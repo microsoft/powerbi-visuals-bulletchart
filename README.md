@@ -1,2 +1,2 @@
 # powerbi-visuals-bulletchart
-A bullet chart that includes four orientations and a few customization options. Use to feature a single measure against a qualitative range.
+This chart allows you to show data values, saving precious space on your reports. It can render single or multiple values in a series, show comparison values, different targets and performance areas. Vertical and horizontal orientations included.
