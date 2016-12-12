@@ -57,27 +57,27 @@ module powerbi.extensibility.visual {
 
     // powerbi.visuals
     import SelectableDataPoint = powerbi.visuals.SelectableDataPoint;
-    import TooltipDataItem = powerbi.visuals.TooltipDataItem;
     import IInteractiveBehavior = powerbi.visuals.IInteractiveBehavior;
     import ISelectionHandler = powerbi.visuals.ISelectionHandler;
-    import TooltipManager = powerbi.visuals.TooltipManager;
-    import TooltipEvent = powerbi.visuals.TooltipEvent;
-   // import tooltip = powerbi.extensibility.utils.tooltip;
     import appendClearCatcher = powerbi.visuals.appendClearCatcher;
     import createInteractivityService = powerbi.visuals.createInteractivityService;
     import valueFormatter = powerbi.visuals.valueFormatter;
-    import TooltipBuilder = powerbi.visuals.TooltipBuilder;
     import IInteractivityService = powerbi.visuals.IInteractivityService;
     import IAxisProperties = powerbi.extensibility.utils.chart.axis.IAxisProperties;
     import IMargin = powerbi.visuals.IMargin;
-    //import ObjectEnumerationBuilder = powerbi.visuals.ObjectEnumerationBuilder;
     import converterHelper = powerbi.visuals.converterHelper;
     import SelectionIdBuilder = powerbi.visuals.ISelectionHandler;
     import AxisHelper = powerbi.extensibility.utils.chart.axis;
     import axisScale = powerbi.extensibility.utils.chart.axis.scale;
-    
+
+    // powerbi.extensibility.utils.tooltip
+    import tooltip = powerbi.extensibility.utils.tooltip;
+    import TooltipEventArgs = powerbi.extensibility.utils.tooltip.TooltipEventArgs;
+    import ITooltipServiceWrapper = powerbi.extensibility.utils.tooltip.ITooltipServiceWrapper;
+
+
     export class BulletChart implements IVisual {
-        private static ScrollBarSize:number = 22;
+        private static ScrollBarSize: number = 22;
         private static SpaceRequiredForBarVertically: number = 100;
         private static XMarginHorizontalLeft: number = 20;
         private static XMarginHorizontalRight: number = 55;
@@ -110,8 +110,10 @@ module powerbi.extensibility.visual {
         private hostService: IVisualHost;
         private layout: VisualLayout;
 
+        private tooltipServiceWrapper: ITooltipServiceWrapper;
+
         private get reverse(): boolean {
-            switch(this.settings && this.settings.orientation.orientation) {
+            switch (this.settings && this.settings.orientation.orientation) {
                 case BulletChartOrientation.HorizontalRight:
                 case BulletChartOrientation.VerticalBottom:
                     return true;
@@ -121,7 +123,7 @@ module powerbi.extensibility.visual {
         }
 
         private get vertical(): boolean {
-            switch(this.settings && this.settings.orientation.orientation) {
+            switch (this.settings && this.settings.orientation.orientation) {
                 case BulletChartOrientation.VerticalTop:
                 case BulletChartOrientation.VerticalBottom:
                     return true;
@@ -149,7 +151,7 @@ module powerbi.extensibility.visual {
         public static converter(dataView: DataView, options: VisualUpdateOptions, visualHost: IVisualHost): BulletChartModel {
             let categorical = BulletChartColumns.getCategoricalColumns(dataView);
 
-            if(!categorical || !categorical.Value || !categorical.Value[0]) {
+            if (!categorical || !categorical.Value || !categorical.Value[0]) {
                 return null;
             }
 
@@ -165,7 +167,7 @@ module powerbi.extensibility.visual {
                 targetValues: [],
                 viewportLength: 0
             };
-            
+
             let verticalOrientation: boolean = settings.orientation.orientation === BulletChartOrientation.VerticalBottom
                 || settings.orientation.orientation === BulletChartOrientation.VerticalTop;
 
@@ -178,32 +180,48 @@ module powerbi.extensibility.visual {
             bulletModel.viewportLength = Math.max(0, (verticalOrientation
                 ? (options.viewport.height - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - 20 - BulletChart.YMarginVertical * 2)
                 : (options.viewport.width - BulletChart.MaxLabelWidth - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
-            bulletModel.hasHighlights = !!(categorical.Value[0].values.length > 0 &&categorical.Value[0].highlights);
+            bulletModel.hasHighlights = !!(categorical.Value[0].values.length > 0 && categorical.Value[0].highlights);
 
             let valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true)
-            let categoryFormatString:string = valueFormatter.getFormatStringByColumn(categorical.Category.source, true);
-            let length:number = categoricalValues.Value.length
+            let categoryFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Category.source, true);
+            let length: number = categoricalValues.Value.length
             for (let idx = 0; idx < length; idx++) {
-                let category: string = ""; 
-                if(categorical.Category) {
+                let category: string = "";
+                if (categorical.Category) {
                     category = valueFormatter.format(categoricalValues.Category[idx], categoryFormatString);
                     category = TextMeasurementService.getTailoredTextOrDefault(
                         BulletChart.getTextProperties(category, settings.labels.fontSize),
                         BulletChart.MaxLabelWidth);
                 }
 
-                let toolTipItems = [];
-                let value = categoricalValues.Value[idx] || 0;
-                toolTipItems.push({ value: value, metadata: categorical.Value[0] });
+                let toolTipItems: BulletChartTooltipItem[] = [],
+                    value = categoricalValues.Value[idx] || 0;
 
-                let targetValue: number = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : settings.values.targetValue;
-                if(_.isNumber(targetValue)) {
-                    toolTipItems.push({ value: targetValue, metadata: categorical.TargetValue && categorical.TargetValue[0] });
+                toolTipItems.push({
+                    value: value,
+                    metadata: categorical.Value[0]
+                });
+
+                let targetValue: number = categoricalValues.TargetValue
+                    ? categoricalValues.TargetValue[idx]
+                    : settings.values.targetValue;
+
+                if (_.isNumber(targetValue)) {
+                    toolTipItems.push({
+                        value: targetValue,
+                        metadata: categorical.TargetValue && categorical.TargetValue[0]
+                    });
                 }
 
-                let targetValue2: number = categoricalValues.TargetValue2 ? categoricalValues.TargetValue2[idx] : settings.values.targetValue2;
-                if(_.isNumber(targetValue2)) {
-                    toolTipItems.push({ value: targetValue2, metadata: categorical.TargetValue2 && categorical.TargetValue2[0] });
+                let targetValue2: number = categoricalValues.TargetValue2
+                    ? categoricalValues.TargetValue2[idx]
+                    : settings.values.targetValue2;
+
+                if (_.isNumber(targetValue2)) {
+                    toolTipItems.push({
+                        value: targetValue2,
+                        metadata: categorical.TargetValue2 && categorical.TargetValue2[0]
+                    });
                 }
 
                 let getRangeValue = (cValues: number[], sValue: number) => cValues ? cValues[idx] :
@@ -224,7 +242,7 @@ module powerbi.extensibility.visual {
                 good = _.isNumber(good) ? Math.max(good, satisfactory) : good;
                 veryGood = _.isNumber(veryGood) ? Math.max(veryGood, good) : veryGood;
 
-                let minMaxValue = _.max([minimum, needsImprovement, satisfactory, good,  veryGood, value, targetValue, targetValue2].filter(_.isNumber));
+                let minMaxValue = _.max([minimum, needsImprovement, satisfactory, good, veryGood, value, targetValue, targetValue2].filter(_.isNumber));
                 maximum = _.isNumber(maximum) ? Math.max(maximum, minMaxValue) : minMaxValue;
 
                 veryGood = _.isNumber(veryGood) ? veryGood : maximum;
@@ -254,12 +272,61 @@ module powerbi.extensibility.visual {
                 let highlight = categorical.Value[0].highlights && categorical.Value[0].highlights[idx] !== null;
                 let selectionIdBuilder = () => categorical.Category ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx) : visualHost.createSelectionIdBuilder();
 
-                if(anyRangeIsDefined) {
-                    BulletChart.addItemToBarArray(bulletModel.barRects, idx, firstScale, secondScale, firstColor, null, toolTipItems, selectionIdBuilder(), highlight);
-                    BulletChart.addItemToBarArray(bulletModel.barRects, idx, secondScale, thirdScale, secondColor,null, toolTipItems, selectionIdBuilder(), highlight);
-                    BulletChart.addItemToBarArray(bulletModel.barRects, idx, thirdScale, fourthScale, thirdColor, null, toolTipItems, selectionIdBuilder(), highlight);
-                    BulletChart.addItemToBarArray(bulletModel.barRects, idx, fourthScale, fifthScale, fourthColor, null, toolTipItems, selectionIdBuilder(), highlight);
-                    BulletChart.addItemToBarArray(bulletModel.barRects, idx, fifthScale, lastScale, lastColor, null, toolTipItems, selectionIdBuilder(), highlight);
+                if (anyRangeIsDefined) {
+                    BulletChart.addItemToBarArray(
+                        bulletModel.barRects,
+                        idx,
+                        firstScale,
+                        secondScale,
+                        firstColor,
+                        null,
+                        toolTipItems,
+                        selectionIdBuilder(),
+                        highlight);
+
+                    BulletChart.addItemToBarArray(
+                        bulletModel.barRects,
+                        idx,
+                        secondScale,
+                        thirdScale,
+                        secondColor,
+                        null,
+                        toolTipItems,
+                        selectionIdBuilder(),
+                        highlight);
+
+                    BulletChart.addItemToBarArray(
+                        bulletModel.barRects,
+                        idx,
+                        thirdScale,
+                        fourthScale,
+                        thirdColor,
+                        null,
+                        toolTipItems,
+                        selectionIdBuilder(),
+                        highlight);
+
+                    BulletChart.addItemToBarArray(
+                        bulletModel.barRects,
+                        idx,
+                        fourthScale,
+                        fifthScale,
+                        fourthColor,
+                        null,
+                        toolTipItems,
+                        selectionIdBuilder(),
+                        highlight);
+
+                    BulletChart.addItemToBarArray(
+                        bulletModel.barRects,
+                        idx,
+                        fifthScale,
+                        lastScale,
+                        lastColor,
+                        null,
+                        toolTipItems,
+                        selectionIdBuilder(),
+                        highlight);
                 }
 
                 BulletChart.addItemToBarArray(bulletModel.valueRects, idx, firstScale, valueScale, settings.colors.bulletcolor.solid.color, null, toolTipItems, selectionIdBuilder(), highlight);
@@ -340,7 +407,7 @@ module powerbi.extensibility.visual {
             end: number,
             fill: string,
             formatString: DataViewObjectPropertyIdentifier,
-            tooltipInfo: any[],
+            tooltipInfo: BulletChartTooltipItem[],
             selectionIdBuilder: ISelectionIdBuilder,
             highlight: boolean): void {
             if (!isNaN(start) && !isNaN(end))
@@ -349,7 +416,7 @@ module powerbi.extensibility.visual {
                     start: start,
                     end: end,
                     fill: fill,
-                    tooltipInfo: [],//TooltipBuilder.createTooltipInfo(formatString, null, null, null, null, tooltipInfo),
+                    tooltipInfo: BulletChart.createTooltipInfo(tooltipInfo),
                     selected: false,
                     identity: selectionIdBuilder.createSelectionId(),
                     key: (selectionIdBuilder.withMeasure(start + " " + end).createSelectionId() as powerbi.visuals.ISelectionId).getKey(),
@@ -357,12 +424,22 @@ module powerbi.extensibility.visual {
                 });
         }
 
-        /* One time setup*/
+        private static createTooltipInfo(toolTipItems: BulletChartTooltipItem[]): VisualTooltipDataItem[] {
+            return toolTipItems.map((toolTipItems: BulletChartTooltipItem) => {
+                let metadata: DataViewMetadataColumn = toolTipItems.metadata.source,
+                    formatString: string = valueFormatter.getFormatStringByColumn(metadata);
+
+                return {
+                    displayName: metadata.displayName,
+                    value: valueFormatter.format(toolTipItems.value, formatString)
+                } as VisualTooltipDataItem;
+            });
+        }
 
         constructor(options: VisualConstructorOptions) {
-             //tooltip.createTooltipServiceWrapper(
-             //   options.host.tooltipService,
-             //   options.element);
+            this.tooltipServiceWrapper = tooltip.createTooltipServiceWrapper(
+                options.host.tooltipService,
+                options.element);
 
             this.layout = new VisualLayout(null, {
                 top: 10,
@@ -370,6 +447,7 @@ module powerbi.extensibility.visual {
                 bottom: 15,
                 left: 10
             });
+
             let body = d3.select(options.element);
             this.hostService = options.host;
 
@@ -392,7 +470,7 @@ module powerbi.extensibility.visual {
 
         /* Called for data, size, formatting changes*/
         public update(options: VisualUpdateOptions) {
-            
+
             if (!options.dataViews || !options.dataViews[0]) {
                 return;
             }
@@ -463,7 +541,7 @@ module powerbi.extensibility.visual {
         private calculateLabelWidth(barData: BarData, bar?: BarRect, reversed?: boolean) {
             return (reversed
                 ? BulletChart.XMarginHorizontalRight
-                : barData.x + BulletChart.MaxLabelWidth + BulletChart.XMarginHorizontalLeft) 
+                : barData.x + BulletChart.MaxLabelWidth + BulletChart.XMarginHorizontalLeft)
                 + (bar ? bar.start : 0);
         }
 
@@ -513,16 +591,16 @@ module powerbi.extensibility.visual {
                 (d: TargetValue) => bars[d.barIndex].y + BulletChart.MarkerMarginHorizontal);
 
             this.drawSecondTargets(
-                    targetValues,
-                    (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reveresed) + d.value2,
-                    (d: TargetValue) => bars[d.barIndex].y);
+                targetValues,
+                (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reveresed) + d.value2,
+                (d: TargetValue) => bars[d.barIndex].y);
 
             // Draw axes
             if (model.settings.axis.axis) {
                 // Using var instead of let since you can't pass let parameters to functions inside loops.
                 // needs to be changed to let when typescript 1.8 comes out.
-                for (let idx:number = 0; idx < bars.length; idx++) {
-                    var bar:BarData = bars[idx];
+                for (let idx: number = 0; idx < bars.length; idx++) {
+                    var bar: BarData = bars[idx];
                     let barGroup = this.bulletGraphicsContext.append("g");
 
                     barGroup.append("g").attr({
@@ -593,8 +671,14 @@ module powerbi.extensibility.visual {
             }
 
             barSelection.exit();
-            TooltipManager.addTooltip(valueSelection, (tooltipEvent: TooltipEvent) => tooltipEvent.data.tooltipInfo, true);
-            TooltipManager.addTooltip(rectSelection, (tooltipEvent: TooltipEvent) => tooltipEvent.data.tooltipInfo, true);
+
+            this.tooltipServiceWrapper.addTooltip(
+                valueSelection,
+                (tooltipEvent: TooltipEventArgs<BarValueRect>) => tooltipEvent.data.tooltipInfo);
+
+            this.tooltipServiceWrapper.addTooltip(
+                rectSelection,
+                (tooltipEvent: TooltipEventArgs<BarRect>) => tooltipEvent.data.tooltipInfo);
         }
 
         private setUpBulletsVertically(bulletBody: d3.Selection<any>, model: BulletChartModel, reveresed: boolean) {
@@ -639,8 +723,8 @@ module powerbi.extensibility.visual {
                 (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reveresed) + d.value);
 
             this.drawSecondTargets(targetValues,
-                    (d: TargetValue) => bars[d.barIndex].x + BulletChart.BulletSize / 3 + BulletChart.BulletSize / 8,
-                    (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reveresed) + d.value2);
+                (d: TargetValue) => bars[d.barIndex].x + BulletChart.BulletSize / 3 + BulletChart.BulletSize / 8,
+                (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reveresed) + d.value2);
 
             // // Draw axes
             if (model.settings.axis.axis) {
@@ -715,8 +799,14 @@ module powerbi.extensibility.visual {
             }
 
             barSelection.exit();
-            TooltipManager.addTooltip(valueSelection, (tooltipEvent: TooltipEvent) => tooltipEvent.data.tooltipInfo, true);
-            TooltipManager.addTooltip(rectSelection, (tooltipEvent: TooltipEvent) => tooltipEvent.data.tooltipInfo, true);
+
+            this.tooltipServiceWrapper.addTooltip(
+                valueSelection,
+                (tooltipEvent: TooltipEventArgs<BarValueRect>) => tooltipEvent.data.tooltipInfo);
+
+            this.tooltipServiceWrapper.addTooltip(
+                rectSelection,
+                (tooltipEvent: TooltipEventArgs<BarRect>) => tooltipEvent.data.tooltipInfo);
         }
 
         private drawFirstTargets(
@@ -726,7 +816,9 @@ module powerbi.extensibility.visual {
             y1: (d: TargetValue) => number,
             y2: (d: TargetValue) => number) {
 
-            let selection = this.bulletGraphicsContext.selectAll('line.target').data(targetValues.filter(x => _.isNumber(x.value)));
+            let selection = this.bulletGraphicsContext
+                .selectAll('line.target')
+                .data(targetValues.filter(x => _.isNumber(x.value)));
 
             selection.enter().append('line').attr({
                 'x1': x1,
@@ -765,7 +857,7 @@ module powerbi.extensibility.visual {
                 'stroke': ((d: TargetValue) => d.fill),
                 'stroke-width': 2
             }).classed("target2", true);
-                
+
             enterSelection.append('line').attr({
                 'x1': ((d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize),
                 'y1': ((d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize),
@@ -823,7 +915,7 @@ module powerbi.extensibility.visual {
         }
 
         function measureSvgTextRect(textProperties: TextProperties): SVGRect {
-           
+
             ensureDOM();
 
             svgTextElement.style(null);
@@ -844,7 +936,7 @@ module powerbi.extensibility.visual {
         }
 
         function estimateSvgTextRect(textProperties: TextProperties): SVGRect {
-           // debug.assertValue(textProperties, 'textProperties');
+            // debug.assertValue(textProperties, 'textProperties');
 
             let estimatedTextProperties: TextProperties = {
                 fontFamily: textProperties.fontFamily,

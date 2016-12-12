@@ -26,12 +26,11 @@
 
 module powerbi.extensibility.visual {
     // powerbi.visuals
-    import TooltipEnabledDataPoint = powerbi.visuals.TooltipEnabledDataPoint;
-    import IAxisProperties = powerbi.extensibility.utils.chart.axis.IAxisProperties;
     import SelectableDataPoint = powerbi.visuals.SelectableDataPoint;
-    import TooltipDataItem = powerbi.visuals.TooltipDataItem;
 
-    //Model
+    // powerbi.extensibility.utils.chart
+    import IAxisProperties = powerbi.extensibility.utils.chart.axis.IAxisProperties;
+
     export interface BulletChartModel {
         bars: BarData[];
         settings: BulletchartSettings;
@@ -60,7 +59,7 @@ module powerbi.extensibility.visual {
         start: number;
         end: number;
         fill: string;
-        tooltipInfo?: TooltipDataItem[];
+        tooltipInfo?: VisualTooltipDataItem[];
         key: string;
         highlight?: boolean;
     }
@@ -90,12 +89,8 @@ module powerbi.extensibility.visual {
         unitsColor: string;
     }
 
-    export interface BulletChartProperty {
-        [propertyName: string]: DataViewObjectPropertyIdentifier;
+    export interface BulletChartTooltipItem {
+        value: any;
+        metadata: DataViewValueColumn;
     }
-
-    export interface BulletChartProperties {
-        [propertyName: string]: BulletChartProperty;
-    }
-
 }
