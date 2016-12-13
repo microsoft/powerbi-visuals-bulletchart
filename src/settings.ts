@@ -25,7 +25,7 @@
  */
 
 module powerbi.extensibility.visual {
-
+    
     export enum BulletChartOrientation {
         HorizontalLeft = <any>"HorizontalLeft",
         HorizontalRight = <any>"HorizontalRight",
@@ -33,7 +33,7 @@ module powerbi.extensibility.visual {
         VerticalBottom = <any>"VerticalBottom"
     }
 
-    import SettingsParser = powerbi.extensibility.visual.settingsParser.SettingsParser;
+    import SettingsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 
     export class BulletchartSettings extends SettingsParser {
         public values: ValuesSettings = new ValuesSettings();

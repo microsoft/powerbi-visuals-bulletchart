@@ -26,22 +26,21 @@
 
 module powerbi.extensibility.visual {
     // jsCommon
-    import PixelConverter = jsCommon.PixelConverter;
+    import PixelConverter = powerbi.extensibility.utils.type.PixelConverter;
 
     // powerbi
     import IEnumType = powerbi.IEnumType;
-    import createEnumType = powerbi.createEnumType;
     import IVisual = powerbi.extensibility.IVisual;
     import DataViewObjectPropertyIdentifier = powerbi.DataViewObjectPropertyIdentifier;
     //import VisualCapabilities = powerbi.VisualCapabilities;
     import VisualDataRoleKind = powerbi.VisualDataRoleKind;
     import IVisualHostServices = powerbi.extensibility.visual.IVisualHost;
     import IViewport = powerbi.IViewport;
-    import TextProperties = powerbi.TextProperties;
+    import TextProperties = powerbi.extensibility.utils.formatting.TextProperties;
     import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
     import DataView = powerbi.DataView;
     import DataViewObjects = powerbi.DataViewObjects;
-    import TextMeasurementService = powerbi.TextMeasurementService;
+    import TextMeasurementService = powerbi.extensibility.utils.formatting.textMeasurementService;
     import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
     import VisualInitOptions = powerbi.extensibility.visual.VisualConstructorOptions;
     import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
@@ -56,17 +55,17 @@ module powerbi.extensibility.visual {
     import DataViewObjectPropertyTypeDescriptor = powerbi.DataViewPropertyValue;
 
     // powerbi.visuals
-    import SelectableDataPoint = powerbi.visuals.SelectableDataPoint;
-    import IInteractiveBehavior = powerbi.visuals.IInteractiveBehavior;
-    import ISelectionHandler = powerbi.visuals.ISelectionHandler;
-    import appendClearCatcher = powerbi.visuals.appendClearCatcher;
-    import createInteractivityService = powerbi.visuals.createInteractivityService;
-    import valueFormatter = powerbi.visuals.valueFormatter;
-    import IInteractivityService = powerbi.visuals.IInteractivityService;
+    import SelectableDataPoint = powerbi.extensibility.utils.interactivity.SelectableDataPoint;
+    import IInteractiveBehavior = powerbi.extensibility.utils.interactivity.IInteractiveBehavior;
+    import ISelectionHandler = powerbi.extensibility.utils.interactivity.ISelectionHandler;
+    import appendClearCatcher = powerbi.extensibility.utils.interactivity.appendClearCatcher;
+    import createInteractivityService = powerbi.extensibility.utils.interactivity.createInteractivityService;
+    import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
+    import IInteractivityService = powerbi.extensibility.utils.interactivity.IInteractivityService;
     import IAxisProperties = powerbi.extensibility.utils.chart.axis.IAxisProperties;
-    import IMargin = powerbi.visuals.IMargin;
-    import converterHelper = powerbi.visuals.converterHelper;
-    import SelectionIdBuilder = powerbi.visuals.ISelectionHandler;
+    import IMargin = powerbi.extensibility.utils.chart.axis.IMargin;
+    import converterHelper = powerbi.extensibility.utils.dataview.converterHelper;
+    import SelectionIdBuilder = powerbi.extensibility.utils.interactivity.ISelectionHandler;
     import AxisHelper = powerbi.extensibility.utils.chart.axis;
     import axisScale = powerbi.extensibility.utils.chart.axis.scale;
 

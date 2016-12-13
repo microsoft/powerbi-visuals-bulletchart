@@ -29,7 +29,7 @@ module powerbi.extensibility.visual {
     import IViewport = powerbi.IViewport;
 
     // powerbi.visuals
-    import IMargin = powerbi.visuals.IMargin;
+    import IMargin = powerbi.extensibility.utils.chart.axis.IMargin;
 
     export class VisualLayout {
         private marginValue: IMargin;

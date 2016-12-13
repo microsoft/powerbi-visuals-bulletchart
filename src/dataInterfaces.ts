@@ -26,7 +26,7 @@
 
 module powerbi.extensibility.visual {
     // powerbi.visuals
-    import SelectableDataPoint = powerbi.visuals.SelectableDataPoint;
+    import SelectableDataPoint = powerbi.extensibility.utils.interactivity.SelectableDataPoint;
 
     // powerbi.extensibility.utils.chart
     import IAxisProperties = powerbi.extensibility.utils.chart.axis.IAxisProperties;

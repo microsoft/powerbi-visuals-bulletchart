@@ -29,7 +29,7 @@ module powerbi.extensibility.visual {
     import DataViewValueColumns = powerbi.DataViewValueColumns;
     import DataViewCategoricalColumn = powerbi.DataViewCategoricalColumn;
     import DataViewValueColumn = powerbi.DataViewValueColumn;
-    import converterHelper = powerbi.visuals.converterHelper;
+    import converterHelper = powerbi.extensibility.utils.dataview.converterHelper;
 
     // powerbi.visuals
     export class BulletChartColumns<T> {
