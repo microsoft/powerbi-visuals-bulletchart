@@ -25,17 +25,22 @@
  */
 
 module powerbi.extensibility.visual {
-    
-    export enum BulletChartOrientation {
-        HorizontalLeft = <any>"HorizontalLeft",
-        HorizontalRight = <any>"HorizontalRight",
-        VerticalTop = <any>"VerticalTop",
-        VerticalBottom = <any>"VerticalBottom"
-    }
-
     import SettingsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 
     export class BulletchartSettings extends SettingsParser {
+        constructor() {
+            super([
+                "mincolor",
+                "needsImprovementcolor",
+                "satisfactorycolor",
+                "goodcolor",
+                "veryGoodcolor",
+                "bulletcolor",
+                "axisColor",
+                "unitsColor"
+            ])
+        }
+
         public values: ValuesSettings = new ValuesSettings();
         public labels: LabelsSettings = new LabelsSettings();
         public orientation: OrientationSettings = new OrientationSettings();
@@ -47,11 +52,11 @@ module powerbi.extensibility.visual {
         public targetValue: number = null;
         public targetValue2: number = null;
         public minimumPercent: number = 0;
-        needsImprovementPercent: number = null;
-        satisfactoryPercent: number = null;
-        goodPercent: number = null;
-        veryGoodPercent: number = null;
-        maximumPercent: number = null;
+        public needsImprovementPercent: number = null;
+        public satisfactoryPercent: number = null;
+        public goodPercent: number = null;
+        public veryGoodPercent: number = null;
+        public maximumPercent: number = null;
     }
 
     export class LabelsSettings {
@@ -60,23 +65,30 @@ module powerbi.extensibility.visual {
         public fontSize: number = 11;
     }
 
+    export enum BulletChartOrientation {
+        HorizontalLeft = <any>"HorizontalLeft",
+        HorizontalRight = <any>"HorizontalRight",
+        VerticalTop = <any>"VerticalTop",
+        VerticalBottom = <any>"VerticalBottom"
+    }
+
     export class OrientationSettings {
         public orientation: BulletChartOrientation = BulletChartOrientation.HorizontalLeft;
     }
 
     export class ColorsSettings {
-        public mincolor: any = { solid: { color: "Darkred" } };
-        public needsImprovementcolor: any = { solid: { color: "Red" } };
-        public satisfactorycolor: any = {solid: {color: "Yellow"}};
-        public goodcolor: any = { solid: { color: "Green"}};
-        public veryGoodcolor: any = { solid: { color: "Darkgreen"}};
-        public bulletcolor: any = { solid: { color: "Black"}};
+        public mincolor: string = "Darkred";
+        public needsImprovementcolor: string = "Red";
+        public satisfactorycolor: string = "Yellow";
+        public goodcolor: string = "Green";
+        public veryGoodcolor: string = "Darkgreen";
+        public bulletcolor: string = "Black";
     }
-    
+
     export class AxisSettings {
-        axis: boolean = true;
-        axisColor:string = "Grey";
-        measureUnits: string = "";
-        unitsColor: string = "Grey";
+        public axis: boolean = true;
+        public axisColor: string = "Grey";
+        public measureUnits: string = "";
+        public unitsColor: string = "Grey";
     };
 }

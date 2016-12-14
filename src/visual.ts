@@ -156,7 +156,6 @@ module powerbi.extensibility.visual {
 
             let categoricalValues = BulletChartColumns.getCategoricalValues(dataView);
             let settings = BulletChart.parseSettings(dataView, categorical.Category.source);
-            //let properties = BulletchartSettings.getProperties(BulletChart.capabilities);
 
             let bulletModel: BulletChartModel = <BulletChartModel>{
                 settings: settings,
@@ -262,14 +261,16 @@ module powerbi.extensibility.visual {
                 let lastScale = scale(maximum);
                 let valueScale = scale(value);
                 //debugger;
-                let firstColor = settings.colors.mincolor.solid.color,
-                    secondColor = settings.colors.needsImprovementcolor.solid.color,
-                    thirdColor = settings.colors.satisfactorycolor.solid.color,
-                    fourthColor = settings.colors.goodcolor.solid.color,
-                    lastColor = settings.colors.veryGoodcolor.solid.color;
+                let firstColor = settings.colors.mincolor,
+                    secondColor = settings.colors.needsImprovementcolor,
+                    thirdColor = settings.colors.satisfactorycolor,
+                    fourthColor = settings.colors.goodcolor,
+                    lastColor = settings.colors.veryGoodcolor;
 
                 let highlight = categorical.Value[0].highlights && categorical.Value[0].highlights[idx] !== null;
-                let selectionIdBuilder = () => categorical.Category ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx) : visualHost.createSelectionIdBuilder();
+                let selectionIdBuilder = () => categorical.Category
+                    ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx)
+                    : visualHost.createSelectionIdBuilder();
 
                 if (anyRangeIsDefined) {
                     BulletChart.addItemToBarArray(
@@ -328,13 +329,22 @@ module powerbi.extensibility.visual {
                         highlight);
                 }
 
-                BulletChart.addItemToBarArray(bulletModel.valueRects, idx, firstScale, valueScale, settings.colors.bulletcolor.solid.color, null, toolTipItems, selectionIdBuilder(), highlight);
+                BulletChart.addItemToBarArray(
+                    bulletModel.valueRects,
+                    idx,
+                    firstScale,
+                    valueScale,
+                    settings.colors.bulletcolor,
+                    null,
+                    toolTipItems,
+                    selectionIdBuilder(),
+                    highlight);
 
                 // markerValue
                 bulletModel.targetValues.push({
                     barIndex: idx,
                     value: targetValue && scale(targetValue),
-                    fill: settings.colors.bulletcolor.solid.color,
+                    fill: settings.colors.bulletcolor,
                     key: selectionIdBuilder()
                         .withMeasure(scale(targetValue || 0).toString())
                         .createSelectionId().getKey(),
