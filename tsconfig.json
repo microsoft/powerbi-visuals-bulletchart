@@ -18,7 +18,6 @@
     "node_modules/powerbi-visuals-utils-chartutils/lib/index.d.ts",
     "node_modules/powerbi-visuals-utils-dataviewutils/lib/index.d.ts",
     "node_modules/powerbi-visuals-utils-tooltiputils/lib/index.d.ts",
-    "node_modules/powerbi-visuals-utils-testutils/lib/index.d.ts",
     "src/dataInterfaces.ts",
     "src/settings.ts",
     "src/columns.ts",

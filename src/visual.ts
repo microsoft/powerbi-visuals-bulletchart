@@ -107,7 +107,7 @@ module powerbi.extensibility.visual {
         private behavior: BulletWebBehavior;
         private interactivityService: IInteractivityService;
         private hostService: IVisualHost;
-        private layout: VisualLayout;
+        public layout: VisualLayout;
 
         private tooltipServiceWrapper: ITooltipServiceWrapper;
 
@@ -156,7 +156,6 @@ module powerbi.extensibility.visual {
 
             let categoricalValues = BulletChartColumns.getCategoricalValues(dataView);
             let settings = BulletChart.parseSettings(dataView, categorical.Category.source);
-            //let properties = BulletchartSettings.getProperties(BulletChart.capabilities);
 
             let bulletModel: BulletChartModel = <BulletChartModel>{
                 settings: settings,
@@ -184,7 +183,7 @@ module powerbi.extensibility.visual {
             let valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true)
             let categoryFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Category.source, true);
             let length: number = categoricalValues.Value.length
-            for (let idx = 0; idx < length; idx++) {
+            for (var idx = 0; idx < length; idx++) {
                 let category: string = "";
                 if (categorical.Category) {
                     category = valueFormatter.format(categoricalValues.Category[idx], categoryFormatString);
@@ -261,15 +260,16 @@ module powerbi.extensibility.visual {
                 let fifthScale = scale(veryGood);
                 let lastScale = scale(maximum);
                 let valueScale = scale(value);
-                //debugger;
-                let firstColor = settings.colors.mincolor.solid.color,
-                    secondColor = settings.colors.needsImprovementcolor.solid.color,
-                    thirdColor = settings.colors.satisfactorycolor.solid.color,
-                    fourthColor = settings.colors.goodcolor.solid.color,
-                    lastColor = settings.colors.veryGoodcolor.solid.color;
+                let firstColor = settings.colors.mincolor,
+                    secondColor = settings.colors.needsImprovementcolor,
+                    thirdColor = settings.colors.satisfactorycolor,
+                    fourthColor = settings.colors.goodcolor,
+                    lastColor = settings.colors.veryGoodcolor;
 
                 let highlight = categorical.Value[0].highlights && categorical.Value[0].highlights[idx] !== null;
-                let selectionIdBuilder = () => categorical.Category ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx) : visualHost.createSelectionIdBuilder();
+                let selectionIdBuilder = () => categorical.Category
+                    ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx)
+                    : visualHost.createSelectionIdBuilder();
 
                 if (anyRangeIsDefined) {
                     BulletChart.addItemToBarArray(
@@ -328,13 +328,22 @@ module powerbi.extensibility.visual {
                         highlight);
                 }
 
-                BulletChart.addItemToBarArray(bulletModel.valueRects, idx, firstScale, valueScale, settings.colors.bulletcolor.solid.color, null, toolTipItems, selectionIdBuilder(), highlight);
+                BulletChart.addItemToBarArray(
+                    bulletModel.valueRects,
+                    idx,
+                    firstScale,
+                    valueScale,
+                    settings.colors.bulletcolor,
+                    null,
+                    toolTipItems,
+                    selectionIdBuilder(),
+                    highlight);
 
                 // markerValue
                 bulletModel.targetValues.push({
                     barIndex: idx,
                     value: targetValue && scale(targetValue),
-                    fill: settings.colors.bulletcolor.solid.color,
+                    fill: settings.colors.bulletcolor,
                     key: selectionIdBuilder()
                         .withMeasure(scale(targetValue || 0).toString())
                         .createSelectionId().getKey(),
@@ -355,7 +364,7 @@ module powerbi.extensibility.visual {
                         scaleType: axisScale.linear,
                     });
                 }
-
+                debugger;
                 let bar1: BarData = {
                     scale: scale,
                     barIndex: idx,
@@ -441,10 +450,10 @@ module powerbi.extensibility.visual {
                 options.element);
 
             this.layout = new VisualLayout(null, {
-                top: 10,
-                right: 10,
-                bottom: 15,
-                left: 10
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0
             });
 
             let body = d3.select(options.element);
@@ -473,7 +482,6 @@ module powerbi.extensibility.visual {
             if (!options.dataViews || !options.dataViews[0]) {
                 return;
             }
-
             let dataView = options.dataViews[0];
             this.layout.viewport = options.viewport;
             let data = BulletChart.converter(dataView, options, this.hostService);
@@ -557,7 +565,7 @@ module powerbi.extensibility.visual {
             let targetValues = model.targetValues;
             let barSelection = this.labelGraphicsContext.selectAll('text').data(bars, (d: BarData) => d.key);
             let rectSelection = this.bulletGraphicsContext.selectAll('rect.range').data(rects, (d: BarRect) => d.key);
-
+            debugger;
             // Draw bullets
             let bullets = rectSelection.enter().append('rect').attr({
                 'x': ((d: BarRect) => Math.max(0, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))),

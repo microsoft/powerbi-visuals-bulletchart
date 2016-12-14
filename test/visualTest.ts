@@ -25,13 +25,11 @@
  */
 /// <reference path="_references.ts" />
 module powerbi.extensibility.visual.test {
-    import VisualClass = powerbi.extensibility.visual.BulletChart1443347686880;
     import BulletChartData = powerbi.extensibility.visual.test.BulletChartData;
     import helpers = powerbi.extensibility.utils.test.helpers;
     import BulletChartOrientation = powerbi.extensibility.visual.BulletChart1443347686880.BulletChartOrientation;
     import colorHelper = powerbi.extensibility.utils.test.helpers.color;
     import bulletChartBuilder = powerbi.extensibility.visual.test.BulletChartBuilder;
-    //import VisualSettings = powerbi.extensibility.visual.BulletchartSettings;
 
     export function roundTo(value: number | string, round: number): number {
         value = _.isNumber(value) ? value : parseFloat(value);
@@ -58,25 +56,26 @@ module powerbi.extensibility.visual.test {
     }
 
     describe("BulletChart", () => {
-        let visualBuilder: bulletChartBuilder;
-        let defaultDataViewBuilder: BulletChartData;
-        let dataView: powerbi.DataView;
-        //let setSettings = helpers.getDataViewObjectsBuilder<VisualSettings>(VisualClass.capabilities);
+        let visualBuilder: bulletChartBuilder,
+            defaultDataViewBuilder: BulletChartData,
+            dataView: DataView;
 
         beforeEach(() => {
-            visualBuilder = new bulletChartBuilder(1000,500);
+            visualBuilder = new bulletChartBuilder(1000, 500);
             defaultDataViewBuilder = new BulletChartData();
             dataView = defaultDataViewBuilder.getDataView();
         });
 
         describe("DOM tests", () => {
+            it("svg element created", () => {
+                expect(visualBuilder.mainElement[0]).toBeInDOM();
+            });
 
-            it("svg element created", () => expect(visualBuilder.mainElement[0]).toBeInDOM());
             it("update", (done) => {
                 visualBuilder.updateRenderTimeout(dataView, () => {
                     expect(visualBuilder.mainElement.children("g").first().children("text").length)
                         .toBe(dataView.categorical.categories[0].values.length);
-                    expect(visualBuilder.element.find('.bulletChart').css('height')).toBe(visualBuilder.viewport.height + 'px');
+                    expect(visualBuilder.element.find('.bulletChart').css('height')).toBe((visualBuilder.viewport.height + visualBuilder.visual.layout.marginValue.bottom) + 'px');
                     expect(visualBuilder.element.find('.bulletChart').css('width')).toBe(visualBuilder.viewport.width + 'px');
                     done();
                 });
@@ -105,7 +104,7 @@ module powerbi.extensibility.visual.test {
                     BulletChartData.ColumnTargetValue]);
 
                 dataView.metadata.objects = {
-                    values:{
+                    values: {
                         targetValue: undefined,
                         targetValue2: undefined,
                         minimumPercent: 0,
@@ -123,15 +122,15 @@ module powerbi.extensibility.visual.test {
                     let settings = visualBuilder.getSettings();
 
                     let badRange = rangeRects.filter((i, e) =>
-                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.mincolor.solid.color));
+                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.mincolor));
                     let needsImprovementRange = rangeRects.filter((i, e) =>
-                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.needsImprovementcolor.solid.color));
+                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.needsImprovementcolor));
                     let satisfactoryRange = rangeRects.filter((i, e) =>
-                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.satisfactorycolor.solid.color));
+                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.satisfactorycolor));
                     let goodRange = rangeRects.filter((i, e) =>
-                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.goodcolor.solid.color));
+                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.goodcolor));
                     let veryGoodRange = rangeRects.filter((i, e) =>
-                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.veryGoodcolor.solid.color));
+                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.veryGoodcolor));
 
                     expect(badRange.length).toEqual(valuesLength);
                     expect(needsImprovementRange.length).toEqual(valuesLength);
@@ -148,14 +147,29 @@ module powerbi.extensibility.visual.test {
                     BulletChartData.ColumnValue,
                     BulletChartData.ColumnTargetValue],
                     (source) => {
-                        switch(source.displayName) {
+                        switch (source.displayName) {
                             case BulletChartData.ColumnValue:
                                 source.format = "0.00 %;-0.00 %;0.00 %";
                                 break;
                         }
                     });
 
-                (dataView.metadata.objects as any).values.satisfactoryPercent = 1e+250;
+                dataView.metadata.objects = {
+                    values: {
+                        satisfactoryPercent: 1e+250
+                    }
+                };
+
+                visualBuilder.updateRenderTimeout(dataView, () => {
+                    let ticks = visualBuilder.axis.first().children("g.tick"),
+                        ticksLengthSum = _.sumBy(
+                            ticks.toArray(),
+                            (e: Element) => e.getBoundingClientRect().width);
+
+                    expect(ticksLengthSum).toBeLessThan(visualBuilder.viewport.width);
+
+                    done();
+                });
             });
 
             it("multi-selection test", () => {
@@ -178,17 +192,28 @@ module powerbi.extensibility.visual.test {
         describe("Format settings test", () => {
             describe("Category labels", () => {
                 beforeEach(() => {
-                    (dataView.metadata.objects as any).labels.show = true;
+                    dataView.metadata.objects = {
+                        labels: {
+                            show: true
+                        }
+                    };
                 });
 
                 it("show", () => {
-                    (dataView.metadata.objects as any).labels.show = false;
+                    dataView.metadata.objects = {
+                        labels: {
+                            show: false
+                        }
+                    };
+
                     visualBuilder.updateFlushAllD3Transitions(dataView);
+
                     expect(visualBuilder.categoryLabels).not.toBeInDOM();
                 });
 
                 it("font size", () => {
                     let fontSize = 25;
+
                     (dataView.metadata.objects as any).labels.fontSize = fontSize;
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
@@ -199,32 +224,42 @@ module powerbi.extensibility.visual.test {
 
             describe("Orientation", () => {
                 it("orientation", () => {
-                    (dataView.metadata.objects as any).orientation.orientation = BulletChartOrientation.HorizontalLeft;
+                    dataView.metadata.objects = {
+                        orientation: {
+                            orientation: BulletChartOrientation.HorizontalLeft
+                        }
+                    };
+
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.categoryLabels.toArray().map($).forEach(e =>
-                        expect(parseFloat(e.attr("x"))).toBeLessThan(visualBuilder.viewport.width/2));
+                        expect(parseFloat(e.attr("x"))).toBeLessThan(visualBuilder.viewport.width / 2));
 
                     (dataView.metadata.objects as any).orientation.orientation = BulletChartOrientation.HorizontalRight;
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.categoryLabels.toArray().map($).forEach(e =>
-                        expect(parseFloat(e.attr("x"))).toBeGreaterThan(visualBuilder.viewport.width/2));
+                        expect(parseFloat(e.attr("x"))).toBeGreaterThan(visualBuilder.viewport.width / 2));
 
                     (dataView.metadata.objects as any).orientation.orientation = BulletChartOrientation.VerticalTop;
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.categoryLabels.toArray().map($).forEach(e =>
-                        expect(parseFloat(e.attr("y"))).toBeLessThan(visualBuilder.viewport.height/2));
+                        expect(parseFloat(e.attr("y"))).toBeLessThan(visualBuilder.viewport.height / 2));
 
                     (dataView.metadata.objects as any).orientation.orientation = BulletChartOrientation.VerticalBottom;
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.categoryLabels.toArray().map($).forEach(e =>
-                        expect(parseFloat(e.attr("y"))).toBeGreaterThan(visualBuilder.viewport.height/2));
+                        expect(parseFloat(e.attr("y"))).toBeGreaterThan(visualBuilder.viewport.height / 2));
                 });
             });
 
             describe("Colors", () => {
                 it("minimum", () => {
                     let color = "#000000";
-                    (dataView.metadata.objects as any).colors.minColor = colorHelper.getSolidColorStructuralObject(color);
+
+                    dataView.metadata.objects = {
+                        colors: {
+                            mincolor: colorHelper.getSolidColorStructuralObject(color)
+                        }
+                    };
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(0)).forEach(e =>
@@ -233,7 +268,12 @@ module powerbi.extensibility.visual.test {
 
                 it("needs improvement", () => {
                     let color = "#111111";
-                    (dataView.metadata.objects as any).colors.needsImprovementColor = colorHelper.getSolidColorStructuralObject(color);
+
+                    dataView.metadata.objects = {
+                        colors: {
+                            needsImprovementcolor: colorHelper.getSolidColorStructuralObject(color)
+                        }
+                    };
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(1)).forEach(e =>
@@ -242,7 +282,12 @@ module powerbi.extensibility.visual.test {
 
                 it("satisfactory", () => {
                     let color = "#222222";
-                    (dataView.metadata.objects as any).colors.satisfactoryColor = colorHelper.getSolidColorStructuralObject(color);
+
+                    dataView.metadata.objects = {
+                        colors: {
+                            satisfactorycolor: colorHelper.getSolidColorStructuralObject(color)
+                        }
+                    };
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(2)).forEach(e =>
@@ -251,7 +296,12 @@ module powerbi.extensibility.visual.test {
 
                 it("good", () => {
                     let color = "#333333";
-                    (dataView.metadata.objects as any).colors.goodColor = colorHelper.getSolidColorStructuralObject(color);
+
+                    dataView.metadata.objects = {
+                        colors: {
+                            goodcolor: colorHelper.getSolidColorStructuralObject(color)
+                        }
+                    };
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(3)).forEach(e =>
@@ -260,7 +310,12 @@ module powerbi.extensibility.visual.test {
 
                 it("very good", () => {
                     let color = "#444444";
-                    (dataView.metadata.objects as any).colors.veryGoodColor = colorHelper.getSolidColorStructuralObject(color);
+
+                    dataView.metadata.objects = {
+                        colors: {
+                            veryGoodcolor: colorHelper.getSolidColorStructuralObject(color)
+                        }
+                    }
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(4)).forEach(e =>
@@ -269,7 +324,12 @@ module powerbi.extensibility.visual.test {
 
                 it("bullet", () => {
                     let color = "#999999";
-                    (dataView.metadata.objects as any).colors.bulletColor = colorHelper.getSolidColorStructuralObject(color);
+
+                    dataView.metadata.objects = {
+                        colors: {
+                            bulletcolor: colorHelper.getSolidColorStructuralObject(color)
+                        }
+                    };
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.valueRects.toArray().map($).forEach(e =>
@@ -279,7 +339,12 @@ module powerbi.extensibility.visual.test {
 
             describe("Axis", () => {
                 beforeEach(() => {
-                    (dataView.metadata.objects as any).labels.show = true;
+                    dataView.metadata.objects = {
+                        labels: {
+                            show: true
+                        },
+                        axis: {}
+                    };
                 });
 
                 it("show", () => {
@@ -300,7 +365,7 @@ module powerbi.extensibility.visual.test {
                 });
 
                 it("measure units", () => {
-                    let measureUnits = "azaza"; 
+                    let measureUnits = "azaza";
                     (dataView.metadata.objects as any).axis.measureUnits = measureUnits;
 
 
@@ -324,5 +389,4 @@ module powerbi.extensibility.visual.test {
             });
         });
     });
-
 }
