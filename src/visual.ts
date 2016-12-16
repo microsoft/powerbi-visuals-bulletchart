@@ -32,7 +32,6 @@ module powerbi.extensibility.visual {
     import IEnumType = powerbi.IEnumType;
     import IVisual = powerbi.extensibility.IVisual;
     import DataViewObjectPropertyIdentifier = powerbi.DataViewObjectPropertyIdentifier;
-    //import VisualCapabilities = powerbi.VisualCapabilities;
     import VisualDataRoleKind = powerbi.VisualDataRoleKind;
     import IVisualHostServices = powerbi.extensibility.visual.IVisualHost;
     import IViewport = powerbi.IViewport;
@@ -97,7 +96,7 @@ module powerbi.extensibility.visual {
         private static FontFamily: string = "Segoe UI";
         private baselineDelta: number = 0;
 
-        //Variables
+        // Variables
         private clearCatcher: d3.Selection<any>;
         private bulletBody: d3.Selection<any>;
         private scrollContainer: d3.Selection<any>;
@@ -180,10 +179,10 @@ module powerbi.extensibility.visual {
                 : (options.viewport.width - BulletChart.MaxLabelWidth - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
             bulletModel.hasHighlights = !!(categorical.Value[0].values.length > 0 && categorical.Value[0].highlights);
 
-            let valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true)
+            let valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
             let categoryFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Category.source, true);
-            let length: number = categoricalValues.Value.length
-            for (var idx = 0; idx < length; idx++) {
+            let length: number = categoricalValues.Value.length;
+            for (let idx = 0; idx < length; idx++) {
                 let category: string = "";
                 if (categorical.Category) {
                     category = valueFormatter.format(categoricalValues.Category[idx], categoryFormatString);
@@ -364,7 +363,7 @@ module powerbi.extensibility.visual {
                         scaleType: axisScale.linear,
                     });
                 }
-                debugger;
+
                 let bar1: BarData = {
                     scale: scale,
                     barIndex: idx,
@@ -390,16 +389,7 @@ module powerbi.extensibility.visual {
         }
 
         private static parseSettings(dataView: DataView, categorySource: DataViewMetadataColumn): BulletchartSettings {
-            let settings: BulletchartSettings = BulletchartSettings.parse<BulletchartSettings>(dataView);
-
-            //settings.labels.precision = Math.min(17, Math.max(0, settings.labels.precision));
-            //settings.outerLine.thickness = Math.min(25, Math.max(1, settings.outerLine.thickness));
-
-            //if (_.isEmpty(settings.legend.titleText)) {
-            //    settings.legend.titleText = categorySource.displayName;
-            //}
-
-            return settings;
+            return BulletchartSettings.parse<BulletchartSettings>(dataView);
         }
 
         public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstanceEnumeration {
@@ -486,7 +476,7 @@ module powerbi.extensibility.visual {
             this.layout.viewport = options.viewport;
             let data = BulletChart.converter(dataView, options, this.hostService);
 
-            //TODO: Calculating the baseline delta of the text. needs to be removed once the TExtMeasurementService.estimateSVGTextBaselineDelta is available.
+            // TODO: Calculating the baseline delta of the text. needs to be removed once the TExtMeasurementService.estimateSVGTextBaselineDelta is available.
             this.ClearViewport();
             if (!data) {
                 return;
@@ -565,7 +555,7 @@ module powerbi.extensibility.visual {
             let targetValues = model.targetValues;
             let barSelection = this.labelGraphicsContext.selectAll('text').data(bars, (d: BarData) => d.key);
             let rectSelection = this.bulletGraphicsContext.selectAll('rect.range').data(rects, (d: BarRect) => d.key);
-            debugger;
+
             // Draw bullets
             let bullets = rectSelection.enter().append('rect').attr({
                 'x': ((d: BarRect) => Math.max(0, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))),
@@ -607,8 +597,8 @@ module powerbi.extensibility.visual {
                 // Using var instead of let since you can't pass let parameters to functions inside loops.
                 // needs to be changed to let when typescript 1.8 comes out.
                 for (let idx: number = 0; idx < bars.length; idx++) {
-                    var bar: BarData = bars[idx];
-                    let barGroup = this.bulletGraphicsContext.append("g");
+                    let bar: BarData = bars[idx],
+                        barGroup = this.bulletGraphicsContext.append("g");
 
                     barGroup.append("g").attr({
                         'transform': () => {
@@ -738,8 +728,8 @@ module powerbi.extensibility.visual {
 
                 // Using var instead of let since you can't pass let parameters to functions inside loops.
                 // needs to be changed to let when typescript 1.8 comes out.
-                for (var idx = 0; idx < bars.length; idx++) {
-                    var bar = bars[idx];
+                for (let idx = 0; idx < bars.length; idx++) {
+                    let bar = bars[idx];
                     this.bulletGraphicsContext.append("g").attr({
                         'transform': () => {
                             let xLocation = bar.x;
@@ -882,7 +872,7 @@ module powerbi.extensibility.visual {
         public destroy() { }
     }
 
-    //TODO: This module should be removed once TextMeasruementService exports the "estimateSvgTextBaselineDelta" function.
+    // TODO: This module should be removed once TextMeasruementService exports the "estimateSvgTextBaselineDelta" function.
     export module TextMeasurementHelper {
 
         interface CanvasContext {
@@ -909,7 +899,7 @@ module powerbi.extensibility.visual {
 
             spanElement = $('<span/>');
             $('body').append(spanElement);
-            //The style hides the svg element from the canvas, preventing canvas from scrolling down to show svg black square.
+            // The style hides the svg element from the canvas, preventing canvas from scrolling down to show svg black square.
             svgTextElement = d3.select($('body').get(0))
                 .append('svg')
                 .style({

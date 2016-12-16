@@ -31,34 +31,33 @@ module powerbi.extensibility.visual {
     import DataViewValueColumn = powerbi.DataViewValueColumn;
     import converterHelper = powerbi.extensibility.utils.dataview.converterHelper;
 
-    // powerbi.visuals
     export class BulletChartColumns<T> {
-        //public static Roles = Object.freeze(
-        //    _.mapValues(new BulletChartColumns<string>(), (x, i) => i));
-
         public static getColumnSources(dataView: DataView) {
             return this.getColumnSourcesT<DataViewMetadataColumn>(dataView);
         }
 
         public static getTableValues(dataView: DataView) {
-            var table = dataView && dataView.table;
-            var columns = this.getColumnSourcesT<any[]>(dataView);
+            const table = dataView && dataView.table,
+                columns = this.getColumnSourcesT<any[]>(dataView);
+
             return columns && table && _.mapValues(
                 columns, (n: DataViewMetadataColumn, i) => n && table.rows.map(row => row[n.index]));
         }
 
         public static getTableRows(dataView: DataView) {
-            var table = dataView && dataView.table;
-            var columns = this.getColumnSourcesT<any[]>(dataView);
+            const table = dataView && dataView.table,
+                columns = this.getColumnSourcesT<any[]>(dataView);
+
             return columns && table && table.rows.map(row =>
                 _.mapValues(columns, (n: DataViewMetadataColumn, i) => n && row[n.index]));
         }
 
         public static getCategoricalValues(dataView: DataView) {
-            var categorical = dataView && dataView.categorical;
-            var categories = categorical && categorical.categories || [];
-            var values = categorical && categorical.values || <DataViewValueColumns>[];
-            var series = categorical && values.source && this.getSeriesValues(dataView);
+            const categorical = dataView && dataView.categorical,
+                categories = categorical && categorical.categories || [],
+                values = categorical && categorical.values || <DataViewValueColumns>[],
+                series = categorical && values.source && this.getSeriesValues(dataView);
+
             return categorical && _.mapValues(new this<any[]>(), (n, i) =>
                 (<DataViewCategoricalColumn[]>_.toArray(categories)).concat(_.toArray(values))
                     .filter(x => x.source.roles && x.source.roles[i]).map(x => x.values)[0]
@@ -71,19 +70,22 @@ module powerbi.extensibility.visual {
         }
 
         public static getCategoricalColumns(dataView: DataView) {
+            const categorical = dataView && dataView.categorical,
+                categories = categorical && categorical.categories || [],
+                values = categorical && categorical.values || <DataViewValueColumns>[];
 
-            var categorical = dataView && dataView.categorical;
-            var categories = categorical && categorical.categories || [];
-            var values = categorical && categorical.values || <DataViewValueColumns>[];
             return categorical && _.mapValues(
                 new this<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>(),
                 (n, i) => {
-                    var result: any = categories.filter(x => x.source.roles && x.source.roles[i])[0];
+                    let result: any = categories.filter(x => x.source.roles && x.source.roles[i])[0];
+
                     if (!result) {
                         result = values.source && values.source.roles && values.source.roles[i] && values;
                     }
+
                     if (!result) {
                         result = values.filter(x => x.source.roles && x.source.roles[i]);
+
                         if (_.isEmpty(result)) {
                             result = undefined;
                         }
@@ -94,21 +96,23 @@ module powerbi.extensibility.visual {
         }
 
         public static getGroupedValueColumns(dataView: DataView) {
-            var categorical = dataView && dataView.categorical;
-            var values = categorical && categorical.values;
-            var grouped = values && values.grouped();
+            const categorical = dataView && dataView.categorical,
+                values = categorical && categorical.values,
+                grouped = values && values.grouped();
+
             return grouped && grouped.map(g => _.mapValues(
                 new this<DataViewValueColumn>(),
                 (n, i) => g.values.filter(v => v.source.roles[i])[0]));
         }
 
         private static getColumnSourcesT<T>(dataView: DataView) {
-            var columns = dataView && dataView.metadata && dataView.metadata.columns;
+            const columns = dataView && dataView.metadata && dataView.metadata.columns;
+
             return columns && _.mapValues(
                 new this<T>(), (n, i) => columns.filter(x => x.roles && x.roles[i])[0]);
         }
 
-        //Data Roles
+        // Data Roles
         public Category: T = null;
         public Value: T = null;
         public TargetValue: T = null;

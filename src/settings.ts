@@ -38,7 +38,7 @@ module powerbi.extensibility.visual {
                 "bulletcolor",
                 "axisColor",
                 "unitsColor"
-            ])
+            ]);
         }
 
         public values: ValuesSettings = new ValuesSettings();
@@ -79,10 +79,10 @@ module powerbi.extensibility.visual {
     export class ColorsSettings {
         public mincolor: string = "#8b0000"; // Darkred
         public needsImprovementcolor: string = "#FF0000"; // Red
-        public satisfactorycolor: string = "#FFFF00"; //Yellow
-        public goodcolor: string = "#008000"; //Green
-        public veryGoodcolor: string = "#006400"; //Darkgreen
-        public bulletcolor: string = "#000000"; //Black
+        public satisfactorycolor: string = "#FFFF00"; // Yellow
+        public goodcolor: string = "#008000"; // Green
+        public veryGoodcolor: string = "#006400"; // Darkgreen
+        public bulletcolor: string = "#000000"; // Black
     }
 
     export class AxisSettings {
