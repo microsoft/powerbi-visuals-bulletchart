@@ -25,11 +25,17 @@
  */
 /// <reference path="_references.ts" />
 module powerbi.extensibility.visual.test {
-    import BulletChartData = powerbi.extensibility.visual.test.BulletChartData;
-    import helpers = powerbi.extensibility.utils.test.helpers;
+    // powerbi.extensibility.visual
+    import BulletChartBuilder = powerbi.extensibility.visual.test.BulletChartBuilder;
     import BulletChartOrientation = powerbi.extensibility.visual.BulletChart1443347686880.BulletChartOrientation;
+    import BulletChartData = powerbi.extensibility.visual.test.BulletChartData;
+
+    // powerbi.extensibility.utils.test
+    import helpers = powerbi.extensibility.utils.test.helpers;
     import colorHelper = powerbi.extensibility.utils.test.helpers.color;
-    import bulletChartBuilder = powerbi.extensibility.visual.test.BulletChartBuilder;
+    import RgbColor = powerbi.extensibility.utils.test.helpers.color.RgbColor;
+    import MockISelectionId = powerbi.extensibility.utils.test.mocks.MockISelectionId;
+    import createSelectionId = powerbi.extensibility.utils.test.mocks.createSelectionId;
 
     export function roundTo(value: number | string, round: number): number {
         value = _.isNumber(value) ? value : parseFloat(value);
@@ -56,14 +62,27 @@ module powerbi.extensibility.visual.test {
     }
 
     describe("BulletChart", () => {
-        let visualBuilder: bulletChartBuilder,
+        let visualBuilder: BulletChartBuilder,
             defaultDataViewBuilder: BulletChartData,
-            dataView: DataView;
+            dataView: DataView,
+            previousCreateSelectionId: any;
 
         beforeEach(() => {
-            visualBuilder = new bulletChartBuilder(1000, 500);
+            let selectionIdIndex: number = 0;
+
+            visualBuilder = new BulletChartBuilder(1000, 500);
             defaultDataViewBuilder = new BulletChartData();
             dataView = defaultDataViewBuilder.getDataView();
+
+            previousCreateSelectionId = createSelectionId;
+
+            powerbi.extensibility.utils.test.mocks.createSelectionId = () => { // TODO: It's temporary solution in order to add keys. We'll consider any other way to inject dependencies.
+                return new MockISelectionId((selectionIdIndex++).toString());
+            };
+        });
+
+        afterEach(() => {
+            powerbi.extensibility.utils.test.mocks.createSelectionId = previousCreateSelectionId;
         });
 
         describe("DOM tests", () => {
@@ -75,8 +94,9 @@ module powerbi.extensibility.visual.test {
                 visualBuilder.updateRenderTimeout(dataView, () => {
                     expect(visualBuilder.mainElement.children("g").first().children("text").length)
                         .toBe(dataView.categorical.categories[0].values.length);
-                    expect(visualBuilder.element.find('.bulletChart').css('height')).toBe((visualBuilder.viewport.height + visualBuilder.visual.layout.marginValue.bottom) + 'px');
-                    expect(visualBuilder.element.find('.bulletChart').css('width')).toBe(visualBuilder.viewport.width + 'px');
+                    expect(visualBuilder.element.find('.bulletChart').css('height')).toBe(`${visualBuilder.viewport.height}px`);
+                    expect(visualBuilder.element.find('.bulletChart').css('width')).toBe(`${visualBuilder.viewport.width}px`);
+
                     done();
                 });
             });
@@ -117,26 +137,36 @@ module powerbi.extensibility.visual.test {
                 };
 
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    let valuesLength = dataView.categorical.categories[0].values.length;
-                    let rangeRects = visualBuilder.rangeRects.filter((i, e) => parseFloat($(e).attr('width')) > 0);
-                    let settings = visualBuilder.getSettings();
+                    let valuesLength = dataView.categorical.categories[0].values.length,
+                        rangeRects = visualBuilder.rangeRects.filter((i, e) => parseFloat($(e).attr('width')) > 0),
+                        settings = visualBuilder.getSettings();
 
-                    let badRange = rangeRects.filter((i, e) =>
-                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.mincolor));
-                    let needsImprovementRange = rangeRects.filter((i, e) =>
-                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.needsImprovementcolor));
-                    let satisfactoryRange = rangeRects.filter((i, e) =>
-                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.satisfactorycolor));
-                    let goodRange = rangeRects.filter((i, e) =>
-                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.goodcolor));
-                    let veryGoodRange = rangeRects.filter((i, e) =>
-                        colorHelper.parseColorString($(e).css('fill')) === colorHelper.parseColorString(settings.colors.veryGoodcolor));
+                    let badRange = rangeRects.filter((i, element: Element) => {
+                        return doColorsEqual($(element).css('fill'), settings.colors.mincolor);
+                    });
+
+                    let needsImprovementRange = rangeRects.filter((i, element: Element) => {
+                        return doColorsEqual($(element).css('fill'), settings.colors.needsImprovementcolor);
+                    });
+
+                    let satisfactoryRange = rangeRects.filter((i, element: Element) => {
+                        return doColorsEqual($(element).css('fill'), settings.colors.satisfactorycolor);
+                    });
+
+                    let goodRange = rangeRects.filter((i, element: Element) => {
+                        return doColorsEqual($(element).css('fill'), settings.colors.goodcolor);
+                    });
+
+                    let veryGoodRange = rangeRects.filter((i, element: Element) => {
+                        return doColorsEqual($(element).css('fill'), settings.colors.veryGoodcolor);
+                    });
 
                     expect(badRange.length).toEqual(valuesLength);
                     expect(needsImprovementRange.length).toEqual(valuesLength);
                     expect(satisfactoryRange.length).toEqual(0);
                     expect(goodRange.length).toEqual(valuesLength);
                     expect(veryGoodRange.length).toEqual(valuesLength);
+
                     done();
                 });
             });
@@ -174,7 +204,8 @@ module powerbi.extensibility.visual.test {
 
             it("multi-selection test", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
-                var grouped = visualBuilder.rangeRectsGrouped;
+
+                const grouped = visualBuilder.rangeRectsGrouped;
 
                 let firstBar = grouped[0].first();
                 let secondBar = grouped[1].first();
@@ -315,7 +346,7 @@ module powerbi.extensibility.visual.test {
                         colors: {
                             veryGoodcolor: colorHelper.getSolidColorStructuralObject(color)
                         }
-                    }
+                    };
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(4)).forEach(e =>
@@ -389,4 +420,13 @@ module powerbi.extensibility.visual.test {
             });
         });
     });
+
+    function doColorsEqual(firstColor: string, secondColor: string): boolean {
+        const convertedFirstColor: RgbColor = colorHelper.parseColorString(firstColor),
+            convertedSecondColor: RgbColor = colorHelper.parseColorString(secondColor);
+
+        return convertedFirstColor.B === convertedSecondColor.B
+            && convertedFirstColor.G === convertedSecondColor.G
+            && convertedFirstColor.R === convertedSecondColor.R;
+    }
 }
