@@ -43,12 +43,6 @@
                 }
             ],
             "objects": {
-                "general": {
-                    "displayName": "General",
-                    "properties": {
-                       
-                    }
-                },
                 "values": {
                     "displayName": "Data values",
                     "properties": {
@@ -93,7 +87,7 @@
                             "displayName": "Show",
                             "type": { "bool":  true }
                         },
-                        "labelcolor": {
+                        "labelColor": {
                             "displayName": "color",
                             "description": "Select color for data labels",
                             "type": { "fill": { "solid": {"color": true } } }
@@ -112,12 +106,12 @@
                     "type": {
                       "enumeration": [
                         {
-                          "value": "HorizontalRight",
-                          "displayName": "Horizontal Right"
-                        },
-                        {
                           "value": "HorizontalLeft",
                           "displayName": "Horizontal Left"
+                        },
+                        {
+                          "value": "HorizontalRight",
+                          "displayName": "Horizontal Right"
                         },
                         {
                           "value": "VerticalTop",
@@ -135,27 +129,27 @@
                 "colors": {
                     "displayName": "colors",
                     "properties": {
-                        "mincolor": {
+                        "minColor": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Minimum color"
                         },
-                        "needsImprovementcolor": {
+                        "needsImprovementColor": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Needs Improvement color"
                         },
-                        "satisfactorycolor": {
+                        "satisfactoryColor": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Satisfactory color"
                         },
-                        "goodcolor": {
+                        "goodColor": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Good color"
                         },
-                        "veryGoodcolor": {
+                        "veryGoodColor": {
                             "type": { "fill": { "solid": { "color": true } } },
                           "displayName": "Very Good color"
                         },
-                        "bulletcolor": {
+                        "bulletColor": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Bullet color"
                         }
@@ -168,7 +162,7 @@
                             "displayName": "Axis",
                             "type": { "bool":  true }
                         },
-                        "axiscolor": {
+                        "axisColor": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Axis color"
                         },
@@ -176,7 +170,7 @@
                             "type": { "text": true },
                             "displayName": "Measure Units"
                         },
-                        "unitscolor": {
+                        "unitsColor": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Units color"
                         }

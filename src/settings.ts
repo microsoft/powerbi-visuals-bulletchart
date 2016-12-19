@@ -25,17 +25,17 @@
  */
 
 module powerbi.extensibility.visual {
-    import SettingsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
+    import DataViewObjectsParser  = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 
-    export class BulletchartSettings extends SettingsParser {
+    export class BulletchartSettings extends DataViewObjectsParser {
         constructor() {
             super([
-                "mincolor",
-                "needsImprovementcolor",
-                "satisfactorycolor",
-                "goodcolor",
-                "veryGoodcolor",
-                "bulletcolor",
+                "minColor",
+                "needsImprovementColor",
+                "satisfactoryColor",
+                "goodColor",
+                "veryGoodColor",
+                "bulletColor",
                 "axisColor",
                 "unitsColor"
             ]);
@@ -77,12 +77,12 @@ module powerbi.extensibility.visual {
     }
 
     export class ColorsSettings {
-        public mincolor: string = "#8b0000"; // Darkred
-        public needsImprovementcolor: string = "#FF0000"; // Red
-        public satisfactorycolor: string = "#FFFF00"; // Yellow
-        public goodcolor: string = "#008000"; // Green
-        public veryGoodcolor: string = "#006400"; // Darkgreen
-        public bulletcolor: string = "#000000"; // Black
+        public minColor: string = "#8b0000"; // Darkred
+        public needsImprovementColor: string = "#FF0000"; // Red
+        public satisfactoryColor: string = "#FFFF00"; // Yellow
+        public goodColor: string = "#008000"; // Green
+        public veryGoodColor: string = "#006400"; // Darkgreen
+        public bulletColor: string = "#000000"; // Black
     }
 
     export class AxisSettings {

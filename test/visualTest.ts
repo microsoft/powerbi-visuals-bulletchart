@@ -36,6 +36,7 @@ module powerbi.extensibility.visual.test {
     import RgbColor = powerbi.extensibility.utils.test.helpers.color.RgbColor;
     import MockISelectionId = powerbi.extensibility.utils.test.mocks.MockISelectionId;
     import createSelectionId = powerbi.extensibility.utils.test.mocks.createSelectionId;
+    import fromPointToPixel = powerbi.extensibility.utils.type.PixelConverter.fromPointToPixel;
 
     export function roundTo(value: number | string, round: number): number {
         value = _.isNumber(value) ? value : parseFloat(value);
@@ -45,7 +46,7 @@ module powerbi.extensibility.visual.test {
     export function convertAnySizeToPixel(size: string, round?: number): number {
         let result: number;
         switch (_.takeRight(size, 2).join("").toLowerCase()) {
-            case "pt": result = powerbi.extensibility.utils.type.PixelConverter.fromPointToPixel(parseFloat(size)); break;
+            case "pt": result = fromPointToPixel(parseFloat(size)); break;
             case "px": result = parseFloat(size); break;
         }
 
@@ -137,28 +138,28 @@ module powerbi.extensibility.visual.test {
                 };
 
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    let valuesLength = dataView.categorical.categories[0].values.length,
-                        rangeRects = visualBuilder.rangeRects.filter((i, e) => parseFloat($(e).attr('width')) > 0),
-                        settings = visualBuilder.getSettings();
+                    let valuesLength: number = dataView.categorical.categories[0].values.length,
+                        rangeRects: JQuery = visualBuilder.rangeRects.filter((i, e) => parseFloat($(e).attr('width')) > 0),
+                        settings: BulletChart1443347686880.BulletchartSettings = visualBuilder.getSettings();
 
-                    let badRange = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css('fill'), settings.colors.mincolor);
+                    let badRange: JQuery = rangeRects.filter((i, element: Element) => {
+                        return doColorsEqual($(element).css('fill'), settings.colors.minColor);
                     });
 
-                    let needsImprovementRange = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css('fill'), settings.colors.needsImprovementcolor);
+                    let needsImprovementRange: JQuery = rangeRects.filter((i, element: Element) => {
+                        return doColorsEqual($(element).css('fill'), settings.colors.needsImprovementColor);
                     });
 
-                    let satisfactoryRange = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css('fill'), settings.colors.satisfactorycolor);
+                    let satisfactoryRange: JQuery = rangeRects.filter((i, element: Element) => {
+                        return doColorsEqual($(element).css('fill'), settings.colors.satisfactoryColor);
                     });
 
-                    let goodRange = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css('fill'), settings.colors.goodcolor);
+                    let goodRange: JQuery = rangeRects.filter((i, element: Element) => {
+                        return doColorsEqual($(element).css('fill'), settings.colors.goodColor);
                     });
 
-                    let veryGoodRange = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css('fill'), settings.colors.veryGoodcolor);
+                    let veryGoodRange: JQuery = rangeRects.filter((i, element: Element) => {
+                        return doColorsEqual($(element).css('fill'), settings.colors.veryGoodColor);
                     });
 
                     expect(badRange.length).toEqual(valuesLength);
@@ -191,7 +192,7 @@ module powerbi.extensibility.visual.test {
                 };
 
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    let ticks = visualBuilder.axis.first().children("g.tick"),
+                    let ticks: JQuery = visualBuilder.axis.first().children("g.tick"),
                         ticksLengthSum = _.sumBy(
                             ticks.toArray(),
                             (e: Element) => e.getBoundingClientRect().width);
@@ -207,9 +208,9 @@ module powerbi.extensibility.visual.test {
 
                 const grouped = visualBuilder.rangeRectsGrouped;
 
-                let firstBar = grouped[0].first();
-                let secondBar = grouped[1].first();
-                let thirdBar = grouped[2].first();
+                let firstBar: JQuery = grouped[0].first();
+                let secondBar: JQuery = grouped[1].first();
+                let thirdBar: JQuery = grouped[2].first();
 
                 helpers.clickElement(firstBar);
                 helpers.clickElement(secondBar, true);
@@ -243,7 +244,7 @@ module powerbi.extensibility.visual.test {
                 });
 
                 it("font size", () => {
-                    let fontSize = 25;
+                    let fontSize:number = 25;
 
                     (dataView.metadata.objects as any).labels.fontSize = fontSize;
 
@@ -288,7 +289,7 @@ module powerbi.extensibility.visual.test {
 
                     dataView.metadata.objects = {
                         colors: {
-                            mincolor: colorHelper.getSolidColorStructuralObject(color)
+                            minColor: colorHelper.getSolidColorStructuralObject(color)
                         }
                     };
 
@@ -302,7 +303,7 @@ module powerbi.extensibility.visual.test {
 
                     dataView.metadata.objects = {
                         colors: {
-                            needsImprovementcolor: colorHelper.getSolidColorStructuralObject(color)
+                            needsImprovementColor: colorHelper.getSolidColorStructuralObject(color)
                         }
                     };
 
@@ -316,7 +317,7 @@ module powerbi.extensibility.visual.test {
 
                     dataView.metadata.objects = {
                         colors: {
-                            satisfactorycolor: colorHelper.getSolidColorStructuralObject(color)
+                            satisfactoryColor: colorHelper.getSolidColorStructuralObject(color)
                         }
                     };
 
@@ -330,7 +331,7 @@ module powerbi.extensibility.visual.test {
 
                     dataView.metadata.objects = {
                         colors: {
-                            goodcolor: colorHelper.getSolidColorStructuralObject(color)
+                            goodColor: colorHelper.getSolidColorStructuralObject(color)
                         }
                     };
 
@@ -344,7 +345,7 @@ module powerbi.extensibility.visual.test {
 
                     dataView.metadata.objects = {
                         colors: {
-                            veryGoodcolor: colorHelper.getSolidColorStructuralObject(color)
+                            veryGoodColor: colorHelper.getSolidColorStructuralObject(color)
                         }
                     };
 
@@ -358,7 +359,7 @@ module powerbi.extensibility.visual.test {
 
                     dataView.metadata.objects = {
                         colors: {
-                            bulletcolor: colorHelper.getSolidColorStructuralObject(color)
+                            bulletColor: colorHelper.getSolidColorStructuralObject(color)
                         }
                     };
 

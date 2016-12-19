@@ -36,24 +36,24 @@ module powerbi.extensibility.visual {
             return this.getColumnSourcesT<DataViewMetadataColumn>(dataView);
         }
 
-        public static getTableValues(dataView: DataView) {
-            const table = dataView && dataView.table,
+        public static getTableValues(dataView: DataView):BulletChartColumns<any[]> {
+            const table: DataViewTable = dataView && dataView.table,
                 columns = this.getColumnSourcesT<any[]>(dataView);
 
             return columns && table && _.mapValues(
                 columns, (n: DataViewMetadataColumn, i) => n && table.rows.map(row => row[n.index]));
         }
 
-        public static getTableRows(dataView: DataView) {
-            const table = dataView && dataView.table,
+        public static getTableRows(dataView: DataView): BulletChartColumns<any[]>[] {
+            const table: DataViewTable  = dataView && dataView.table,
                 columns = this.getColumnSourcesT<any[]>(dataView);
 
             return columns && table && table.rows.map(row =>
                 _.mapValues(columns, (n: DataViewMetadataColumn, i) => n && row[n.index]));
         }
 
-        public static getCategoricalValues(dataView: DataView) {
-            const categorical = dataView && dataView.categorical,
+        public static getCategoricalValues(dataView: DataView): BulletChartColumns<any[]> {
+            const categorical: DataViewCategorical = dataView && dataView.categorical,
                 categories = categorical && categorical.categories || [],
                 values = categorical && categorical.values || <DataViewValueColumns>[],
                 series = categorical && values.source && this.getSeriesValues(dataView);
@@ -64,13 +64,13 @@ module powerbi.extensibility.visual {
                 || values.source && values.source.roles && values.source.roles[i] && series);
         }
 
-        public static getSeriesValues(dataView: DataView) {
+        public static getSeriesValues(dataView: DataView):any[] {
             return dataView && dataView.categorical && dataView.categorical.values
                 && dataView.categorical.values.map(x => converterHelper.getSeriesName(x.source));
         }
 
-        public static getCategoricalColumns(dataView: DataView) {
-            const categorical = dataView && dataView.categorical,
+        public static getCategoricalColumns(dataView: DataView): BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns> {
+            const categorical: DataViewCategorical = dataView && dataView.categorical,
                 categories = categorical && categorical.categories || [],
                 values = categorical && categorical.values || <DataViewValueColumns>[];
 
@@ -95,8 +95,8 @@ module powerbi.extensibility.visual {
                 });
         }
 
-        public static getGroupedValueColumns(dataView: DataView) {
-            const categorical = dataView && dataView.categorical,
+        public static getGroupedValueColumns(dataView: DataView): BulletChartColumns<DataViewValueColumn>[] {
+            const categorical: DataViewCategorical  = dataView && dataView.categorical,
                 values = categorical && categorical.values,
                 grouped = values && values.grouped();
 
@@ -105,8 +105,8 @@ module powerbi.extensibility.visual {
                 (n, i) => g.values.filter(v => v.source.roles[i])[0]));
         }
 
-        private static getColumnSourcesT<T>(dataView: DataView) {
-            const columns = dataView && dataView.metadata && dataView.metadata.columns;
+        private static getColumnSourcesT<T>(dataView: DataView): BulletChartColumns<T> {
+            const columns: DataViewMetadataColumn[] = dataView && dataView.metadata && dataView.metadata.columns;
 
             return columns && _.mapValues(
                 new this<T>(), (n, i) => columns.filter(x => x.roles && x.roles[i])[0]);
