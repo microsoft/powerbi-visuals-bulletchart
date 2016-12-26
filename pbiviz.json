@@ -1,0 +1,38 @@
+{
+  "visual": {
+    "name": "BulletChart",
+    "displayName": "Bullet Chart",
+    "guid": "BulletChart1443347686880",
+    "visualClassName": "BulletChart",
+    "version": "1.4.4",
+    "description": "A bullet chart that includes four orientations and a few customization options. Use to feature a single measure against a qualitative range.",
+    "supportUrl": "http://community.powerbi.com",
+    "gitHubUrl": "https://github.com/Microsoft/powerbi-visuals-bulletchart"
+  },
+  "apiVersion": "1.3.0",
+  "author": {
+    "name": "Microsoft",
+    "email": "pbicvsupport@microsoft.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "externalJS": [
+    "node_modules/jquery/dist/jquery.min.js",
+    "node_modules/lodash/lodash.min.js",
+    "node_modules/d3/d3.js",
+    "node_modules/powerbi-visuals-utils-typeutils/lib/index.js",
+    "node_modules/moment/min/moment.min.js",
+    "node_modules/globalize/lib/globalize.js",
+    "node_modules/globalize/lib/cultures/globalize.culture.en-US.js",
+    "node_modules/powerbi-visuals-utils-svgutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-dataviewutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-formattingutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-interactivityutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-chartutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-dataviewutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-tooltiputils/lib/index.js"
+  ],
+  "style": "style/bulletChart.less",
+  "capabilities": "capabilities.json"
+}

@@ -1,0 +1,214 @@
+{
+            "dataRoles": [
+                {
+                    "name": "Category",
+                    "kind": "Grouping",
+                    "displayName": "Category"
+                }, {
+                    "name": "Value",
+                    "kind": "Measure",
+                    "displayName": "Value"
+                }, {
+                    "name": "TargetValue",
+                    "kind": "Measure",
+                    "displayName": "Target Value"
+                }, {
+                    "name": "Minimum",
+                    "kind": "Measure",
+                    "displayName": "Minimum"
+                }, {
+                    "name": "NeedsImprovement",
+                    "kind": "Measure",
+                    "displayName": "Needs Improvement"
+                }, {
+                    "name": "Satisfactory",
+                    "kind": "Measure",
+                    "displayName": "Satisfactory"
+                }, {
+                    "name": "Good",
+                    "kind": "Measure",
+                    "displayName": "Good"
+                }, {
+                    "name": "VeryGood",
+                    "kind": "Measure",
+                    "displayName": "Very Good"
+                }, {
+                    "name": "Maximum",
+                    "kind": "Measure",
+                    "displayName": "Maximum"
+                }, {
+                    "name": "TargetValue2",
+                    "kind": "Measure",
+                    "displayName": "Target Value 2"
+                }
+            ],
+            "objects": {
+                "values": {
+                    "displayName": "Data values",
+                    "properties": {
+                        "targetValue": {
+                            "displayName": "Target Value",
+                            "type": { "numeric": true }
+                        },
+                        "targetValue2": {
+                            "displayName": "Target Value 2",
+                            "type": { "numeric": true }
+                        },
+                        "minimumPercent": {
+                            "displayName": "Minimum %",
+                            "type": { "numeric": true }
+                        },
+                        "needsImprovementPercent": {
+                            "displayName": "Needs Improvement %",
+                            "type": { "numeric": true }
+                        },
+                        "satisfactoryPercent": {
+                            "displayName": "Satisfactory %",
+                            "type": { "numeric": true }
+                        },
+                        "goodPercent": {
+                            "displayName": "Good %",
+                            "type": { "numeric": true }
+                        },
+                        "veryGoodPercent": {
+                            "displayName": "Very Good %",
+                            "type": { "numeric": true }
+                        },
+                        "maximumPercent": {
+                            "displayName": "Maximum %",
+                            "type": { "numeric": true }
+                        }
+                    }
+                },
+                "labels": {
+                    "displayName": "Category labels",
+                    "properties": {
+                        "show": {
+                            "displayName": "Show",
+                            "type": { "bool":  true }
+                        },
+                        "labelColor": {
+                            "displayName": "color",
+                            "description": "Select color for data labels",
+                            "type": { "fill": { "solid": {"color": true } } }
+                        },
+                        "fontSize": {
+                            "displayName": "Text Size",
+                            "type": { "formatting": { "fontSize": true } }
+                        }
+                    }
+                },
+              "orientation": {
+                "displayName": "Orientation",
+                "properties": {
+                  "orientation": {
+                    "displayName": "Orientation",
+                    "type": {
+                      "enumeration": [
+                        {
+                          "value": "HorizontalLeft",
+                          "displayName": "Horizontal Left"
+                        },
+                        {
+                          "value": "HorizontalRight",
+                          "displayName": "Horizontal Right"
+                        },
+                        {
+                          "value": "VerticalTop",
+                          "displayName": "VerticalTop"
+                        },
+                        {
+                          "value": "VerticalBottom",
+                          "displayName": "Vertical Bottom"
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+                "colors": {
+                    "displayName": "colors",
+                    "properties": {
+                        "minColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Minimum color"
+                        },
+                        "needsImprovementColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Needs Improvement color"
+                        },
+                        "satisfactoryColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Satisfactory color"
+                        },
+                        "goodColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Good color"
+                        },
+                        "veryGoodColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                          "displayName": "Very Good color"
+                        },
+                        "bulletColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Bullet color"
+                        }
+                    }
+                },
+                "axis": {
+                    "displayName": "Axis",
+                    "properties": {
+                        "axis": {
+                            "displayName": "Axis",
+                            "type": { "bool":  true }
+                        },
+                        "axisColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Axis color"
+                        },
+                        "measureUnits": {
+                            "type": { "text": true },
+                            "displayName": "Measure Units"
+                        },
+                        "unitsColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Units color"
+                        }
+                    }
+                }
+            },
+            "dataViewMappings": [{
+                "conditions": [
+                    {
+                        "Category": { "max": 1 }, "Value": { "max": 1 }, "TargetValue": { "max": 1 }, "Minimum": { "max": 1 }, "NeedsImprovement": { "max": 1 },
+                        "Satisfactory": { "max": 1 }, "Good": { "max": 1 }, "VeryGood": { "max": 1 }, "Maximum": { "max": 1 }, "TargetValue2": { "max": 1 }
+                    }
+                ],
+                "categorical": {
+                    "categories": {
+                        "for": { "in": "Category" },
+                        "dataReductionAlgorithm": { "top": {} }
+                    },
+                    "values": {
+                        "select": [
+                            { "bind": { "to": "Value" } },
+                            { "bind": { "to": "TargetValue" } },
+                            { "bind": { "to": "TargetValue2" } },
+                            { "bind": { "to": "Minimum" } },
+                            { "bind": { "to": "NeedsImprovement" } },
+                            { "bind": { "to": "Satisfactory" } },
+                            { "bind": { "to": "Good" } },
+                            { "bind": { "to": "VeryGood" } },
+                            { "bind": { "to": "Maximum" } }
+                        ]
+                    }
+                }
+            }],
+            "supportsHighlight": true,
+            "sorting": {
+                "default": {}
+            },
+            "drilldown": {
+                "roles": ["Category"]
+            }
+}
