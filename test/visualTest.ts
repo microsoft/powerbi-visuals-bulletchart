@@ -23,7 +23,9 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
+
 /// <reference path="_references.ts" />
+
 module powerbi.extensibility.visual.test {
     // powerbi.extensibility.visual
     import BulletChartBuilder = powerbi.extensibility.visual.test.BulletChartBuilder;
@@ -95,8 +97,8 @@ module powerbi.extensibility.visual.test {
                 visualBuilder.updateRenderTimeout(dataView, () => {
                     expect(visualBuilder.mainElement.children("g").first().children("text").length)
                         .toBe(dataView.categorical.categories[0].values.length);
-                    expect(visualBuilder.element.find('.bulletChart').css('height')).toBe(`${visualBuilder.viewport.height}px`);
-                    expect(visualBuilder.element.find('.bulletChart').css('width')).toBe(`${visualBuilder.viewport.width}px`);
+                    expect(visualBuilder.element.find(".bulletChart").css("height")).toBe(`${visualBuilder.viewport.height}px`);
+                    expect(visualBuilder.element.find(".bulletChart").css("width")).toBe(`${visualBuilder.viewport.width}px`);
 
                     done();
                 });
@@ -107,7 +109,7 @@ module powerbi.extensibility.visual.test {
                 dataView = defaultDataViewBuilder.getDataView();
 
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    expect(visualBuilder.element.find('.rect').length).toBe(0);
+                    expect(visualBuilder.element.find(".rect").length).toBe(0);
                     done();
                 });
             });
@@ -139,27 +141,27 @@ module powerbi.extensibility.visual.test {
 
                 visualBuilder.updateRenderTimeout(dataView, () => {
                     let valuesLength: number = dataView.categorical.categories[0].values.length,
-                        rangeRects: JQuery = visualBuilder.rangeRects.filter((i, e) => parseFloat($(e).attr('width')) > 0),
+                        rangeRects: JQuery = visualBuilder.rangeRects.filter((i, e) => parseFloat($(e).attr("width")) > 0),
                         settings: BulletChart1443347686880.BulletchartSettings = visualBuilder.getSettings();
 
                     let badRange: JQuery = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css('fill'), settings.colors.minColor);
+                        return doColorsEqual($(element).css("fill"), settings.colors.minColor);
                     });
 
                     let needsImprovementRange: JQuery = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css('fill'), settings.colors.needsImprovementColor);
+                        return doColorsEqual($(element).css("fill"), settings.colors.needsImprovementColor);
                     });
 
                     let satisfactoryRange: JQuery = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css('fill'), settings.colors.satisfactoryColor);
+                        return doColorsEqual($(element).css("fill"), settings.colors.satisfactoryColor);
                     });
 
                     let goodRange: JQuery = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css('fill'), settings.colors.goodColor);
+                        return doColorsEqual($(element).css("fill"), settings.colors.goodColor);
                     });
 
                     let veryGoodRange: JQuery = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css('fill'), settings.colors.veryGoodColor);
+                        return doColorsEqual($(element).css("fill"), settings.colors.veryGoodColor);
                     });
 
                     expect(badRange.length).toEqual(valuesLength);
@@ -244,13 +246,13 @@ module powerbi.extensibility.visual.test {
                 });
 
                 it("font size", () => {
-                    let fontSize:number = 25;
+                    let fontSize: number = 25;
 
                     (dataView.metadata.objects as any).labels.fontSize = fontSize;
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.categoryLabels.toArray().map($).forEach(e =>
-                        assertSizeMatch(e.attr('font-size'), fontSize + "pt"));
+                        assertSizeMatch(e.attr("font-size"), fontSize + "pt"));
                 });
             });
 
@@ -295,7 +297,7 @@ module powerbi.extensibility.visual.test {
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(0)).forEach(e =>
-                        colorHelper.assertColorsMatch(e.css('fill'), color));
+                        colorHelper.assertColorsMatch(e.css("fill"), color));
                 });
 
                 it("needs improvement", () => {
@@ -309,7 +311,7 @@ module powerbi.extensibility.visual.test {
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(1)).forEach(e =>
-                        colorHelper.assertColorsMatch(e.css('fill'), color));
+                        colorHelper.assertColorsMatch(e.css("fill"), color));
                 });
 
                 it("satisfactory", () => {
@@ -323,7 +325,7 @@ module powerbi.extensibility.visual.test {
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(2)).forEach(e =>
-                        colorHelper.assertColorsMatch(e.css('fill'), color));
+                        colorHelper.assertColorsMatch(e.css("fill"), color));
                 });
 
                 it("good", () => {
@@ -337,7 +339,7 @@ module powerbi.extensibility.visual.test {
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(3)).forEach(e =>
-                        colorHelper.assertColorsMatch(e.css('fill'), color));
+                        colorHelper.assertColorsMatch(e.css("fill"), color));
                 });
 
                 it("very good", () => {
@@ -351,7 +353,7 @@ module powerbi.extensibility.visual.test {
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.rangeRectsGrouped.map(e => e.eq(4)).forEach(e =>
-                        colorHelper.assertColorsMatch(e.css('fill'), color));
+                        colorHelper.assertColorsMatch(e.css("fill"), color));
                 });
 
                 it("bullet", () => {
@@ -365,7 +367,7 @@ module powerbi.extensibility.visual.test {
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
                     visualBuilder.valueRects.toArray().map($).forEach(e =>
-                        colorHelper.assertColorsMatch(e.css('fill'), color));
+                        colorHelper.assertColorsMatch(e.css("fill"), color));
                 });
             });
 
@@ -383,7 +385,7 @@ module powerbi.extensibility.visual.test {
                     (dataView.metadata.objects as any).axis.axis = false;
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
-                    expect(visualBuilder.element.find('.axis').length).toBe(0);
+                    expect(visualBuilder.element.find(".axis").length).toBe(0);
                 });
 
                 it("axis color", () => {
@@ -391,9 +393,9 @@ module powerbi.extensibility.visual.test {
                     (dataView.metadata.objects as any).axis.axisColor = colorHelper.getSolidColorStructuralObject(color);
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
-                    expect(visualBuilder.element.find('.axis')).toBeDefined();
-                    colorHelper.assertColorsMatch(visualBuilder.axis.css('fill'), color);
-                    colorHelper.assertColorsMatch(visualBuilder.axis.find('line').css('stroke'), color);
+                    expect(visualBuilder.element.find(".axis")).toBeDefined();
+                    colorHelper.assertColorsMatch(visualBuilder.axis.css("fill"), color);
+                    colorHelper.assertColorsMatch(visualBuilder.axis.find("line").css("stroke"), color);
                 });
 
                 it("measure units", () => {
@@ -416,7 +418,7 @@ module powerbi.extensibility.visual.test {
                     visualBuilder.updateFlushAllD3Transitions(dataView);
 
                     visualBuilder.measureUnits.toArray().map($).forEach(e =>
-                        colorHelper.assertColorsMatch(e.attr('fill'), color));
+                        colorHelper.assertColorsMatch(e.attr("fill"), color));
                 });
             });
         });

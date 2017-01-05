@@ -36,7 +36,7 @@ module powerbi.extensibility.visual {
             return this.getColumnSourcesT<DataViewMetadataColumn>(dataView);
         }
 
-        public static getTableValues(dataView: DataView):BulletChartColumns<any[]> {
+        public static getTableValues(dataView: DataView): BulletChartColumns<any[]> {
             const table: DataViewTable = dataView && dataView.table,
                 columns = this.getColumnSourcesT<any[]>(dataView);
 
@@ -64,7 +64,7 @@ module powerbi.extensibility.visual {
                 || values.source && values.source.roles && values.source.roles[i] && series);
         }
 
-        public static getSeriesValues(dataView: DataView):any[] {
+        public static getSeriesValues(dataView: DataView): any[] {
             return dataView && dataView.categorical && dataView.categorical.values
                 && dataView.categorical.values.map(x => converterHelper.getSeriesName(x.source));
         }

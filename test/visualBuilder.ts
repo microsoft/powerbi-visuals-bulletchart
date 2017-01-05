@@ -81,7 +81,7 @@ module powerbi.extensibility.visual.test {
         }
 
         public get rangeRectsGrouped(): JQuery[] {
-            let groupBy = this.isVertical ? 'x' : 'y',
+            let groupBy = this.isVertical ? "x" : "y",
                 grouped = _.groupBy(this.rangeRects.toArray(), e => $(e).attr(groupBy)),
                 groups = _.keys(grouped).map(x => $(grouped[x]));
 
