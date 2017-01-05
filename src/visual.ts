@@ -64,7 +64,6 @@ module powerbi.extensibility.visual {
     import TooltipEventArgs = powerbi.extensibility.utils.tooltip.TooltipEventArgs;
     import ITooltipServiceWrapper = powerbi.extensibility.utils.tooltip.ITooltipServiceWrapper;
 
-
     export class BulletChart implements IVisual {
         private static ScrollBarSize: number = 22;
         private static SpaceRequiredForBarVertically: number = 100;
@@ -169,7 +168,7 @@ module powerbi.extensibility.visual {
                 ? (options.viewport.height - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value20 - BulletChart.YMarginVertical * BulletChart.value2)
                 : (options.viewport.width - BulletChart.MaxLabelWidth - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
             bulletModel.hasHighlights = !!(categorical.Value[0].values.length > BulletChart.zeroValue && categorical.Value[0].highlights);
-            
+
             let valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
             let categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
             let length: number = categoricalValues.Value.length;
@@ -181,7 +180,7 @@ module powerbi.extensibility.visual {
                         BulletChart.getTextProperties(category, settings.labels.fontSize),
                         BulletChart.MaxLabelWidth);
                 }
-          
+
                 let toolTipItems: BulletChartTooltipItem[] = [],
                     value = categoricalValues.Value[idx] || BulletChart.zeroValue;
 
@@ -243,7 +242,7 @@ module powerbi.extensibility.visual {
                     .domain([minimum, maximum])
                     .range(verticalOrientation ? [bulletModel.viewportLength, 0] : [0, bulletModel.viewportLength]));
 
-                let firstScale:number = scale(minimum);
+                let firstScale: number = scale(minimum);
                 let secondScale: number = scale(needsImprovement);
                 let thirdScale: number = scale(satisfactory);
                 let fourthScale: number = scale(good);
@@ -256,7 +255,7 @@ module powerbi.extensibility.visual {
                     fourthColor: string = settings.colors.goodColor,
                     lastColor: string = settings.colors.veryGoodColor;
 
-                let highlight:any = categorical.Value[0].highlights && categorical.Value[0].highlights[idx] !== null;
+                let highlight: any = categorical.Value[0].highlights && categorical.Value[0].highlights[idx] !== null;
                 let selectionIdBuilder = () => categorical.Category
                     ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx)
                     : visualHost.createSelectionIdBuilder();
@@ -401,6 +400,7 @@ module powerbi.extensibility.visual {
             tooltipInfo: BulletChartTooltipItem[],
             selectionIdBuilder: ISelectionIdBuilder,
             highlight: boolean): void {
+
             if (!isNaN(start) && !isNaN(end))
                 collection.push({
                     barIndex: barIndex,
@@ -415,21 +415,28 @@ module powerbi.extensibility.visual {
                 });
         }
 
-        private static createTooltipInfo(toolTipItems: BulletChartTooltipItem[]): VisualTooltipDataItem[] {
-            return toolTipItems.map((toolTipItems: BulletChartTooltipItem) => {
-                let metadata: DataViewMetadataColumn = toolTipItems.metadata.source,
-                    formatString: string = valueFormatter.getFormatStringByColumn(metadata);
+        public static createTooltipInfo(tooltipItems: BulletChartTooltipItem[]): VisualTooltipDataItem[] {
+            const tooltipDataItems: VisualTooltipDataItem[] = [];
 
-                return {
-                    displayName: metadata.displayName,
-                    value: valueFormatter.format(toolTipItems.value, formatString)
-                } as VisualTooltipDataItem;
+            tooltipItems.forEach((tooltipItem: BulletChartTooltipItem) => {
+                if (tooltipItem && tooltipItem.metadata) {
+                    let metadata: DataViewMetadataColumn = tooltipItem.metadata.source,
+                        formatString: string = valueFormatter.getFormatStringByColumn(metadata);
+
+                    tooltipDataItems.push({
+                        displayName: metadata.displayName,
+                        value: valueFormatter.format(tooltipItem.value, formatString)
+                    });
+                }
             });
+
+            return tooltipDataItems;
         }
 
         private static bulletChartClassed: string = "bulletChart";
         private static dragResizeDisabled: string = "drag-resize-disabled";
-        private static bulletScrollRegion: string = 'bullet-scroll-region'
+        private static bulletScrollRegion: string = "bullet-scroll-region";
+
         constructor(options: VisualConstructorOptions) {
             this.tooltipServiceWrapper = tooltip.createTooltipServiceWrapper(
                 options.host.tooltipService,
@@ -446,16 +453,16 @@ module powerbi.extensibility.visual {
             this.hostService = options.host;
 
             this.bulletBody = body
-                .append('div')
+                .append("div")
                 .classed(BulletChart.bulletChartClassed, true)
                 .attr(BulletChart.dragResizeDisabled, true);
 
-            this.scrollContainer = this.bulletBody.append('svg')
+            this.scrollContainer = this.bulletBody.append("svg")
                 .classed(BulletChart.bulletScrollRegion, true);
             this.clearCatcher = appendClearCatcher(this.scrollContainer);
 
-            this.labelGraphicsContext = this.scrollContainer.append('g');
-            this.bulletGraphicsContext = this.scrollContainer.append('g');
+            this.labelGraphicsContext = this.scrollContainer.append("g");
+            this.bulletGraphicsContext = this.scrollContainer.append("g");
 
             this.behavior = new BulletWebBehavior();
 
@@ -467,7 +474,7 @@ module powerbi.extensibility.visual {
             if (!options.dataViews || !options.dataViews[0]) {
                 return;
             }
-            let dataView:DataView = options.dataViews[0];
+            let dataView: DataView = options.dataViews[0];
             this.layout.viewport = options.viewport;
             let data: BulletChartModel = BulletChart.converter(dataView, options, this.hostService);
 
@@ -486,8 +493,8 @@ module powerbi.extensibility.visual {
             }
 
             this.bulletBody.style({
-                'height': PixelConverter.toString(this.layout.viewportIn.height),
-                'width': PixelConverter.toString(this.layout.viewportIn.width),
+                "height": PixelConverter.toString(this.layout.viewportIn.height),
+                "width": PixelConverter.toString(this.layout.viewportIn.width),
             });
             if (this.vertical) {
                 this.scrollContainer.attr({
@@ -496,9 +503,9 @@ module powerbi.extensibility.visual {
                 });
             }
             else {
-                
+
                 this.scrollContainer.attr({
-                    height: (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)) + 'px',
+                    height: (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)) + "px",
                     width: PixelConverter.toString(this.viewportScroll.width)
                 });
             }
@@ -518,11 +525,11 @@ module powerbi.extensibility.visual {
             this.labelGraphicsContext.selectAll("text").remove();
             this.bulletGraphicsContext.selectAll("rect").remove();
             this.bulletGraphicsContext.selectAll("text").remove();
-            this.bulletGraphicsContext.selectAll('axis').remove();
-            this.bulletGraphicsContext.selectAll('path').remove();
-            this.bulletGraphicsContext.selectAll('line').remove();
-            this.bulletGraphicsContext.selectAll('tick').remove();
-            this.bulletGraphicsContext.selectAll('g').remove();
+            this.bulletGraphicsContext.selectAll("axis").remove();
+            this.bulletGraphicsContext.selectAll("path").remove();
+            this.bulletGraphicsContext.selectAll("line").remove();
+            this.bulletGraphicsContext.selectAll("tick").remove();
+            this.bulletGraphicsContext.selectAll("g").remove();
             this.scrollContainer.attr({ width: PixelConverter.toString(0), height: PixelConverter.toString(0) });
         }
 
@@ -548,34 +555,34 @@ module powerbi.extensibility.visual {
         private static value1: number = 1;
         private static value4: number = 4;
         private static value12: number = 12;
-        private setUpBulletsHorizontally(bulletBody: d3.Selection<any>, model: BulletChartModel, reveresed: boolean):void {
-            let bars:BarData[] = model.bars;
+        private setUpBulletsHorizontally(bulletBody: d3.Selection<any>, model: BulletChartModel, reveresed: boolean): void {
+            let bars: BarData[] = model.bars;
             let rects: BarRect[] = model.barRects;
             let valueRects: BarValueRect[] = model.valueRects;
             let targetValues: TargetValue[] = model.targetValues;
-            let barSelection: any = this.labelGraphicsContext.selectAll('text').data(bars, (d: BarData) => d.key);
-            let rectSelection: any = this.bulletGraphicsContext.selectAll('rect.range').data(rects, (d: BarRect) => d.key);
+            let barSelection: any = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
+            let rectSelection: any = this.bulletGraphicsContext.selectAll("rect.range").data(rects, (d: BarRect) => d.key);
             // Draw bullets
-            let bullets: d3.Selection<any> = rectSelection.enter().append('rect').attr({
-                'x': ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))),
-                'y': ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y - BulletChart.BulletSize / BulletChart.value2)),
-                'width': ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)),
-                'height': BulletChart.BulletSize,
-            }).classed('range', true).style({
-                'fill': (d: BarRect) => d.fill
+            let bullets: d3.Selection<any> = rectSelection.enter().append("rect").attr({
+                "x": ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))),
+                "y": ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y - BulletChart.BulletSize / BulletChart.value2)),
+                "width": ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)),
+                "height": BulletChart.BulletSize,
+            }).classed("range", true).style({
+                "fill": (d: BarRect) => d.fill
             });
 
             rectSelection.exit();
 
             // Draw value rects
-            let valueSelection: any = this.bulletGraphicsContext.selectAll('rect.value').data(valueRects, (d: BarValueRect) => d.key);
-            valueSelection.enter().append('rect').attr({
-                'x': ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))),
-                'y': ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y - BulletChart.BulletSize / BulletChart.value8)),
-                'width': ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.end - d.start)),
-                'height': BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4,
-            }).classed('value', true).style({
-                'fill': (d: BarValueRect) => d.fill
+            let valueSelection: any = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
+            valueSelection.enter().append("rect").attr({
+                "x": ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))),
+                "y": ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y - BulletChart.BulletSize / BulletChart.value8)),
+                "width": ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.end - d.start)),
+                "height": BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4,
+            }).classed("value", true).style({
+                "fill": (d: BarValueRect) => d.fill
             });
 
             valueSelection.exit();
@@ -593,24 +600,24 @@ module powerbi.extensibility.visual {
 
             // Draw axes
             if (model.settings.axis.axis) {
-                // Using var instead of let since you can't pass let parameters to functions inside loops.
+                // Using var instead of let since you can"t pass let parameters to functions inside loops.
                 // needs to be changed to let when typescript 1.8 comes out.
                 for (let idx: number = 0; idx < bars.length; idx++) {
                     let bar: BarData = bars[idx],
                         barGroup = this.bulletGraphicsContext.append("g");
 
                     barGroup.append("g").attr({
-                        'transform': () => {
+                        "transform": () => {
                             let xLocation: number = this.calculateLabelWidth(bar, null, reveresed);
                             let yLocation: number = bar.y + BulletChart.BulletSize / BulletChart.value2;
 
-                            return 'translate(' + xLocation + ',' + yLocation + ')';
+                            return "translate(" + xLocation + "," + yLocation + ")";
                         },
                     }).classed("axis", true).call(bar.xAxisProperties.axis).style({
-                        'fill': model.settings.axis.axisColor,
-                        'font-size': PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
-                    }).selectAll('line').style({
-                        'stroke': model.settings.axis.axisColor,
+                        "fill": model.settings.axis.axisColor,
+                        "font-size": PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
+                    }).selectAll("line").style({
+                        "stroke": model.settings.axis.axisColor,
                     });
 
                     barGroup.selectAll(".tick text").call(
@@ -622,15 +629,15 @@ module powerbi.extensibility.visual {
 
             // Draw Labels
             if (model.settings.labels.show) {
-                barSelection.enter().append('text').classed("title", true).attr({
-                    'x': ((d: BarData) => {
+                barSelection.enter().append("text").classed("title", true).attr({
+                    "x": ((d: BarData) => {
                         if (reveresed)
                             return BulletChart.XMarginHorizontalLeft + BulletChart.XMarginHorizontalRight + model.viewportLength;
                         return d.x;
                     }),
-                    'y': ((d: BarData) => d.y + this.baselineDelta),
-                    'fill': model.settings.labels.labelColor,
-                    'font-size': PixelConverter.fromPoint(model.settings.labels.fontSize),
+                    "y": ((d: BarData) => d.y + this.baselineDelta),
+                    "fill": model.settings.labels.labelColor,
+                    "font-size": PixelConverter.fromPoint(model.settings.labels.fontSize),
                 }).text((d: BarData) => d.categoryLabel);
             }
 
@@ -640,15 +647,15 @@ module powerbi.extensibility.visual {
 
             // Draw measure label
             if (model.settings.axis.measureUnits) {
-                barSelection.enter().append('text').attr({
-                    'x': ((d: BarData) => {
+                barSelection.enter().append("text").attr({
+                    "x": ((d: BarData) => {
                         if (reveresed)
                             return BulletChart.XMarginHorizontalLeft + BulletChart.XMarginHorizontalRight + model.viewportLength + BulletChart.SubtitleMargin;
                         return d.x - BulletChart.SubtitleMargin;
                     }),
-                    'y': ((d: BarData) => d.y + this.data.labelHeight / BulletChart.value2 + BulletChart.value12),
-                    'fill': model.settings.axis.unitsColor,
-                    'font-size': PixelConverter.fromPoint(BulletChart.DefaultSubtitleFontSizeInPt)
+                    "y": ((d: BarData) => d.y + this.data.labelHeight / BulletChart.value2 + BulletChart.value12),
+                    "fill": model.settings.axis.unitsColor,
+                    "font-size": PixelConverter.fromPoint(BulletChart.DefaultSubtitleFontSizeInPt)
                 }).text(measureUnitsText);
             }
 
@@ -677,36 +684,36 @@ module powerbi.extensibility.visual {
                 (tooltipEvent: TooltipEventArgs<BarRect>) => tooltipEvent.data.tooltipInfo);
         }
         private static value3: number = 3;
-        private static value10: number =10;
+        private static value10: number = 10;
         private setUpBulletsVertically(bulletBody: d3.Selection<any>, model: BulletChartModel, reveresed: boolean) {
             let bars: BarData[] = model.bars;
             let rects: BarRect[] = model.barRects;
             let valueRects: BarValueRect[] = model.valueRects;
             let targetValues: TargetValue[] = model.targetValues;
-            let barSelection:any = this.labelGraphicsContext.selectAll('text').data(bars, (d: BarData) => d.key);
-            let rectSelection: any = this.bulletGraphicsContext.selectAll('rect.range').data(rects, (d: BarRect) => d.key);
+            let barSelection: any = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
+            let rectSelection: any = this.bulletGraphicsContext.selectAll("rect.range").data(rects, (d: BarRect) => d.key);
 
             // Draw bullets
-            let bullets: any = rectSelection.enter().append('rect').attr({
-                'x': ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x)),
-                'y': ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reveresed))),
-                'height': ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)),
-                'width': BulletChart.BulletSize,
-            }).classed('range', true).style({
-                'fill': (d: BarRect) => d.fill
+            let bullets: any = rectSelection.enter().append("rect").attr({
+                "x": ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x)),
+                "y": ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reveresed))),
+                "height": ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)),
+                "width": BulletChart.BulletSize,
+            }).classed("range", true).style({
+                "fill": (d: BarRect) => d.fill
             });
 
             rectSelection.exit();
 
             // Draw value rects
-            let valueSelection: any = this.bulletGraphicsContext.selectAll('rect.value').data(valueRects, (d: BarValueRect) => d.key);
-            valueSelection.enter().append('rect').attr({
-                'x': ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + BulletChart.BulletSize / BulletChart.value3)),
-                'y': ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reveresed))),
-                'height': ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.start - d.end)),
-                'width': BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4,
-            }).classed('value', true).style({
-                'fill': (d: BarValueRect) => d.fill
+            let valueSelection: any = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
+            valueSelection.enter().append("rect").attr({
+                "x": ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + BulletChart.BulletSize / BulletChart.value3)),
+                "y": ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reveresed))),
+                "height": ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.start - d.end)),
+                "width": BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4,
+            }).classed("value", true).style({
+                "fill": (d: BarValueRect) => d.fill
             });
 
             valueSelection.exit();
@@ -731,16 +738,16 @@ module powerbi.extensibility.visual {
                 for (let idx = 0; idx < bars.length; idx++) {
                     let bar = bars[idx];
                     this.bulletGraphicsContext.append("g").attr({
-                        'transform': () => {
-                            let xLocation:number = bar.x;
+                        "transform": () => {
+                            let xLocation: number = bar.x;
                             let yLocation: number = this.calculateLabelHeight(bar, null, reveresed);
-                            return 'translate(' + xLocation + ',' + yLocation + ')';
+                            return "translate(" + xLocation + "," + yLocation + ")";
                         },
                     }).classed("axis", true).call(bar.xAxisProperties.axis).style({
-                        'fill': model.settings.axis.axisColor,
-                        'font-size': PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt),
-                    }).selectAll('line').style({
-                        'stroke': model.settings.axis.axisColor,
+                        "fill": model.settings.axis.axisColor,
+                        "font-size": PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt),
+                    }).selectAll("line").style({
+                        "stroke": model.settings.axis.axisColor,
                     });
                 }
 
@@ -750,33 +757,33 @@ module powerbi.extensibility.visual {
                     TextMeasurementService.svgEllipsis);
             }
 
-            let labelsStartPos:number = BulletChart.YMarginVertical + (reveresed ? model.viewportLength + 15 : 0) + this.data.labelHeightTop;
+            let labelsStartPos: number = BulletChart.YMarginVertical + (reveresed ? model.viewportLength + 15 : 0) + this.data.labelHeightTop;
 
             // Draw Labels
             if (model.settings.labels.show) {
-                barSelection.enter().append('text').classed("title", true).attr({
-                    'x': ((d: BarData) => d.x),
-                    'y': ((d: BarData) => {
+                barSelection.enter().append("text").classed("title", true).attr({
+                    "x": ((d: BarData) => d.x),
+                    "y": ((d: BarData) => {
                         return labelsStartPos;
                     }),
-                    'fill': model.settings.labels.labelColor,
-                    'font-size': PixelConverter.fromPoint(model.settings.labels.fontSize),
+                    "fill": model.settings.labels.labelColor,
+                    "font-size": PixelConverter.fromPoint(model.settings.labels.fontSize),
                 }).text((d: BarData) => d.categoryLabel);
             }
 
-            let measureUnitsText:string = TextMeasurementService.getTailoredTextOrDefault(
+            let measureUnitsText: string = TextMeasurementService.getTailoredTextOrDefault(
                 BulletChart.getTextProperties(model.settings.axis.measureUnits, BulletChart.DefaultSubtitleFontSizeInPt),
                 BulletChart.MaxMeasureUnitWidth);
 
             // Draw measure label
             if (model.settings.axis.measureUnits) {
-                barSelection.enter().append('text').attr({
-                    'x': ((d: BarData) => d.x + BulletChart.BulletSize),
-                    'y': ((d: BarData) => {
+                barSelection.enter().append("text").attr({
+                    "x": ((d: BarData) => d.x + BulletChart.BulletSize),
+                    "y": ((d: BarData) => {
                         return labelsStartPos + BulletChart.SubtitleMargin + BulletChart.value12;
                     }),
-                    'fill': model.settings.axis.unitsColor,
-                    'font-size': PixelConverter.fromPoint(BulletChart.DefaultSubtitleFontSizeInPt)
+                    "fill": model.settings.axis.unitsColor,
+                    "font-size": PixelConverter.fromPoint(BulletChart.DefaultSubtitleFontSizeInPt)
                 }).text(measureUnitsText);
             }
 
@@ -813,17 +820,17 @@ module powerbi.extensibility.visual {
             y2: (d: TargetValue) => number) {
 
             let selection = this.bulletGraphicsContext
-                .selectAll('line.target')
+                .selectAll("line.target")
                 .data(targetValues.filter(x => _.isNumber(x.value)));
 
-            selection.enter().append('line').attr({
-                'x1': x1,
-                'x2': x2,
-                'y1': y1,
-                'y2': y2,
+            selection.enter().append("line").attr({
+                "x1": x1,
+                "x2": x2,
+                "y1": y1,
+                "y2": y2,
             }).style({
-                'stroke': ((d: TargetValue) => d.fill),
-                'stroke-width': 2,
+                "stroke": ((d: TargetValue) => d.fill),
+                "stroke-width": 2,
             }).classed("target", true);
 
             selection.exit().remove();
@@ -835,33 +842,33 @@ module powerbi.extensibility.visual {
             getY: (d: TargetValue) => number): void {
 
             let selection = this.bulletGraphicsContext
-                .selectAll('line.target2')
+                .selectAll("line.target2")
                 .data(targetValues.filter(x => _.isNumber(x.value2)));
             let enterSelection = selection.enter();
 
             let targetStyle = {
-                'stroke': ((d: TargetValue) => d.fill),
-                'stroke-width': 2
+                "stroke": ((d: TargetValue) => d.fill),
+                "stroke-width": 2
             };
 
-            enterSelection.append('line').attr({
-                'x1': ((d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize),
-                'y1': ((d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize),
-                'x2': ((d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize),
-                'y2': ((d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize),
+            enterSelection.append("line").attr({
+                "x1": ((d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize),
+                "y1": ((d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize),
+                "x2": ((d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize),
+                "y2": ((d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize),
             }).style({
-                'stroke': ((d: TargetValue) => d.fill),
-                'stroke-width': 2
+                "stroke": ((d: TargetValue) => d.fill),
+                "stroke-width": 2
             }).classed("target2", true);
 
-            enterSelection.append('line').attr({
-                'x1': ((d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize),
-                'y1': ((d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize),
-                'x2': ((d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize),
-                'y2': ((d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize),
+            enterSelection.append("line").attr({
+                "x1": ((d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize),
+                "y1": ((d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize),
+                "x2": ((d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize),
+                "y2": ((d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize),
             }).style({
-                'stroke': ((d: TargetValue) => d.fill),
-                'stroke-width': 2
+                "stroke": ((d: TargetValue) => d.fill),
+                "stroke-width": 2
             }).classed("target2", true);
 
             selection.exit().remove();
@@ -896,18 +903,18 @@ module powerbi.extensibility.visual {
             if (spanElement)
                 return;
 
-            spanElement = $('<span/>');
-            $('body').append(spanElement);
+            spanElement = $("<span/>");
+            $("body").append(spanElement);
             // The style hides the svg element from the canvas, preventing canvas from scrolling down to show svg black square.
-            svgTextElement = d3.select($('body').get(0))
-                .append('svg')
+            svgTextElement = d3.select($("body").get(0))
+                .append("svg")
                 .style({
-                    'height': '0px',
-                    'width': '0px',
-                    'position': 'absolute'
+                    "height": "0px",
+                    "width": "0px",
+                    "position": "absolute"
                 })
-                .append('text');
-            canvasCtx = (<CanvasElement>$('<canvas/>').get(0)).getContext("2d");
+                .append("text");
+            canvasCtx = (<CanvasElement>$("<canvas/>").get(0)).getContext("2d");
         }
 
         function measureSvgTextRect(textProperties: TextProperties): SVGRect {
@@ -918,12 +925,12 @@ module powerbi.extensibility.visual {
             svgTextElement
                 .text(textProperties.text)
                 .attr({
-                    'visibility': 'hidden',
-                    'font-family': textProperties.fontFamily,
-                    'font-size': textProperties.fontSize,
-                    'font-weight': textProperties.fontWeight,
-                    'font-style': textProperties.fontStyle,
-                    'white-space': textProperties.whiteSpace || 'nowrap'
+                    "visibility": "hidden",
+                    "font-family": textProperties.fontFamily,
+                    "font-size": textProperties.fontSize,
+                    "font-weight": textProperties.fontWeight,
+                    "font-style": textProperties.fontStyle,
+                    "white-space": textProperties.whiteSpace || "nowrap"
                 });
 
             // We're expecting the browser to give a synchronous measurement here
@@ -932,8 +939,6 @@ module powerbi.extensibility.visual {
         }
 
         function estimateSvgTextRect(textProperties: TextProperties): SVGRect {
-            // debug.assertValue(textProperties, 'textProperties');
-
             let estimatedTextProperties: TextProperties = {
                 fontFamily: textProperties.fontFamily,
                 fontSize: textProperties.fontSize,
@@ -971,15 +976,15 @@ module powerbi.extensibility.visual {
             this.options = options;
             let clearCatcher = options.clearCatcher;
 
-            options.valueRects.on('click', (d: BarValueRect) => {
+            options.valueRects.on("click", (d: BarValueRect) => {
                 selectionHandler.handleSelection(d, (d3.event as MouseEvent).ctrlKey);
             });
 
-            options.rects.on('click', (d: BarRect) => {
+            options.rects.on("click", (d: BarRect) => {
                 selectionHandler.handleSelection(d, (d3.event as MouseEvent).ctrlKey);
             });
 
-            clearCatcher.on('click', () => {
+            clearCatcher.on("click", () => {
                 selectionHandler.handleClearSelection();
             });
         }
