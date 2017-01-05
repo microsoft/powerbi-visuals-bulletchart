@@ -28,19 +28,6 @@ module powerbi.extensibility.visual {
     import DataViewObjectsParser  = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 
     export class BulletchartSettings extends DataViewObjectsParser {
-        constructor() {
-            super([
-                "minColor",
-                "needsImprovementColor",
-                "satisfactoryColor",
-                "goodColor",
-                "veryGoodColor",
-                "bulletColor",
-                "axisColor",
-                "unitsColor"
-            ]);
-        }
-
         public values: ValuesSettings = new ValuesSettings();
         public labels: LabelsSettings = new LabelsSettings();
         public orientation: OrientationSettings = new OrientationSettings();
