@@ -64,7 +64,6 @@ module powerbi.extensibility.visual {
     import TooltipEventArgs = powerbi.extensibility.utils.tooltip.TooltipEventArgs;
     import ITooltipServiceWrapper = powerbi.extensibility.utils.tooltip.ITooltipServiceWrapper;
 
-
     export class BulletChart implements IVisual {
         private static ScrollBarSize: number = 22;
         private static SpaceRequiredForBarVertically: number = 100;
@@ -401,6 +400,7 @@ module powerbi.extensibility.visual {
             tooltipInfo: BulletChartTooltipItem[],
             selectionIdBuilder: ISelectionIdBuilder,
             highlight: boolean): void {
+
             if (!isNaN(start) && !isNaN(end))
                 collection.push({
                     barIndex: barIndex,
@@ -415,16 +415,22 @@ module powerbi.extensibility.visual {
                 });
         }
 
-        private static createTooltipInfo(toolTipItems: BulletChartTooltipItem[]): VisualTooltipDataItem[] {
-            return toolTipItems.map((toolTipItems: BulletChartTooltipItem) => {
-                let metadata: DataViewMetadataColumn = toolTipItems.metadata.source,
-                    formatString: string = valueFormatter.getFormatStringByColumn(metadata);
+        public static createTooltipInfo(tooltipItems: BulletChartTooltipItem[]): VisualTooltipDataItem[] {
+            const tooltipDataItems: VisualTooltipDataItem[] = [];
 
-                return {
-                    displayName: metadata.displayName,
-                    value: valueFormatter.format(toolTipItems.value, formatString)
-                } as VisualTooltipDataItem;
+            tooltipItems.forEach((tooltipItem: BulletChartTooltipItem) => {
+                if (tooltipItem && tooltipItem.metadata) {
+                    let metadata: DataViewMetadataColumn = tooltipItem.metadata.source,
+                        formatString: string = valueFormatter.getFormatStringByColumn(metadata);
+
+                    tooltipDataItems.push({
+                        displayName: metadata.displayName,
+                        value: valueFormatter.format(tooltipItem.value, formatString)
+                    });
+                }
             });
+
+            return tooltipDataItems;
         }
 
         private static bulletChartClassed: string = "bulletChart";

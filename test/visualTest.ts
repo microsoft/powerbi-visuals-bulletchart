@@ -29,7 +29,6 @@
 module powerbi.extensibility.visual.test {
     // powerbi.extensibility.visual
     import BulletChartBuilder = powerbi.extensibility.visual.test.BulletChartBuilder;
-    import BulletChartOrientation = powerbi.extensibility.visual.BulletChart1443347686880.BulletChartOrientation;
     import BulletChartData = powerbi.extensibility.visual.test.BulletChartData;
 
     // powerbi.extensibility.utils.test
@@ -39,6 +38,11 @@ module powerbi.extensibility.visual.test {
     import MockISelectionId = powerbi.extensibility.utils.test.mocks.MockISelectionId;
     import createSelectionId = powerbi.extensibility.utils.test.mocks.createSelectionId;
     import fromPointToPixel = powerbi.extensibility.utils.type.PixelConverter.fromPointToPixel;
+
+    // BulletChart1443347686880
+    import VisualClass = powerbi.extensibility.visual.BulletChart1443347686880.BulletChart;
+    import BulletChartTooltipItem = powerbi.extensibility.visual.BulletChart1443347686880.BulletChartTooltipItem;
+    import BulletChartOrientation = powerbi.extensibility.visual.BulletChart1443347686880.BulletChartOrientation;
 
     export function roundTo(value: number | string, round: number): number {
         value = _.isNumber(value) ? value : parseFloat(value);
@@ -420,6 +424,20 @@ module powerbi.extensibility.visual.test {
                     visualBuilder.measureUnits.toArray().map($).forEach(e =>
                         colorHelper.assertColorsMatch(e.attr("fill"), color));
                 });
+            });
+        });
+
+        describe("createTooltipInfo", () => {
+            it("should return an empty array if metadata isn't defined", () => {
+                const tooltipItems: BulletChartTooltipItem[] = [{
+                    value: "Microsoft",
+                    metadata: undefined
+                }, {
+                    value: "Power BI",
+                    metadata: null
+                }];
+
+                expect(VisualClass.createTooltipInfo(tooltipItems).length).toBe(0);
             });
         });
     });
