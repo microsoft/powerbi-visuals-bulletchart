@@ -32,14 +32,13 @@ module powerbi.extensibility.visual.test {
     import getRandomNumber = powerbi.extensibility.utils.test.helpers.getRandomNumber;
 
     // BulletChart1443347686880
-    import VisualPlugin = powerbi.visuals.plugins.BulletChart1443347686880;
     import VisualClass = powerbi.extensibility.visual.BulletChart1443347686880.BulletChart;
     import VisualSettings = powerbi.extensibility.visual.BulletChart1443347686880.BulletchartSettings;
     import BulletChartOrientation = powerbi.extensibility.visual.BulletChart1443347686880.BulletChartOrientation;
 
     export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
         constructor(width: number, height: number) {
-            super(width, height, VisualPlugin.name);
+            super(width, height, "BulletChart1443347686880");
         }
 
         public get mainElement() {
