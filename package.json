@@ -47,6 +47,7 @@
     "powerbi-visuals-utils-tooltiputils": "^0.3.0",
     "tslint": "^4.4.2",
     "tslint-microsoft-contrib": "^4.0.0",
-    "typings": "1.4.0"
+    "typings": "1.4.0",
+    "typescript": "2.1.4"
   }
 }
