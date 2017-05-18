@@ -146,6 +146,8 @@ module powerbi.extensibility.visual {
             let categoricalValues: BulletChartColumns<any[]> = BulletChartColumns.getCategoricalValues(dataView);
             let settings: BulletchartSettings = BulletchartSettings.parse<BulletchartSettings>(dataView);
 
+            BulletChart.limitProperties(settings);
+
             let bulletModel: BulletChartModel = <BulletChartModel>{
                 settings: settings,
                 bars: [],
@@ -374,6 +376,12 @@ module powerbi.extensibility.visual {
             }
 
             return bulletModel;
+        }
+
+        private static limitProperties(settings: BulletchartSettings): void {
+            if (settings.values.minimumPercent > settings.values.maximumPercent) {
+                settings.values.maximumPercent = settings.values.minimumPercent;
+            }
         }
 
         private get settings(): BulletchartSettings {
@@ -794,7 +802,7 @@ module powerbi.extensibility.visual {
                     clearCatcher: this.clearCatcher,
                     interactivityService: this.interactivityService,
                     bulletChartSettings: this.data.settings,
-                    hasHighlights: false,
+                    hasHighlights: this.data.hasHighlights,
                 };
 
                 let targetCollection: BarRect[] = this.data.barRects.concat(this.data.valueRects);
