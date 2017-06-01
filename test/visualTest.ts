@@ -440,6 +440,25 @@ module powerbi.extensibility.visual.test {
                 expect(VisualClass.createTooltipInfo(tooltipItems).length).toBe(0);
             });
         });
+
+        describe("highlight", () => {
+            it("should respect category highlight", () => {
+                const highlightsArray: [number] = [1, null, null, null, null, null, null, null];
+                dataView.categorical.values[0].highlights = highlightsArray;
+
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                visualBuilder.rangeRectsGrouped[0].each(function () {
+                    expect($(this)[0].style["opacity"]).toBe("1");
+                });
+
+                visualBuilder.rangeRectsGrouped.forEach((x, i) => {
+                    if (i !== 0) {
+                        expect(x[0].style["opacity"]).not.toBe("1");
+                    }
+                });
+            });
+        });
     });
 
     function doColorsEqual(firstColor: string, secondColor: string): boolean {

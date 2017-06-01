@@ -60,7 +60,21 @@ module powerbi.extensibility.visual {
 
             return categorical && _.mapValues(new this<any[]>(), (n, i) =>
                 (<DataViewCategoricalColumn[]>_.toArray(categories)).concat(_.toArray(values))
-                    .filter(x => x.source.roles && x.source.roles[i]).map(x => x.values)[0]
+                    .filter(x => x.source.roles && x.source.roles[i]).map(x => {
+                        const hasHighLight: boolean = !!(<DataViewValueColumn>x).highlights;
+                        let useHighlightAsValue: boolean;
+
+                        if (hasHighLight) {
+                            useHighlightAsValue = (<DataViewValueColumn>x).highlights.every(y => {
+                                if (y === null || y === undefined) {
+                                    return false;
+                                }
+                                return true;
+                            });
+                        }
+
+                        return useHighlightAsValue ? (<DataViewValueColumn>x).highlights : x.values;
+                    })[0]
                 || values.source && values.source.roles && values.source.roles[i] && series);
         }
 
