@@ -1,14 +1,13 @@
 {
   "name": "powerbi-visuals-bulletchart",
   "description": "Bullet chart",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "author": {
     "name": "Microsoft",
     "email": "pbicvsupport@microsoft.com"
   },
   "scripts": {
     "postinstall": "pbiviz update 1.6.0",
-    "typings": "typings",
     "pbiviz": "pbiviz",
     "start": "pbiviz start",
     "package": "pbiviz package",
