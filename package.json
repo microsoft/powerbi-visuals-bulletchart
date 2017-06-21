@@ -25,6 +25,7 @@
     "@types/jasmine": "^2.5.37",
     "@types/jasmine-jquery": "^1.5.28",
     "@types/lodash": "4.14.52",
+    "@types/jquery": "^2.0.46",
     "coveralls": "2.11.15",
     "d3": "3.5.5",
     "globalize": "0.1.0-a2",
