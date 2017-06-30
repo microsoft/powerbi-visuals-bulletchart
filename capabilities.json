@@ -45,80 +45,99 @@
             "objects": {
                 "values": {
                     "displayName": "Data values",
+                    "displayNameKey": "Visual_DataValues",
                     "properties": {
                         "targetValue": {
                             "displayName": "Target Value",
+                            "displayNameKey": "Visual_DataValues_TargetValue",
                             "type": { "numeric": true }
                         },
                         "targetValue2": {
                             "displayName": "Target Value 2",
+                            "displayNameKey": "Visual_DataValues_TargetValue2",
                             "type": { "numeric": true }
                         },
                         "minimumPercent": {
                             "displayName": "Minimum %",
+                            "displayNameKey": "Visual_DataValues_MinimumPercent",
                             "type": { "numeric": true }
                         },
                         "needsImprovementPercent": {
                             "displayName": "Needs Improvement %",
+                            "displayNameKey": "Visual_DataValues_NeedsImprovementPercent",
                             "type": { "numeric": true }
                         },
                         "satisfactoryPercent": {
                             "displayName": "Satisfactory %",
+                            "displayNameKey": "Visual_DataValues_SatisfactoryPercent",
                             "type": { "numeric": true }
                         },
                         "goodPercent": {
                             "displayName": "Good %",
+                            "displayNameKey": "Visual_DataValues_GoodPercent",
                             "type": { "numeric": true }
                         },
                         "veryGoodPercent": {
                             "displayName": "Very Good %",
+                            "displayNameKey": "Visual_DataValues_VeryGoodPercent",
                             "type": { "numeric": true }
                         },
                         "maximumPercent": {
                             "displayName": "Maximum %",
+                            "displayNameKey": "Visual_DataValues_MaximumPercent",
                             "type": { "numeric": true }
                         }
                     }
                 },
                 "labels": {
-                    "displayName": "Category labels",
+                    "displayName": "Category labels",                    
+                    "displayNameKey": "Visual_CategoryLabels",
                     "properties": {
                         "show": {
                             "displayName": "Show",
+                            "displayNameKey": "Visual_Show",
                             "type": { "bool":  true }
                         },
                         "labelColor": {
-                            "displayName": "color",
+                            "displayName": "color",                            
+                            "displayNameKey": "Visual_Color",
                             "description": "Select color for data labels",
                             "type": { "fill": { "solid": {"color": true } } }
                         },
                         "fontSize": {
-                            "displayName": "Text Size",
+                            "displayName": "Text Size",                
+                            "displayNameKey": "Visual_TextSize",
                             "type": { "formatting": { "fontSize": true } }
                         }
                     }
                 },
               "orientation": {
-                "displayName": "Orientation",
+                "displayName": "Orientation", 
+                "displayNameKey": "Visual_Orientation",
                 "properties": {
                   "orientation": {
-                    "displayName": "Orientation",
+                    "displayName": "Orientation",                    
+                    "displayNameKey": "Visual_Orientation",     
                     "type": {
                       "enumeration": [
                         {
-                          "value": "HorizontalLeft",
+                          "value": "HorizontalLeft",                                   
+                          "displayNameKey": "Visual_Orientation_HorizontalLeft", 
                           "displayName": "Horizontal Left"
                         },
                         {
-                          "value": "HorizontalRight",
+                          "value": "HorizontalRight",     
+                          "displayNameKey": "Visual_Orientation_HorizontalRight", 
                           "displayName": "Horizontal Right"
                         },
                         {
                           "value": "VerticalTop",
+                          "displayNameKey": "Visual_Orientation_VerticalTop", 
                           "displayName": "VerticalTop"
                         },
                         {
                           "value": "VerticalBottom",
+                          "displayNameKey": "Visual_Orientation_VerticalBottom", 
                           "displayName": "Vertical Bottom"
                         }
                       ]
@@ -128,51 +147,63 @@
               },
                 "colors": {
                     "displayName": "colors",
+                    "displayNameKey": "Visual_Colors", 
                     "properties": {
                         "minColor": {
                             "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Minimum color"
+                            "displayName": "Minimum color",                            
+                            "displayNameKey": "Visual_Colors_MinimumColor" 
                         },
                         "needsImprovementColor": {
                             "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Needs Improvement color"
+                            "displayName": "Needs Improvement color",                                       
+                            "displayNameKey": "Visual_Colors_NeedsImprovementColor" 
                         },
                         "satisfactoryColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Satisfactory color"
+                            "type": { "fill": { "solid": { "color": true } } },      
+                            "displayName": "Satisfactory color",
+                            "displayNameKey": "Visual_Colors_SatisfactoryColor"
                         },
                         "goodColor": {
                             "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Good color"
+                            "displayName": "Good color",
+                            "displayNameKey": "Visual_Colors_GoodColor"
                         },
                         "veryGoodColor": {
                             "type": { "fill": { "solid": { "color": true } } },
-                          "displayName": "Very Good color"
+                            "displayName": "Very Good color",                            
+                            "displayNameKey": "Visual_Colors_VeryGoodColor"
                         },
                         "bulletColor": {
                             "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Bullet color"
+                            "displayName": "Bullet color",
+                            "displayNameKey": "Visual_Colors_BulletColor"
                         }
                     }
                 },
                 "axis": {
                     "displayName": "Axis",
+                    "displayNameKey": "Visual_Axis",
                     "properties": {
                         "axis": {
                             "displayName": "Axis",
+                            "displayNameKey": "Visual_Axis",
                             "type": { "bool":  true }
                         },
                         "axisColor": {
                             "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Axis color"
+                            "displayName": "Axis color",
+                            "displayNameKey": "Visual_AxisColor"
                         },
                         "measureUnits": {
                             "type": { "text": true },
-                            "displayName": "Measure Units"
+                            "displayName": "Measure Units",
+                            "displayNameKey": "Visual_MeasureUnits"
                         },
                         "unitsColor": {
                             "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Units color"
+                            "displayName": "Units color",
+                            "displayNameKey": "Visual_UnitsColor"
                         }
                     }
                 }
