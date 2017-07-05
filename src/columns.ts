@@ -73,7 +73,7 @@ module powerbi.extensibility.visual {
                             });
                         }
 
-                        return useHighlightAsValue ? (<DataViewValueColumn>x).highlights : x.values;
+                        return useHighlightAsValue ? (<DataViewValueColumn>x).highlights : (<DataViewValueColumn>x).values;
                     })[0]
                 || values.source && values.source.roles && values.source.roles[i] && series);
         }
