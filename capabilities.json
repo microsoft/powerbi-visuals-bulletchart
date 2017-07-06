@@ -108,6 +108,11 @@
                             "displayName": "Text Size",                
                             "displayNameKey": "Visual_TextSize",
                             "type": { "formatting": { "fontSize": true } }
+                        },
+                        "maxWidth": {
+                            "displayName": "Maximum width",
+                            "displayNameKey": "Visual_MaxWidth",
+                            "type": { "numeric": true }
                         }
                     }
                 },
@@ -146,7 +151,7 @@
                 }
               },
                 "colors": {
-                    "displayName": "colors",
+                    "displayName": "Colors",
                     "displayNameKey": "Visual_Colors", 
                     "properties": {
                         "minColor": {

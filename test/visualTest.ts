@@ -124,6 +124,30 @@ module powerbi.extensibility.visual.test {
                 expect(visualBuilder.mainElement[0].getBoundingClientRect().width).toBe(0);
             });
 
+            it("should be smaller gap between bullets if axis is not rendered", () => {
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                let rangeRects: any = visualBuilder.rangeRects;
+                let yArray: number[] = rangeRects.map((i, e) => {
+                    return parseFloat($(e).attr("y"));
+                });
+
+                dataView.metadata.objects = {
+                    axis: {
+                        axis: false
+                    }
+                };
+
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                rangeRects = visualBuilder.rangeRects;
+                let yArrayWithNoAxis: any = rangeRects.map((i, e) => {
+                    return parseFloat($(e).attr("y"));
+                });
+
+                expect(yArray[yArray.length - 1]).toBeGreaterThan(yArrayWithNoAxis[yArrayWithNoAxis.length - 1]);
+            });
+
             it("only defined ranges should be visible", (done) => {
                 dataView = defaultDataViewBuilder.getDataView([
                     BulletChartData.ColumnCategory,
@@ -457,6 +481,39 @@ module powerbi.extensibility.visual.test {
                         expect(x[0].style["opacity"]).not.toBe("1");
                     }
                 });
+            });
+        });
+
+        describe("tick count tests", () => {
+            it("should calculate fit count of ticks using viewport length", () => {
+                const tinyViewportLength: number = 10,
+                    smallViewportLength: number = 100,
+                    mediumViewportLength: number = 200,
+                    bigViewportLength: number = 500,
+                    lengthArray: number[] = [tinyViewportLength, smallViewportLength, mediumViewportLength, bigViewportLength];
+
+                lengthArray.forEach((x) => {
+                    expect(VisualClass.getFitTicksCount(x)).toBeGreaterThan(0);
+                });
+            });
+        });
+
+        describe("formatting option limitation test", () => {
+            it("should limit values correctly", () => {
+                dataView.metadata.objects = {
+                    values: {
+                        minimumPercent: 100,
+                        maximumPercent: 0
+                    },
+                    labels: {
+                        maxWidth: 0
+                    }
+                };
+
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+                let sett = visualBuilder.getSettings();
+                expect(sett.values.minimumPercent).not.toBeGreaterThan(sett.values.maximumPercent);
+                expect(sett.labels.maxWidth).not.toBe(0);
             });
         });
     });

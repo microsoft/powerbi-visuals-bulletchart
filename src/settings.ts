@@ -50,6 +50,7 @@ module powerbi.extensibility.visual {
         public show: boolean = true;
         public labelColor: string = "Black";
         public fontSize: number = 11;
+        public maxWidth: number = 80;
     }
 
     export enum BulletChartOrientation {
