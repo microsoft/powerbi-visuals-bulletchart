@@ -3,43 +3,53 @@
                 {
                     "name": "Category",
                     "kind": "Grouping",
-                    "displayName": "Category"
+                    "displayName": "Category",
+                    "displayNameKey": "Visual_Categoty"
                 }, {
                     "name": "Value",
                     "kind": "Measure",
-                    "displayName": "Value"
+                    "displayName": "Value",
+                    "displayNameKey": "Visual_Value"
                 }, {
                     "name": "TargetValue",
                     "kind": "Measure",
-                    "displayName": "Target Value"
+                    "displayName": "Target Value",
+                    "displayNameKey": "Visual_TargetValue"
                 }, {
                     "name": "Minimum",
                     "kind": "Measure",
-                    "displayName": "Minimum"
+                    "displayName": "Minimum",
+                    "displayNameKey": "Visual_Minimum"
                 }, {
                     "name": "NeedsImprovement",
                     "kind": "Measure",
-                    "displayName": "Needs Improvement"
+                    "displayName": "Needs Improvement",
+                    "displayNameKey": "Visual_NeedsImprovement"
                 }, {
                     "name": "Satisfactory",
                     "kind": "Measure",
-                    "displayName": "Satisfactory"
+                    "displayName": "Satisfactory",
+                    "displayNameKey": "Visual_Satisfactory"
                 }, {
                     "name": "Good",
                     "kind": "Measure",
-                    "displayName": "Good"
+                    "displayName": "Good",
+                    "displayNameKey": "Visual_Good"
                 }, {
                     "name": "VeryGood",
                     "kind": "Measure",
-                    "displayName": "Very Good"
+                    "displayName": "Very Good",
+                    "displayNameKey": "Visual_VeryGood"
                 }, {
                     "name": "Maximum",
                     "kind": "Measure",
-                    "displayName": "Maximum"
+                    "displayName": "Maximum",
+                    "displayNameKey": "Visual_Maximum"
                 }, {
                     "name": "TargetValue2",
                     "kind": "Measure",
-                    "displayName": "Target Value 2"
+                    "displayName": "Target Value 2",
+                    "displayNameKey": "Visual_TargetValue2"
                 }
             ],
             "objects": {
