@@ -28,5 +28,15 @@
     "Visual_AxisColor": "Axis color",
     "Visual_MeasureUnits": "Measure Units",
     "Visual_UnitsColor": "Units color",
-    "Visual_MaxWidth": "Maximum width"
+    "Visual_MaxWidth": "Maximum width",
+    "Visual_Categoty": "Category",
+    "Visual_Value": "Value",
+    "Visual_TargetValue": "Target Value",
+    "Visual_Minimum": "Minimum",
+    "Visual_NeedsImprovement": "Needs Improvement",
+    "Visual_Satisfactory": "Satisfactory",
+    "Visual_Good": "Good",
+    "Visual_VeryGood": "Very Good",
+    "Visual_Maximum": "Maximum",
+    "Visual_TargetValue2": "Target Value 2"
 }
