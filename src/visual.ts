@@ -69,13 +69,14 @@ module powerbi.extensibility.visual {
         private static SpaceRequiredForBarVertically: number = 100;
         private static XMarginHorizontalLeft: number = 20;
         private static XMarginHorizontalRight: number = 55;
-        private static YMarginHorizontal: number = 20;
+        private static YMarginHorizontal: number = 17.5;
         private static XMarginVertical: number = 70;
         private static YMarginVertical: number = 10;
         private static BulletSize: number = 25;
         private static DefaultSubtitleFontSizeInPt: number = 9;
         private static BarMargin: number = 10;
         private static MaxLabelWidth: number = 80;
+        private static MeasureUnitHeightHalf: number = 8;
         private static MaxMeasureUnitWidth: number = BulletChart.MaxLabelWidth - 20;
         private static SubtitleMargin: number = 10;
         private static AxisFontSizeInPt: number = 8;
@@ -132,10 +133,9 @@ module powerbi.extensibility.visual {
             };
         }
         private static value1dot4: number = 1.4;
-        private static categoryLabelModifier: number = 1.25;
         private static value2: number = 2;
-        private static value15: number = 15;
-        private static value20: number = 20;
+        private static value12: number = 12;
+        private static value25: number = 25;
         private static value28: number = 28;
         private static value60: number = 60;
         private static emptyString: string = "";
@@ -150,6 +150,7 @@ module powerbi.extensibility.visual {
             let categoricalValues: BulletChartColumns<any[]> = BulletChartColumns.getCategoricalValues(dataView);
             let settings: BulletchartSettings = BulletchartSettings.parse<BulletchartSettings>(dataView);
 
+            BulletChart.updateOrientation(settings);
             BulletChart.limitProperties(settings);
 
             let bulletModel: BulletChartModel = <BulletChartModel>{
@@ -169,9 +170,9 @@ module powerbi.extensibility.visual {
 
             bulletModel.labelHeight = (settings.labels.show || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(settings.labels.fontSize));
             bulletModel.labelHeightTop = (settings.labels.show || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(settings.labels.fontSize)) / BulletChart.value1dot4;
-            bulletModel.spaceRequiredForBarHorizontally = Math.max(settings.axis.axis ? BulletChart.value60 : BulletChart.value28, bulletModel.labelHeight * BulletChart.categoryLabelModifier);
+            bulletModel.spaceRequiredForBarHorizontally = Math.max(settings.axis.axis ? BulletChart.value60 : BulletChart.value28, bulletModel.labelHeight + BulletChart.value25);
             bulletModel.viewportLength = Math.max(0, (verticalOrientation
-                ? (options.viewport.height - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value20 - BulletChart.YMarginVertical * BulletChart.value2)
+                ? (options.viewport.height - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value25 - BulletChart.YMarginVertical * BulletChart.value2)
                 : (options.viewport.width - (settings.labels.show ? settings.labels.maxWidth : 0) - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
             bulletModel.hasHighlights = !!(categorical.Value[0].values.length > BulletChart.zeroValue && categorical.Value[0].highlights);
 
@@ -382,6 +383,15 @@ module powerbi.extensibility.visual {
             return bulletModel;
         }
 
+        // Implemented for old enums using space containing keys for example "Horizontal Left" which doesn't exist in current version
+        private static updateOrientation(settings: BulletchartSettings): void {
+            const noSpaceOrientation: string = settings.orientation.orientation.toString().replace(" ", "");
+
+            if (BulletChartOrientation[noSpaceOrientation]) {
+                settings.orientation.orientation = BulletChartOrientation[noSpaceOrientation];
+            }
+        }
+
         private static limitProperties(settings: BulletchartSettings): void {
             if (settings.values.minimumPercent > settings.values.maximumPercent) {
                 settings.values.maximumPercent = settings.values.minimumPercent;
@@ -531,9 +541,9 @@ module powerbi.extensibility.visual {
                 });
             }
             else {
-
                 this.scrollContainer.attr({
-                    height: (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue) + BulletChart.YMarginHorizontal) + "px",
+                    height: (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
+                        + (this.data.settings.axis.axis ? 0 : BulletChart.YMarginHorizontal)) + "px",
                     width: PixelConverter.toString(this.viewportScroll.width)
                 });
             }
@@ -582,7 +592,7 @@ module powerbi.extensibility.visual {
         private static value8: number = 8;
         private static value1: number = 1;
         private static value4: number = 4;
-        private static value12: number = 12;
+        private static value14: number = 14;
         private static bulletMiddlePosition: number = (1 / BulletChart.value8 + 1 / BulletChart.value4) * BulletChart.BulletSize;
         private setUpBulletsHorizontally(bulletBody: d3.Selection<any>, model: BulletChartModel, reveresed: boolean): void {
             let bars: BarData[] = model.bars;
@@ -664,7 +674,7 @@ module powerbi.extensibility.visual {
                             return BulletChart.XMarginHorizontalLeft + BulletChart.XMarginHorizontalRight + model.viewportLength;
                         return d.x;
                     }),
-                    "y": ((d: BarData) => d.y + this.baselineDelta + BulletChart.BulletSize / 2),
+                    "y": ((d: BarData) => d.y + this.baselineDelta + BulletChart.BulletSize / BulletChart.value2),
                     "fill": model.settings.labels.labelColor,
                     "font-size": PixelConverter.fromPoint(model.settings.labels.fontSize),
                 }).text((d: BarData) => d.categoryLabel);
@@ -682,7 +692,7 @@ module powerbi.extensibility.visual {
                             return BulletChart.XMarginHorizontalLeft + BulletChart.XMarginHorizontalRight + model.viewportLength + BulletChart.SubtitleMargin;
                         return d.x - BulletChart.SubtitleMargin;
                     }),
-                    "y": ((d: BarData) => d.y + this.data.labelHeight / BulletChart.value2 + BulletChart.value12),
+                    "y": ((d: BarData) => d.y + this.data.labelHeight / BulletChart.value2 + BulletChart.value12 + BulletChart.BulletSize / 2),
                     "fill": model.settings.axis.unitsColor,
                     "font-size": PixelConverter.fromPoint(BulletChart.DefaultSubtitleFontSizeInPt)
                 }).text(measureUnitsText);
