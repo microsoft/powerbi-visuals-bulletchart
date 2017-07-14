@@ -1,3 +1,6 @@
+## 1.4.10
+* Fixed Measure Units rendering
+
 ## 1.4.9
 * Added new formatting option for Category labels "Maximum width" to adjust label width for horizontal oriented bullets.
 * Horizontal oriented bullets now renders closer to each other when axis is off.
