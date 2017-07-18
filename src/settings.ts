@@ -78,5 +78,5 @@ module powerbi.extensibility.visual {
         public axisColor: string = "Grey";
         public measureUnits: string = "";
         public unitsColor: string = "Grey";
-    };
+    }
 }
