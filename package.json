@@ -47,8 +47,8 @@
     "powerbi-visuals-utils-testutils": "^0.2.2",
     "powerbi-visuals-utils-tooltiputils": "^1.0.0",
     "powerbi-visuals-utils-formattingutils": "^2.1.0",
-    "tslint": "^4.4.2",
-    "tslint-microsoft-contrib": "^4.0.0",
+    "tslint": "^5.1.2",
+    "tslint-microsoft-contrib": "^5.0.0",
     "typescript": "2.1.4"
   }
 }
