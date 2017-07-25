@@ -29,10 +29,17 @@ module powerbi.extensibility.visual {
 
     export class BulletchartSettings extends DataViewObjectsParser {
         public values: ValuesSettings = new ValuesSettings();
+        public tooltips: TooltipsSettings = new TooltipsSettings();
         public labels: LabelsSettings = new LabelsSettings();
         public orientation: OrientationSettings = new OrientationSettings();
         public colors: ColorsSettings = new ColorsSettings();
         public axis: AxisSettings = new AxisSettings();
+    }
+
+    export class TooltipsSettings {
+        public valueCustomName: string = "";
+        public targetCustomName: string = "";
+        public target2CustomName: string = "";
     }
 
     export class ValuesSettings {

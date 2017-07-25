@@ -99,6 +99,27 @@
                         }
                     }
                 },
+                "tooltips": {
+                    "displayName": "Tooltips",
+                    "displayNameKey": "Visual_Tooltips",
+                    "properties": {
+                        "valueCustomName": {
+                            "displayName": "\"Value\" custom name",                            
+                            "displayNameKey": "Visual_ValueCustomName",
+                            "type": { "text": true }
+                        },
+                        "targetCustomName": {
+                            "displayName": "\"Target Value\" custom name",                            
+                            "displayNameKey": "Visual_TargetValueCustomName",
+                            "type": { "text": true }
+                        },
+                        "target2CustomName": {
+                            "displayName": "\"Target Value 2\" custom name",                            
+                            "displayNameKey": "Visual_TargetValue2CustomName",
+                            "type": { "text": true }
+                        }
+                    }
+                },
                 "labels": {
                     "displayName": "Category labels",                    
                     "displayNameKey": "Visual_CategoryLabels",

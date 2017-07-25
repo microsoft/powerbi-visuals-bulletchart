@@ -91,6 +91,7 @@ module powerbi.extensibility.visual {
 
     export interface BulletChartTooltipItem {
         value: any;
-        metadata: DataViewValueColumn;
+        metadata?: DataViewValueColumn;
+        customName: string;
     }
 }

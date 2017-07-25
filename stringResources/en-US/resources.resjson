@@ -38,5 +38,9 @@
     "Visual_Good": "Good",
     "Visual_VeryGood": "Very Good",
     "Visual_Maximum": "Maximum",
-    "Visual_TargetValue2": "Target Value 2"
+    "Visual_TargetValue2": "Target Value 2",
+    "Visual_Tooltips": "Tooltips",
+    "Visual_ValueCustomName": "\"Value\" custom name",
+    "Visual_TargetValueCustomName": "\"Target Value\" custom name",
+    "Visual_TargetValue2CustomName": "\"Target Value 2\" custom name"
 }

@@ -193,7 +193,8 @@ module powerbi.extensibility.visual {
 
                 toolTipItems.push({
                     value: value,
-                    metadata: categorical.Value[0]
+                    metadata: categorical.Value[0],
+                    customName: settings.tooltips.valueCustomName
                 });
 
                 let targetValue: number = categoricalValues.TargetValue
@@ -203,7 +204,8 @@ module powerbi.extensibility.visual {
                 if (_.isNumber(targetValue)) {
                     toolTipItems.push({
                         value: targetValue,
-                        metadata: categorical.TargetValue && categorical.TargetValue[0]
+                        metadata: categorical.TargetValue && categorical.TargetValue[0],
+                        customName: settings.tooltips.targetCustomName
                     });
                 }
 
@@ -214,23 +216,21 @@ module powerbi.extensibility.visual {
                 if (_.isNumber(targetValue2)) {
                     toolTipItems.push({
                         value: targetValue2,
-                        metadata: categorical.TargetValue2 && categorical.TargetValue2[0]
+                        metadata: categorical.TargetValue2 && categorical.TargetValue2[0],
+                        customName: settings.tooltips.target2CustomName
                     });
                 }
 
-                let getRangeValue = (cValues: number[], sValue: number) => cValues ? cValues[idx] :
-                    (_.isNumber(targetValue) && _.isNumber(sValue) ? (sValue * targetValue / 100) : null);
-
-                let minimum: number = getRangeValue(categoricalValues.Minimum, settings.values.minimumPercent);
-                let needsImprovement: number = getRangeValue(categoricalValues.NeedsImprovement, settings.values.needsImprovementPercent);
-                let satisfactory: number = getRangeValue(categoricalValues.Satisfactory, settings.values.satisfactoryPercent);
-                let good: number = getRangeValue(categoricalValues.Good, settings.values.goodPercent);
-                let veryGood: number = getRangeValue(categoricalValues.VeryGood, settings.values.veryGoodPercent);
-                let maximum: number = getRangeValue(categoricalValues.Maximum, settings.values.maximumPercent);
+                let minimum: number = BulletChart.getRangeValue(categoricalValues.Minimum ? categoricalValues.Minimum[idx] : undefined, settings.values.minimumPercent, targetValue);
+                let needsImprovement: number = BulletChart.getRangeValue(categoricalValues.NeedsImprovement ? categoricalValues.NeedsImprovement[idx] : undefined, settings.values.needsImprovementPercent, targetValue, minimum);
+                let satisfactory: number = BulletChart.getRangeValue(categoricalValues.Satisfactory ? categoricalValues.Satisfactory[idx] : undefined, settings.values.satisfactoryPercent, targetValue, minimum);
+                let good: number = BulletChart.getRangeValue(categoricalValues.Good ? categoricalValues.Good[idx] : undefined, settings.values.goodPercent, targetValue, minimum);
+                let veryGood: number = BulletChart.getRangeValue(categoricalValues.VeryGood ? categoricalValues.VeryGood[idx] : undefined, settings.values.veryGoodPercent, targetValue, minimum);
+                let maximum: number = BulletChart.getRangeValue(categoricalValues.Maximum ? categoricalValues.Maximum[idx] : undefined, settings.values.maximumPercent, targetValue, minimum);
 
                 let anyRangeIsDefined: boolean = [needsImprovement, satisfactory, good, veryGood].some(_.isNumber);
 
-                minimum = _.isNumber(minimum) ? Math.max(minimum, BulletChart.zeroValue) : BulletChart.zeroValue;
+                minimum = _.isNumber(minimum) && categoricalValues.Minimum ? minimum : BulletChart.zeroValue;
                 needsImprovement = _.isNumber(needsImprovement) ? Math.max(minimum, needsImprovement) : needsImprovement;
                 satisfactory = _.isNumber(satisfactory) ? Math.max(satisfactory, needsImprovement) : satisfactory;
                 good = _.isNumber(good) ? Math.max(good, satisfactory) : good;
@@ -383,6 +383,18 @@ module powerbi.extensibility.visual {
             return bulletModel;
         }
 
+        public static getRangeValue(value: number, percent: number, targetValue: number, minimum?: number): number {
+            let negativeMinimumCoef: number;
+
+            if (minimum === undefined) {
+                negativeMinimumCoef = value ? value : BulletChart.zeroValue;
+            } else {
+                negativeMinimumCoef = minimum;
+            }
+
+            return isFinite(value) && value !== null ? value : (isFinite(targetValue) && targetValue !== null && isFinite(percent) && percent !== null ? (percent * (targetValue - negativeMinimumCoef) / 100) + negativeMinimumCoef : null);
+        }
+
         // Implemented for old enums using space containing keys for example "Horizontal Left" which doesn't exist in current version
         private static updateOrientation(settings: BulletchartSettings): void {
             const noSpaceOrientation: string = settings.orientation.orientation.toString().replace(" ", "");
@@ -458,11 +470,18 @@ module powerbi.extensibility.visual {
 
             tooltipItems.forEach((tooltipItem: BulletChartTooltipItem) => {
                 if (tooltipItem && tooltipItem.metadata) {
-                    let metadata: DataViewMetadataColumn = tooltipItem.metadata.source,
+                    let displayName: string,
+                        metadata: DataViewMetadataColumn = tooltipItem.metadata.source,
                         formatString: string = valueFormatter.getFormatStringByColumn(metadata);
 
+                    if (tooltipItem.customName) {
+                        displayName = tooltipItem.customName;
+                    } else {
+                        displayName = metadata.displayName;
+                    }
+
                     tooltipDataItems.push({
-                        displayName: metadata.displayName,
+                        displayName,
                         value: valueFormatter.format(tooltipItem.value, formatString)
                     });
                 }
@@ -677,7 +696,9 @@ module powerbi.extensibility.visual {
                     "y": ((d: BarData) => d.y + this.baselineDelta + BulletChart.BulletSize / BulletChart.value2),
                     "fill": model.settings.labels.labelColor,
                     "font-size": PixelConverter.fromPoint(model.settings.labels.fontSize),
-                }).text((d: BarData) => d.categoryLabel);
+                }).text((d: BarData) => d.categoryLabel)
+                .append("title")
+                .text((d: BarData) => d.categoryLabel);
             }
 
             let measureUnitsText = TextMeasurementService.getTailoredTextOrDefault(
@@ -807,7 +828,9 @@ module powerbi.extensibility.visual {
                     }),
                     "fill": model.settings.labels.labelColor,
                     "font-size": PixelConverter.fromPoint(model.settings.labels.fontSize),
-                }).text((d: BarData) => d.categoryLabel);
+                }).text((d: BarData) => d.categoryLabel)
+                .append("title")
+                .text((d: BarData) => d.categoryLabel);
             }
 
             let measureUnitsText: string = TextMeasurementService.getTailoredTextOrDefault(
