@@ -1,3 +1,7 @@
+## 1.5.0
+* Added new formatting options for tooltips custom names
+* Added negative minimum values support
+
 ## 1.4.10
 * Fixed Measure Units rendering
 
