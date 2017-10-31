@@ -62,7 +62,13 @@ module.exports = (config) => {
             srcRecursivePath,
             'node_modules/jquery/dist/jquery.min.js',
             'node_modules/powerbi-visuals-utils-testutils/lib/index.js',
-            'node_modules/jasmine-jquery/lib/jasmine-jquery.js',            
+            'node_modules/jasmine-jquery/lib/jasmine-jquery.js',      
+            {
+                pattern: './capabilities.json',
+                watched: false,
+                served: true,
+                included: false
+            },
             recursivePathToTests,
             {
                 pattern: srcOriginalRecursivePath,
