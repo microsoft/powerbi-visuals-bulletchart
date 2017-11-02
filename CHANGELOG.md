@@ -1,3 +1,6 @@
+## 1.5.1
+* Added check for null objects toString call
+
 ## 1.5.0
 * Added new formatting options for tooltips custom names
 * Added negative minimum values support
