@@ -335,16 +335,20 @@ module powerbi.extensibility.visual {
                     selectionIdBuilder(),
                     highlight);
 
-                // markerValue
-                bulletModel.targetValues.push({
-                    barIndex: idx,
-                    value: targetValue && scale(targetValue),
-                    fill: settings.colors.bulletColor,
-                    key: selectionIdBuilder()
-                        .withMeasure(scale(targetValue || BulletChart.zeroValue).toString())
-                        .createSelectionId().getKey(),
-                    value2: targetValue2 && scale(targetValue2),
-                });
+                let scaledTarget: number = scale(targetValue || BulletChart.zeroValue);
+
+                if (_.isNumber(scaledTarget)) {
+                    // markerValue
+                    bulletModel.targetValues.push({
+                        barIndex: idx,
+                        value: targetValue && scale(targetValue),
+                        fill: settings.colors.bulletColor,
+                        key: selectionIdBuilder()
+                            .withMeasure(scaledTarget.toString())
+                            .createSelectionId().getKey(),
+                        value2: targetValue2 && scale(targetValue2),
+                    });
+                }
 
                 let xAxisProperties: IAxisProperties = null;
                 if (settings.axis.axis) {
@@ -397,10 +401,12 @@ module powerbi.extensibility.visual {
 
         // Implemented for old enums using space containing keys for example "Horizontal Left" which doesn't exist in current version
         private static updateOrientation(settings: BulletchartSettings): void {
-            const noSpaceOrientation: string = settings.orientation.orientation.toString().replace(" ", "");
+            if (settings && settings.orientation && settings.orientation.orientation) {
+                const noSpaceOrientation: string = settings.orientation.orientation.toString().replace(" ", "");
 
-            if (BulletChartOrientation[noSpaceOrientation]) {
-                settings.orientation.orientation = BulletChartOrientation[noSpaceOrientation];
+                if (BulletChartOrientation[noSpaceOrientation]) {
+                    settings.orientation.orientation = BulletChartOrientation[noSpaceOrientation];
+                }
             }
         }
 
