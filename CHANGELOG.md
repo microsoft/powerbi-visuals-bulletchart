@@ -1,3 +1,6 @@
+## 1.5.2
+* Fixed bug when not 0 minimum value calculated as 0
+
 ## 1.5.1
 * Added check for null objects toString call
 

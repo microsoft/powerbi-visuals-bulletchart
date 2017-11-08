@@ -47,7 +47,7 @@ module powerbi.extensibility.visual.test {
         public valuesCategory = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
         public valuesValue = [2, 4, 3, 3, 4, 3, 4, 5];
         public valuesTargetValue = [3, 3, 3, 2, 2, 2, 3, 3];
-        public valuesMinimum = [1, 1, 1, 1, 1, 1, 2, 2];
+        public valuesMinimum = [-1, 1, 1, 1, 1, 1, 2, 2];
         public valuesSatisfactory = [2, 2, 2, 3, 3, 3, 3, 3];
         public valuesGood = [4, 4, 4, 6, 6, 6, 4, 4];
         public valuesMaximum = [6, 6, 6, 8, 8, 8, 8, 7];
