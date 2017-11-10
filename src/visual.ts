@@ -230,7 +230,7 @@ module powerbi.extensibility.visual {
 
                 let anyRangeIsDefined: boolean = [needsImprovement, satisfactory, good, veryGood].some(_.isNumber);
 
-                minimum = _.isNumber(minimum) && categoricalValues.Minimum ? minimum : BulletChart.zeroValue;
+                minimum = _.isNumber(minimum) ? minimum : BulletChart.zeroValue;
                 needsImprovement = _.isNumber(needsImprovement) ? Math.max(minimum, needsImprovement) : needsImprovement;
                 satisfactory = _.isNumber(satisfactory) ? Math.max(satisfactory, needsImprovement) : satisfactory;
                 good = _.isNumber(good) ? Math.max(good, satisfactory) : good;
@@ -388,11 +388,11 @@ module powerbi.extensibility.visual {
         }
 
         public static getRangeValue(value: number, percent: number, targetValue: number, minimum?: number): number {
-            let negativeMinimumCoef: number;
+            let negativeMinimumCoef: number = 0;
 
             if (minimum === undefined) {
                 negativeMinimumCoef = value ? value : BulletChart.zeroValue;
-            } else {
+            } else if (minimum < 0) {
                 negativeMinimumCoef = minimum;
             }
 
