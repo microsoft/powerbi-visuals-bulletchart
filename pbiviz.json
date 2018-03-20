@@ -4,12 +4,12 @@
     "displayName": "Bullet Chart",
     "guid": "BulletChart1443347686880",
     "visualClassName": "BulletChart",
-    "version": "1.5.2",
+    "version": "1.6.0",
     "description": "A bullet chart that includes four orientations and a few customization options. Use to feature a single measure against a qualitative range.",
     "supportUrl": "http://community.powerbi.com",
     "gitHubUrl": "https://github.com/Microsoft/powerbi-visuals-bulletchart"
   },
-  "apiVersion": "1.7.0",
+  "apiVersion": "1.11.0",
   "author": {
     "name": "Microsoft",
     "email": "pbicvsupport@microsoft.com"
