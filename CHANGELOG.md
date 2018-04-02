@@ -1,3 +1,6 @@
+## 1.6.1
+* UPD: moment library has been updated to 2.22.0
+
 ## 1.6.0
 * UPD: powerbi-visuals-tools has been updated to 1.11.0 to support Bookmarks
 * UPD: API has been updated to 1.11.0 to support Bookmarks
