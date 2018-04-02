@@ -1,7 +1,7 @@
 {
   "name": "powerbi-visuals-bulletchart",
   "description": "Bullet chart",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "author": {
     "name": "Microsoft",
     "email": "pbicvsupport@microsoft.com"
@@ -25,8 +25,8 @@
     "@types/d3": "3.5.36",
     "@types/jasmine": "^2.5.37",
     "@types/jasmine-jquery": "^1.5.28",
-    "@types/lodash": "4.14.52",
     "@types/jquery": "^2.0.46",
+    "@types/lodash": "4.14.52",
     "coveralls": "2.11.15",
     "d3": "3.5.5",
     "globalize": "0.1.0-a2",
@@ -41,15 +41,15 @@
     "karma-sourcemap-loader": "0.3.7",
     "karma-typescript-preprocessor": "0.3.0",
     "lodash": "4.16.2",
-    "moment": "2.15.1",
+    "moment": "2.22.0",
     "powerbi-models": "^1.0.2",
+    "powerbi-visuals-tools": "1.11.0",
     "powerbi-visuals-utils-chartutils": "^1.2.0",
     "powerbi-visuals-utils-dataviewutils": "^1.2.0",
-    "powerbi-visuals-tools": "1.11.0",
-    "powerbi-visuals-utils-testutils": "1.2.0",
-    "powerbi-visuals-utils-tooltiputils": "^1.0.0",
     "powerbi-visuals-utils-formattingutils": "^2.1.0",
     "powerbi-visuals-utils-interactivityutils": "3.1.0",
+    "powerbi-visuals-utils-testutils": "1.2.0",
+    "powerbi-visuals-utils-tooltiputils": "^1.0.0",
     "tslint": "^5.1.2",
     "tslint-microsoft-contrib": "^5.0.0",
     "typescript": "2.1.4"
