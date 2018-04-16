@@ -4,7 +4,7 @@
                     "name": "Category",
                     "kind": "Grouping",
                     "displayName": "Category",
-                    "displayNameKey": "Visual_Categoty"
+                    "displayNameKey": "Visual_Category"
                 }, {
                     "name": "Value",
                     "kind": "Measure",
@@ -133,6 +133,7 @@
                             "displayName": "color",                            
                             "displayNameKey": "Visual_Color",
                             "description": "Select color for data labels",
+                            "descriptionKey": "Visual_Description_Color",
                             "type": { "fill": { "solid": {"color": true } } }
                         },
                         "fontSize": {
