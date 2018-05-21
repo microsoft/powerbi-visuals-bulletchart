@@ -230,7 +230,7 @@ module powerbi.extensibility.visual {
 
                 let anyRangeIsDefined: boolean = [needsImprovement, satisfactory, good, veryGood].some(_.isNumber);
 
-                minimum = _.isNumber(minimum) && categoricalValues.Minimum ? minimum : BulletChart.zeroValue;
+                minimum = _.isNumber(minimum) ? minimum : BulletChart.zeroValue;
                 needsImprovement = _.isNumber(needsImprovement) ? Math.max(minimum, needsImprovement) : needsImprovement;
                 satisfactory = _.isNumber(satisfactory) ? Math.max(satisfactory, needsImprovement) : satisfactory;
                 good = _.isNumber(good) ? Math.max(good, satisfactory) : good;
@@ -335,16 +335,20 @@ module powerbi.extensibility.visual {
                     selectionIdBuilder(),
                     highlight);
 
-                // markerValue
-                bulletModel.targetValues.push({
-                    barIndex: idx,
-                    value: targetValue && scale(targetValue),
-                    fill: settings.colors.bulletColor,
-                    key: selectionIdBuilder()
-                        .withMeasure(scale(targetValue || BulletChart.zeroValue).toString())
-                        .createSelectionId().getKey(),
-                    value2: targetValue2 && scale(targetValue2),
-                });
+                let scaledTarget: number = scale(targetValue || BulletChart.zeroValue);
+
+                if (_.isNumber(scaledTarget)) {
+                    // markerValue
+                    bulletModel.targetValues.push({
+                        barIndex: idx,
+                        value: targetValue && scale(targetValue),
+                        fill: settings.colors.bulletColor,
+                        key: selectionIdBuilder()
+                            .withMeasure(scaledTarget.toString())
+                            .createSelectionId().getKey(),
+                        value2: targetValue2 && scale(targetValue2),
+                    });
+                }
 
                 let xAxisProperties: IAxisProperties = null;
                 if (settings.axis.axis) {
@@ -384,11 +388,11 @@ module powerbi.extensibility.visual {
         }
 
         public static getRangeValue(value: number, percent: number, targetValue: number, minimum?: number): number {
-            let negativeMinimumCoef: number;
+            let negativeMinimumCoef: number = 0;
 
             if (minimum === undefined) {
                 negativeMinimumCoef = value ? value : BulletChart.zeroValue;
-            } else {
+            } else if (minimum < 0) {
                 negativeMinimumCoef = minimum;
             }
 
@@ -397,10 +401,12 @@ module powerbi.extensibility.visual {
 
         // Implemented for old enums using space containing keys for example "Horizontal Left" which doesn't exist in current version
         private static updateOrientation(settings: BulletchartSettings): void {
-            const noSpaceOrientation: string = settings.orientation.orientation.toString().replace(" ", "");
+            if (settings && settings.orientation && settings.orientation.orientation) {
+                const noSpaceOrientation: string = settings.orientation.orientation.toString().replace(" ", "");
 
-            if (BulletChartOrientation[noSpaceOrientation]) {
-                settings.orientation.orientation = BulletChartOrientation[noSpaceOrientation];
+                if (BulletChartOrientation[noSpaceOrientation]) {
+                    settings.orientation.orientation = BulletChartOrientation[noSpaceOrientation];
+                }
             }
         }
 

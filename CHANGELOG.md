@@ -1,3 +1,18 @@
+## 1.6.1
+* UPD: moment library has been updated to 2.22.0
+
+## 1.6.0
+* UPD: powerbi-visuals-tools has been updated to 1.11.0 to support Bookmarks
+* UPD: API has been updated to 1.11.0 to support Bookmarks
+* UPD: powerbi-visuals-utils-interactivityutils has been updated to 3.1.0 to support Bookmarks
+* UPD: powerbi-visuals-utils-testutils has been updated to "1.2.0" to support Bookmarks
+
+## 1.5.2
+* Fixed bug when not 0 minimum value calculated as 0
+
+## 1.5.1
+* Added check for null objects toString call
+
 ## 1.5.0
 * Added new formatting options for tooltips custom names
 * Added negative minimum values support
