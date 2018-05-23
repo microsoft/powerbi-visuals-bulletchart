@@ -1,3 +1,6 @@
+## 1.7.0
+* Added localization for all supported languages
+
 ## 1.6.1
 * UPD: moment library has been updated to 2.22.0
 
