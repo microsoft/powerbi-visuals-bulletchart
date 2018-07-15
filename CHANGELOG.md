@@ -1,3 +1,7 @@
+## 1.8.0
+* Implements high contrast mode
+* API 1.13.0
+
 ## 1.7.0
 * Added localization for all supported languages
 

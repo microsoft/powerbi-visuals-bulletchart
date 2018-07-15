@@ -30,7 +30,7 @@
 /// <reference path="../node_modules/@types/jasmine-jquery/index.d.ts" />
 
 // Power BI API
-/// <reference path="../.api/v1.11.0/PowerBI-visuals.d.ts" />
+/// <reference path="../.api/v1.13.0/PowerBI-visuals.d.ts" />
 
 // Power BI Extensibility
 /// <reference path="../node_modules/powerbi-visuals-utils-dataviewutils/lib/index.d.ts" />
@@ -41,6 +41,7 @@
 /// <reference path="../node_modules/powerbi-visuals-utils-dataviewutils/lib/index.d.ts" />
 /// <reference path="../node_modules/powerbi-visuals-utils-formattingutils/lib/index.d.ts" />
 /// <reference path="../node_modules/powerbi-visuals-utils-chartutils/lib/index.d.ts"/>
+/// <reference path="../node_modules/powerbi-visuals-utils-colorutils/lib/index.d.ts" />
 /// <reference path="../node_modules/powerbi-visuals-utils-testutils/lib/index.d.ts"/>
 
 // The visual

@@ -25,44 +25,61 @@
  */
 
 module powerbi.extensibility.visual {
-    import PixelConverter = powerbi.extensibility.utils.type.PixelConverter;
     import IEnumType = powerbi.IEnumType;
     import IVisual = powerbi.extensibility.IVisual;
-    import DataViewObjectPropertyIdentifier = powerbi.DataViewObjectPropertyIdentifier;
-    import VisualDataRoleKind = powerbi.VisualDataRoleKind;
+    import IColorPalette = powerbi.extensibility.IColorPalette;
     import IVisualHostServices = powerbi.extensibility.visual.IVisualHost;
     import IViewport = powerbi.IViewport;
-    import TextProperties = powerbi.extensibility.utils.formatting.TextProperties;
+    import IEnumMember = powerbi.IEnumMember;
+
+    import DataViewObjectPropertyIdentifier = powerbi.DataViewObjectPropertyIdentifier;
+    import VisualDataRoleKind = powerbi.VisualDataRoleKind;
     import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
     import DataView = powerbi.DataView;
     import DataViewObjects = powerbi.DataViewObjects;
-    import TextMeasurementService = powerbi.extensibility.utils.formatting.textMeasurementService;
     import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
     import VisualInitOptions = powerbi.extensibility.visual.VisualConstructorOptions;
     import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
     import VisualObjectInstance = powerbi.VisualObjectInstance;
-    import IEnumMember = powerbi.IEnumMember;
     import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
     import DataViewValueColumns = powerbi.DataViewValueColumns;
     import DataViewCategoricalColumn = powerbi.DataViewCategoricalColumn;
     import DataViewValueColumn = powerbi.DataViewValueColumn;
     import DataViewObjectPropertyTypeDescriptor = powerbi.DataViewPropertyValue;
+
+    // powerbi.extensibility.utils.type
+    import PixelConverter = powerbi.extensibility.utils.type.PixelConverter;
+
+    // powerbi.extensibility.utils.interactivity
     import SelectableDataPoint = powerbi.extensibility.utils.interactivity.SelectableDataPoint;
     import IInteractiveBehavior = powerbi.extensibility.utils.interactivity.IInteractiveBehavior;
     import ISelectionHandler = powerbi.extensibility.utils.interactivity.ISelectionHandler;
     import appendClearCatcher = powerbi.extensibility.utils.interactivity.appendClearCatcher;
     import createInteractivityService = powerbi.extensibility.utils.interactivity.createInteractivityService;
-    import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
     import IInteractivityService = powerbi.extensibility.utils.interactivity.IInteractivityService;
+    import SelectionIdBuilder = powerbi.extensibility.utils.interactivity.ISelectionHandler;
+
+    // powerbi.extensibility.utils.formatting
+    import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
+    import TextMeasurementService = powerbi.extensibility.utils.formatting.textMeasurementService;
+    import TextProperties = powerbi.extensibility.utils.formatting.TextProperties;
+
+    // powerbi.extensibility.utils.chart
     import IAxisProperties = powerbi.extensibility.utils.chart.axis.IAxisProperties;
     import IMargin = powerbi.extensibility.utils.chart.axis.IMargin;
-    import converterHelper = powerbi.extensibility.utils.dataview.converterHelper;
-    import SelectionIdBuilder = powerbi.extensibility.utils.interactivity.ISelectionHandler;
     import AxisHelper = powerbi.extensibility.utils.chart.axis;
     import axisScale = powerbi.extensibility.utils.chart.axis.scale;
+
+    // powerbi.extensibility.utils.tooltip
     import tooltip = powerbi.extensibility.utils.tooltip;
     import TooltipEventArgs = powerbi.extensibility.utils.tooltip.TooltipEventArgs;
     import ITooltipServiceWrapper = powerbi.extensibility.utils.tooltip.ITooltipServiceWrapper;
+
+    // powerbi.extensibility.utils.color
+    import ColorHelper = powerbi.extensibility.utils.color.ColorHelper;
+
+    // powerbi.extensibility.utils.dataview
+    import converterHelper = powerbi.extensibility.utils.dataview.converterHelper;
 
     export class BulletChart implements IVisual {
         private static ScrollBarSize: number = 22;
@@ -97,6 +114,8 @@ module powerbi.extensibility.visual {
         private interactivityService: IInteractivityService;
         private hostService: IVisualHost;
         public layout: VisualLayout;
+        private colorPalette: IColorPalette;
+        private colorHelper: ColorHelper;
 
         private tooltipServiceWrapper: ITooltipServiceWrapper;
 
@@ -140,7 +159,7 @@ module powerbi.extensibility.visual {
         private static value60: number = 60;
         private static emptyString: string = "";
         // Convert a DataView into a view model
-        public static converter(dataView: DataView, options: VisualUpdateOptions, visualHost: IVisualHost): BulletChartModel {
+        public static converter(dataView: DataView, options: VisualUpdateOptions, visualHost: IVisualHost, colorHelper: ColorHelper): BulletChartModel {
             let categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns> = BulletChartColumns.getCategoricalColumns(dataView);
 
             if (!categorical || !categorical.Value || !categorical.Value[0]) {
@@ -148,7 +167,7 @@ module powerbi.extensibility.visual {
             }
 
             let categoricalValues: BulletChartColumns<any[]> = BulletChartColumns.getCategoricalValues(dataView);
-            let settings: BulletchartSettings = BulletchartSettings.parse<BulletchartSettings>(dataView);
+            let settings: BulletchartSettings = BulletChart.parseSettings(dataView, categorical.Category.source, colorHelper);
 
             BulletChart.updateOrientation(settings);
             BulletChart.limitProperties(settings);
@@ -260,12 +279,26 @@ module powerbi.extensibility.visual {
                     secondColor: string = settings.colors.needsImprovementColor,
                     thirdColor: string = settings.colors.satisfactoryColor,
                     fourthColor: string = settings.colors.goodColor,
-                    lastColor: string = settings.colors.veryGoodColor;
+                    lastColor: string = settings.colors.veryGoodColor,
+                    firstFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor(): firstColor,
+                    secondFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor(): secondColor,
+                    thirdFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor(): thirdColor,
+                    fourthFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor(): fourthColor,
+                    lastFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor(): lastColor;
 
                 let highlight: any = categorical.Value[0].highlights && categorical.Value[0].highlights[idx] !== null;
                 let selectionIdBuilder = () => categorical.Category
                     ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx)
                     : visualHost.createSelectionIdBuilder();
+
+                
+                const minStrokeWidth: number = 0,            
+                    maxStrokeWidthBars: number = 0.5,
+                    maxStrokeWidthValues: number = 1.5;
+                
+
+                let barRectsStrokeWidth: number = colorHelper.isHighContrast ? maxStrokeWidthBars : minStrokeWidth,
+                    valueRectsStrokeWidth: number = colorHelper.isHighContrast ? maxStrokeWidthValues : minStrokeWidth;
 
                 if (anyRangeIsDefined) {
                     BulletChart.addItemToBarArray(
@@ -273,7 +306,9 @@ module powerbi.extensibility.visual {
                         idx,
                         firstScale,
                         secondScale,
+                        firstFillColor,
                         firstColor,
+                        maxStrokeWidthBars,
                         null,
                         toolTipItems,
                         selectionIdBuilder(),
@@ -284,7 +319,9 @@ module powerbi.extensibility.visual {
                         idx,
                         secondScale,
                         thirdScale,
+                        secondFillColor,
                         secondColor,
+                        maxStrokeWidthBars,
                         null,
                         toolTipItems,
                         selectionIdBuilder(),
@@ -295,7 +332,9 @@ module powerbi.extensibility.visual {
                         idx,
                         thirdScale,
                         fourthScale,
+                        thirdFillColor,
                         thirdColor,
+                        maxStrokeWidthBars,
                         null,
                         toolTipItems,
                         selectionIdBuilder(),
@@ -306,7 +345,9 @@ module powerbi.extensibility.visual {
                         idx,
                         fourthScale,
                         fifthScale,
+                        fourthFillColor,
                         fourthColor,
+                        maxStrokeWidthBars,
                         null,
                         toolTipItems,
                         selectionIdBuilder(),
@@ -317,19 +358,24 @@ module powerbi.extensibility.visual {
                         idx,
                         fifthScale,
                         lastScale,
+                        lastFillColor,
                         lastColor,
+                        maxStrokeWidthBars,
                         null,
                         toolTipItems,
                         selectionIdBuilder(),
                         highlight);
                 }
 
+                let bulletFillColor = colorHelper.isHighContrast ? colorHelper.getThemeColor() : settings.colors.bulletColor;
                 BulletChart.addItemToBarArray(
                     bulletModel.valueRects,
                     idx,
                     firstScale,
                     valueScale,
+                    bulletFillColor,
                     settings.colors.bulletColor,
+                    maxStrokeWidthValues,
                     null,
                     toolTipItems,
                     selectionIdBuilder(),
@@ -342,7 +388,9 @@ module powerbi.extensibility.visual {
                     bulletModel.targetValues.push({
                         barIndex: idx,
                         value: targetValue && scale(targetValue),
-                        fill: settings.colors.bulletColor,
+                        fill: bulletFillColor,
+                        stroke: settings.colors.bulletColor,
+                        strokeWidth: maxStrokeWidthValues,
                         key: selectionIdBuilder()
                             .withMeasure(scaledTarget.toString())
                             .createSelectionId().getKey(),
@@ -424,8 +472,22 @@ module powerbi.extensibility.visual {
             return this.data && this.data.settings;
         }
 
-        private static parseSettings(dataView: DataView, categorySource: DataViewMetadataColumn): BulletchartSettings {
-            return BulletchartSettings.parse<BulletchartSettings>(dataView);
+        private static parseSettings(dataView: DataView, categorySource: DataViewMetadataColumn, colorHelper: ColorHelper): BulletchartSettings {
+            let settings: BulletchartSettings =  BulletchartSettings.parse<BulletchartSettings>(dataView);
+
+            // change colors for high contrast mode
+            settings.axis.axisColor = colorHelper.getHighContrastColor("foreground", settings.axis.axisColor);
+            settings.axis.unitsColor = colorHelper.getHighContrastColor("foreground", settings.axis.unitsColor);
+            settings.labels.labelColor = colorHelper.getHighContrastColor("foreground", settings.labels.labelColor);
+
+            settings.colors.bulletColor = colorHelper.getHighContrastColor("foreground", settings.colors.bulletColor);
+            settings.colors.goodColor = colorHelper.getHighContrastColor("foreground", settings.colors.goodColor);
+            settings.colors.minColor = colorHelper.getHighContrastColor("foreground", settings.colors.minColor);
+            settings.colors.needsImprovementColor = colorHelper.getHighContrastColor("foreground", settings.colors.needsImprovementColor);
+            settings.colors.satisfactoryColor = colorHelper.getHighContrastColor("foreground", settings.colors.satisfactoryColor);
+            settings.colors.veryGoodColor = colorHelper.getHighContrastColor("foreground", settings.colors.veryGoodColor);
+
+            return settings;
         }
 
         public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstanceEnumeration {
@@ -451,7 +513,9 @@ module powerbi.extensibility.visual {
             barIndex: number,
             start: number,
             end: number,
-            fill: string,
+            fillColor: string,
+            strokeColor: string,
+            strokeWidth: number,
             formatString: DataViewObjectPropertyIdentifier,
             tooltipInfo: BulletChartTooltipItem[],
             selectionIdBuilder: ISelectionIdBuilder,
@@ -459,10 +523,12 @@ module powerbi.extensibility.visual {
 
             if (!isNaN(start) && !isNaN(end))
                 collection.push({
-                    barIndex: barIndex,
-                    start: start,
-                    end: end,
-                    fill: fill,
+                    barIndex,
+                    start,
+                    end,
+                    fillColor,
+                    strokeColor,
+                    strokeWidth,
                     tooltipInfo: BulletChart.createTooltipInfo(tooltipInfo),
                     selected: false,
                     identity: selectionIdBuilder.createSelectionId(),
@@ -514,6 +580,8 @@ module powerbi.extensibility.visual {
 
             let body: d3.Selection<any> = d3.select(options.element);
             this.hostService = options.host;
+            this.colorPalette = this.hostService.colorPalette;
+            this.colorHelper = new ColorHelper(this.colorPalette);
 
             this.bulletBody = body
                 .append("div")
@@ -539,7 +607,7 @@ module powerbi.extensibility.visual {
             }
             let dataView: DataView = options.dataViews[0];
             this.layout.viewport = options.viewport;
-            let data: BulletChartModel = BulletChart.converter(dataView, options, this.hostService);
+            let data: BulletChartModel = BulletChart.converter(dataView, options, this.hostService, this.colorHelper);
 
             // TODO: Calculating the baseline delta of the text. needs to be removed once the TExtMeasurementService.estimateSVGTextBaselineDelta is available.
             this.ClearViewport();
@@ -633,7 +701,9 @@ module powerbi.extensibility.visual {
                 "width": ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)),
                 "height": BulletChart.BulletSize,
             }).classed("range", true).style({
-                "fill": (d: BarRect) => d.fill
+                "fill": (d: BarRect) => d.fillColor,
+                "stroke": (d: BarRect) => d.strokeColor,
+                "stroke-width": (d: BarRect) => d.strokeWidth
             });
 
             rectSelection.exit();
@@ -646,7 +716,9 @@ module powerbi.extensibility.visual {
                 "width": ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.end - d.start)),
                 "height": BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4,
             }).classed("value", true).style({
-                "fill": (d: BarValueRect) => d.fill
+                "fill": (d: BarValueRect) => d.fillColor,
+                "stroke": (d: BarValueRect) => d.strokeColor,
+                "stroke-width": (d: BarValueRect) => d.strokeWidth
             });
 
             valueSelection.exit();
@@ -766,7 +838,9 @@ module powerbi.extensibility.visual {
                 "height": ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)),
                 "width": BulletChart.BulletSize,
             }).classed("range", true).style({
-                "fill": (d: BarRect) => d.fill
+                "fill": (d: BarRect) => d.fillColor,
+                "stroke": (d: BarRect) => d.strokeColor,
+                "stroke-width": (d: BarRect) => d.strokeWidth
             });
 
             rectSelection.exit();
@@ -779,7 +853,9 @@ module powerbi.extensibility.visual {
                 "height": ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.start - d.end)),
                 "width": BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4,
             }).classed("value", true).style({
-                "fill": (d: BarValueRect) => d.fill
+                "fill": (d: BarValueRect) => d.fillColor,
+                "stroke": (d: BarRect) => d.strokeColor,
+                "stroke-width": (d: BarRect) => d.strokeWidth
             });
 
             valueSelection.exit();
