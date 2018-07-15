@@ -280,22 +280,20 @@ module powerbi.extensibility.visual {
                     thirdColor: string = settings.colors.satisfactoryColor,
                     fourthColor: string = settings.colors.goodColor,
                     lastColor: string = settings.colors.veryGoodColor,
-                    firstFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor(): firstColor,
-                    secondFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor(): secondColor,
-                    thirdFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor(): thirdColor,
-                    fourthFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor(): fourthColor,
-                    lastFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor(): lastColor;
+                    firstFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : firstColor,
+                    secondFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : secondColor,
+                    thirdFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : thirdColor,
+                    fourthFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : fourthColor,
+                    lastFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : lastColor;
 
                 let highlight: any = categorical.Value[0].highlights && categorical.Value[0].highlights[idx] !== null;
                 let selectionIdBuilder = () => categorical.Category
                     ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx)
                     : visualHost.createSelectionIdBuilder();
 
-                
-                const minStrokeWidth: number = 0,            
+                const minStrokeWidth: number = 0,
                     maxStrokeWidthBars: number = 0.5,
                     maxStrokeWidthValues: number = 1.5;
-                
 
                 let barRectsStrokeWidth: number = colorHelper.isHighContrast ? maxStrokeWidthBars : minStrokeWidth,
                     valueRectsStrokeWidth: number = colorHelper.isHighContrast ? maxStrokeWidthValues : minStrokeWidth;
