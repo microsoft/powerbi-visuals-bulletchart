@@ -44,6 +44,10 @@ module powerbi.extensibility.visual.test {
     import BulletChartTooltipItem = powerbi.extensibility.visual.BulletChart1443347686880.BulletChartTooltipItem;
     import BulletChartOrientation = powerbi.extensibility.visual.BulletChart1443347686880.BulletChartOrientation;
 
+    // helpers
+    import isColorAppliedToElements = powerbi.extensibility.visual.test.helpers.isColorAppliedToElements;
+    import areColorsEqual = powerbi.extensibility.visual.test.helpers.areColorsEqual;
+
     export function roundTo(value: number | string, round: number): number {
         value = _.isNumber(value) ? value : parseFloat(value);
         return _.isNumber(value) ? parseFloat((<number>value).toFixed(round)) : <any>value;
@@ -173,23 +177,23 @@ module powerbi.extensibility.visual.test {
                         settings: BulletChart1443347686880.BulletchartSettings = visualBuilder.getSettings();
 
                     let badRange: JQuery = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css("fill"), settings.colors.minColor);
+                        return areColorsEqual($(element).css("fill"), settings.colors.minColor);
                     });
 
                     let needsImprovementRange: JQuery = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css("fill"), settings.colors.needsImprovementColor);
+                        return areColorsEqual($(element).css("fill"), settings.colors.needsImprovementColor);
                     });
 
                     let satisfactoryRange: JQuery = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css("fill"), settings.colors.satisfactoryColor);
+                        return areColorsEqual($(element).css("fill"), settings.colors.satisfactoryColor);
                     });
 
                     let goodRange: JQuery = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css("fill"), settings.colors.goodColor);
+                        return areColorsEqual($(element).css("fill"), settings.colors.goodColor);
                     });
 
                     let veryGoodRange: JQuery = rangeRects.filter((i, element: Element) => {
-                        return doColorsEqual($(element).css("fill"), settings.colors.veryGoodColor);
+                        return areColorsEqual($(element).css("fill"), settings.colors.veryGoodColor);
                     });
 
                     expect(badRange.length).toEqual(valuesLength);
@@ -539,15 +543,40 @@ module powerbi.extensibility.visual.test {
 
                 objectsChecker(jsonData);
             });
+
+        describe("high contrast mode test", () => {
+            const backgroundColor: string = "#000000";
+            const foregroundColor: string = "#ff00ff";
+
+            beforeEach(() => {
+                visualBuilder.visualHost.colorPalette.isHighContrast = true;
+
+                visualBuilder.visualHost.colorPalette.background = { value: backgroundColor };
+                visualBuilder.visualHost.colorPalette.foreground = { value: foregroundColor };
+            });
+
+            it("should not use fill style", (done) => {
+                visualBuilder.updateRenderTimeout(dataView, () => {
+                    const valueRects: JQuery[] = visualBuilder.valueRects.toArray().map($);
+                    const rangeRects: JQuery[] = visualBuilder.rangeRects.toArray().map($);
+
+                    expect(isColorAppliedToElements(valueRects, null, "fill"));
+                    expect(isColorAppliedToElements(rangeRects, null, "fill"));
+                    done();
+                });
+            });
+
+             it("should use stroke style", (done) => {
+                visualBuilder.updateRenderTimeout(dataView, () => {
+                    const valueRects: JQuery[] = visualBuilder.valueRects.toArray().map($);
+                    const rangeRects: JQuery[] = visualBuilder.rangeRects.toArray().map($);
+
+                    expect(isColorAppliedToElements(valueRects, null, "fill"));
+                    expect(isColorAppliedToElements(rangeRects, null, "fill"));
+                    done();
+                    });
+                });
+            });
         });
     });
-
-    function doColorsEqual(firstColor: string, secondColor: string): boolean {
-        const convertedFirstColor: RgbColor = colorHelper.parseColorString(firstColor),
-            convertedSecondColor: RgbColor = colorHelper.parseColorString(secondColor);
-
-        return convertedFirstColor.B === convertedSecondColor.B
-            && convertedFirstColor.G === convertedSecondColor.G
-            && convertedFirstColor.R === convertedSecondColor.R;
-    }
 }

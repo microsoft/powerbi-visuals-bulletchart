@@ -58,7 +58,9 @@ module powerbi.extensibility.visual {
         barIndex: number;
         start: number;
         end: number;
-        fill: string;
+        fillColor: string;
+        strokeColor: string;
+        strokeWidth?: number;
         tooltipInfo?: VisualTooltipDataItem[];
         key: string;
         highlight?: boolean;
@@ -69,6 +71,8 @@ module powerbi.extensibility.visual {
         value: number;
         value2: number;
         fill: string;
+        stroke: string;
+        strokeWidth?: number;
         key: string;
     }
 
