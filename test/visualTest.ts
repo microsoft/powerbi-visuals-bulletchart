@@ -592,7 +592,7 @@ module powerbi.extensibility.visual.test {
                         BulletChartData.ColumnMaximum
                     ], undefined, false);
                     visualBuilder.update(dataView);
-                    
+
                     rangeRects = visualBuilder.rangeRects.toArray().map($);
                     valueRects = visualBuilder.valueRects.toArray().map($);
                 });
