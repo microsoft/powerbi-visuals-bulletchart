@@ -167,7 +167,7 @@ module powerbi.extensibility.visual {
             }
 
             let categoricalValues: BulletChartColumns<any[]> = BulletChartColumns.getCategoricalValues(dataView);
-            let settings: BulletchartSettings = BulletChart.parseSettings(dataView, categorical.Category.source, colorHelper);
+            let settings: BulletchartSettings = BulletChart.parseSettings(dataView, colorHelper);
 
             BulletChart.updateOrientation(settings);
             BulletChart.limitProperties(settings);
@@ -470,7 +470,7 @@ module powerbi.extensibility.visual {
             return this.data && this.data.settings;
         }
 
-        private static parseSettings(dataView: DataView, categorySource: DataViewMetadataColumn, colorHelper: ColorHelper): BulletchartSettings {
+        private static parseSettings(dataView: DataView, colorHelper: ColorHelper): BulletchartSettings {
             let settings: BulletchartSettings =  BulletchartSettings.parse<BulletchartSettings>(dataView);
 
             // change colors for high contrast mode

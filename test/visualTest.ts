@@ -577,6 +577,34 @@ module powerbi.extensibility.visual.test {
                     });
                 });
             });
+
+            describe("empty categories", () => {
+                let rangeRects: JQuery[];
+                let valueRects: JQuery[];
+
+                beforeEach(() => {
+                    dataView = defaultDataViewBuilder.getDataView([
+                        BulletChartData.ColumnCategory,
+                        BulletChartData.ColumnValue,
+                        BulletChartData.ColumnTargetValue,
+                        BulletChartData.ColumnSatisfactory,
+                        BulletChartData.ColumnGood,
+                        BulletChartData.ColumnMaximum
+                    ], undefined, false);
+                    visualBuilder.update(dataView);
+
+                    rangeRects = visualBuilder.rangeRects.toArray().map($);
+                    valueRects = visualBuilder.valueRects.toArray().map($);
+                });
+
+                it("should visual's elements be rendered", (done) => {
+                    visualBuilder.updateRenderTimeout(dataView, () => {
+                        expect(rangeRects.length).not.toBe(0);
+                        expect(valueRects.length).not.toBe(0);
+                        done();
+                    });
+                });
+            });
         });
     });
 }

@@ -52,8 +52,8 @@ module powerbi.extensibility.visual.test {
         public valuesGood = [4, 4, 4, 6, 6, 6, 4, 4];
         public valuesMaximum = [6, 6, 6, 8, 8, 8, 8, 7];
 
-        public getDataView(columnNames?: string[], customizeColumns?: CustomizeColumnFn): DataView {
-            return this.createCategoricalDataViewBuilder([
+        public getDataView(columnNames?: string[], customizeColumns?: CustomizeColumnFn, hasCategories: boolean = true): DataView {
+            let categoriesOptions = hasCategories ? [
                 {
                     source: {
                         displayName: BulletChartData.ColumnCategory,
@@ -62,7 +62,10 @@ module powerbi.extensibility.visual.test {
                     },
                     values: this.valuesCategory
                 }
-            ], [
+            ] : [];
+            return this.createCategoricalDataViewBuilder(
+                categoriesOptions,
+                [
                     {
                         source: {
                             displayName: BulletChartData.ColumnValue,
