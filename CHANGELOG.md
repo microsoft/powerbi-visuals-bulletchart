@@ -1,3 +1,5 @@
+## 1.8.1
+* Fixed visual's fail on data with empty category field
 ## 1.8.0
 * Implements high contrast mode
 * API 1.13.0
