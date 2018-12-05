@@ -106,7 +106,7 @@ module powerbi.extensibility.visual {
             }, this.minViewportValue);
         }
 
-        private setUpdateObject<T>(object: T, setObjectFn: (T) => void, beforeUpdateFn?: (T) => void): void {
+        private setUpdateObject<T>(object: T, setObjectFn: (object: T) => void, beforeUpdateFn?: (object: T) => void): void {
             object = _.clone(object);
             setObjectFn(VisualLayout.createNotifyChangedObject(object, o => {
                 if (beforeUpdateFn) beforeUpdateFn(object);
