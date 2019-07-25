@@ -24,8 +24,6 @@
  *  THE SOFTWARE.
  */
 
-/// <reference path="_references.ts" />
-
 module powerbi.extensibility.visual.test {
     // powerbi.extensibility.visual
     import BulletChartBuilder = powerbi.extensibility.visual.test.BulletChartBuilder;
@@ -544,36 +542,36 @@ module powerbi.extensibility.visual.test {
                 objectsChecker(jsonData);
             });
 
-        describe("high contrast mode test", () => {
-            const backgroundColor: string = "#000000";
-            const foregroundColor: string = "#ff00ff";
+            describe("high contrast mode test", () => {
+                const backgroundColor: string = "#000000";
+                const foregroundColor: string = "#ff00ff";
 
-            beforeEach(() => {
-                visualBuilder.visualHost.colorPalette.isHighContrast = true;
+                beforeEach(() => {
+                    visualBuilder.visualHost.colorPalette.isHighContrast = true;
 
-                visualBuilder.visualHost.colorPalette.background = { value: backgroundColor };
-                visualBuilder.visualHost.colorPalette.foreground = { value: foregroundColor };
-            });
-
-            it("should not use fill style", (done) => {
-                visualBuilder.updateRenderTimeout(dataView, () => {
-                    const valueRects: JQuery[] = visualBuilder.valueRects.toArray().map($);
-                    const rangeRects: JQuery[] = visualBuilder.rangeRects.toArray().map($);
-
-                    expect(isColorAppliedToElements(valueRects, null, "fill"));
-                    expect(isColorAppliedToElements(rangeRects, null, "fill"));
-                    done();
+                    visualBuilder.visualHost.colorPalette.background = { value: backgroundColor };
+                    visualBuilder.visualHost.colorPalette.foreground = { value: foregroundColor };
                 });
-            });
 
-             it("should use stroke style", (done) => {
-                visualBuilder.updateRenderTimeout(dataView, () => {
-                    const valueRects: JQuery[] = visualBuilder.valueRects.toArray().map($);
-                    const rangeRects: JQuery[] = visualBuilder.rangeRects.toArray().map($);
+                it("should not use fill style", (done) => {
+                    visualBuilder.updateRenderTimeout(dataView, () => {
+                        const valueRects: JQuery[] = visualBuilder.valueRects.toArray().map($);
+                        const rangeRects: JQuery[] = visualBuilder.rangeRects.toArray().map($);
 
-                    expect(isColorAppliedToElements(valueRects, null, "fill"));
-                    expect(isColorAppliedToElements(rangeRects, null, "fill"));
-                    done();
+                        expect(isColorAppliedToElements(valueRects, null, "fill"));
+                        expect(isColorAppliedToElements(rangeRects, null, "fill"));
+                        done();
+                    });
+                });
+
+                it("should use stroke style", (done) => {
+                    visualBuilder.updateRenderTimeout(dataView, () => {
+                        const valueRects: JQuery[] = visualBuilder.valueRects.toArray().map($);
+                        const rangeRects: JQuery[] = visualBuilder.rangeRects.toArray().map($);
+
+                        expect(isColorAppliedToElements(valueRects, null, "fill"));
+                        expect(isColorAppliedToElements(rangeRects, null, "fill"));
+                        done();
                     });
                 });
             });

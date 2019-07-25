@@ -24,78 +24,83 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual {
-    // powerbi.visuals
-    import SelectableDataPoint = powerbi.extensibility.utils.interactivity.SelectableDataPoint;
+import powerbi from "powerbi-visuals-api";
 
-    // powerbi.extensibility.utils.chart
-    import IAxisProperties = powerbi.extensibility.utils.chart.axis.IAxisProperties;
+import DataViewValueColumn = powerbi.DataViewValueColumn;
+import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 
-    export interface BulletChartModel {
-        bars: BarData[];
-        settings: BulletchartSettings;
-        barRects: BarRect[];
-        valueRects: BarValueRect[];
-        targetValues: TargetValue[];
-        hasHighlights: boolean;
-        viewportLength: number;
-        labelHeight: number;
-        labelHeightTop: number;
-        spaceRequiredForBarHorizontally: number;
-    }
+import { interactivitySelectionService as interactivityService } from "powerbi-visuals-utils-interactivityutils";
+import SelectableDataPoint = interactivityService.SelectableDataPoint;
 
-    export interface BarData {
-        scale: any;
-        barIndex: number;
-        categoryLabel: string;
-        xAxisProperties: IAxisProperties;
-        x: number;
-        y: number;
-        key: string;
-    }
+import { axisInterfaces } from "powerbi-visuals-utils-chartutils";
+import IAxisProperties = axisInterfaces.IAxisProperties;
 
-    export interface BarRect extends SelectableDataPoint {
-        barIndex: number;
-        start: number;
-        end: number;
-        fillColor: string;
-        strokeColor: string;
-        strokeWidth?: number;
-        tooltipInfo?: VisualTooltipDataItem[];
-        key: string;
-        highlight?: boolean;
-    }
+import { BulletchartSettings } from "./settings";
 
-    export interface TargetValue {
-        barIndex: number;
-        value: number;
-        value2: number;
-        fill: string;
-        stroke: string;
-        strokeWidth?: number;
-        key: string;
-    }
+export interface BulletChartModel {
+    bars: BarData[];
+    settings: BulletchartSettings;
+    barRects: BarRect[];
+    valueRects: BarValueRect[];
+    targetValues: TargetValue[];
+    hasHighlights: boolean;
+    viewportLength: number;
+    labelHeight: number;
+    labelHeightTop: number;
+    spaceRequiredForBarHorizontally: number;
+}
 
-    export interface ScaledValues {
-        firstScale: number;
-        secondScale: number;
-        thirdScale: number;
-        fourthScale: number;
-        fifthScale: number;
-    }
+export interface BarData {
+    scale: any;
+    barIndex: number;
+    categoryLabel: string;
+    xAxisProperties: IAxisProperties;
+    x: number;
+    y: number;
+    key: string;
+}
 
-    export interface BarValueRect extends BarRect { }
+export interface BarRect extends SelectableDataPoint {
+    barIndex: number;
+    start: number;
+    end: number;
+    fillColor: string;
+    strokeColor: string;
+    strokeWidth?: number;
+    tooltipInfo?: VisualTooltipDataItem[];
+    key: string;
+    highlight?: boolean;
+}
 
-    export interface BulletChartAxis {
-        axis: boolean;
-        axisColor: string;
-        measureUnits: string;
-        unitsColor: string;
-    }
+export interface TargetValue {
+    barIndex: number;
+    value: number;
+    value2: number;
+    fill: string;
+    stroke: string;
+    strokeWidth?: number;
+    key: string;
+}
 
-    export interface BulletChartTooltipItem {
-        value: any;
-        metadata?: DataViewValueColumn;
-        customName: string;
-    }
+export interface ScaledValues {
+    firstScale: number;
+    secondScale: number;
+    thirdScale: number;
+    fourthScale: number;
+    fifthScale: number;
+}
+
+export interface BarValueRect extends BarRect { }
+
+export interface BulletChartAxis {
+    axis: boolean;
+    axisColor: string;
+    measureUnits: string;
+    unitsColor: string;
+}
+
+export interface BulletChartTooltipItem {
+    value: any;
+    metadata?: DataViewValueColumn;
+    customName: string;
 }

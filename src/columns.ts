@@ -24,119 +24,126 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual {
-    import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
-    import DataViewValueColumns = powerbi.DataViewValueColumns;
-    import DataViewCategoricalColumn = powerbi.DataViewCategoricalColumn;
-    import DataViewValueColumn = powerbi.DataViewValueColumn;
-    import converterHelper = powerbi.extensibility.utils.dataview.converterHelper;
+import powerbi from "powerbi-visuals-api";
+import * as _ from "lodash";
 
-    export class BulletChartColumns<T> {
-        public static getColumnSources(dataView: DataView) {
-            return this.getColumnSourcesT<DataViewMetadataColumn>(dataView);
-        }
 
-        public static getTableValues(dataView: DataView): BulletChartColumns<any[]> {
-            const table: DataViewTable = dataView && dataView.table,
-                columns = this.getColumnSourcesT<any[]>(dataView);
+import DataView = powerbi.DataView;
+import DataViewValueColumn = powerbi.DataViewValueColumn;
+import DataViewCategorical = powerbi.DataViewCategorical;
+import DataViewValueColumns = powerbi.DataViewValueColumns;
+import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
+import DataViewCategoricalColumn = powerbi.DataViewCategoricalColumn;
+import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
+import DataViewTable = powerbi.DataViewTable;
 
-            return columns && table && _.mapValues(
-                columns, (n: DataViewMetadataColumn, i) => n && table.rows.map(row => row[n.index]));
-        }
+import { converterHelper as ch } from "powerbi-visuals-utils-dataviewutils";
+import converterHelper = ch.converterHelper;
 
-        public static getTableRows(dataView: DataView): BulletChartColumns<any[]>[] {
-            const table: DataViewTable  = dataView && dataView.table,
-                columns = this.getColumnSourcesT<any[]>(dataView);
-
-            return columns && table && table.rows.map(row =>
-                _.mapValues(columns, (n: DataViewMetadataColumn, i) => n && row[n.index]));
-        }
-
-        public static getCategoricalValues(dataView: DataView): BulletChartColumns<any[]> {
-            const categorical: DataViewCategorical = dataView && dataView.categorical,
-                categories = categorical && categorical.categories || [],
-                values = categorical && categorical.values || <DataViewValueColumns>[],
-                series = categorical && values.source && this.getSeriesValues(dataView);
-
-            return categorical && _.mapValues(new this<any[]>(), (n, i) =>
-                (<DataViewCategoricalColumn[]>_.toArray(categories)).concat(_.toArray(values))
-                    .filter(x => x.source.roles && x.source.roles[i]).map(x => {
-                        const hasHighLight: boolean = !!(<DataViewValueColumn>x).highlights;
-                        let useHighlightAsValue: boolean;
-
-                        if (hasHighLight) {
-                            useHighlightAsValue = (<DataViewValueColumn>x).highlights.every(y => {
-                                if (y === null || y === undefined) {
-                                    return false;
-                                }
-                                return true;
-                            });
-                        }
-
-                        return useHighlightAsValue ? (<DataViewValueColumn>x).highlights : (<DataViewValueColumn>x).values;
-                    })[0]
-                || values.source && values.source.roles && values.source.roles[i] && series);
-        }
-
-        public static getSeriesValues(dataView: DataView): any[] {
-            return dataView && dataView.categorical && dataView.categorical.values
-                && dataView.categorical.values.map(x => converterHelper.getSeriesName(x.source));
-        }
-
-        public static getCategoricalColumns(dataView: DataView): BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns> {
-            const categorical: DataViewCategorical = dataView && dataView.categorical,
-                categories = categorical && categorical.categories || [],
-                values = categorical && categorical.values || <DataViewValueColumns>[];
-
-            return categorical && _.mapValues(
-                new this<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>(),
-                (n, i) => {
-                    let result: any = categories.filter(x => x.source.roles && x.source.roles[i])[0];
-
-                    if (!result) {
-                        result = values.source && values.source.roles && values.source.roles[i] && values;
-                    }
-
-                    if (!result) {
-                        result = values.filter(x => x.source.roles && x.source.roles[i]);
-
-                        if (_.isEmpty(result)) {
-                            result = undefined;
-                        }
-                    }
-
-                    return result;
-                });
-        }
-
-        public static getGroupedValueColumns(dataView: DataView): BulletChartColumns<DataViewValueColumn>[] {
-            const categorical: DataViewCategorical  = dataView && dataView.categorical,
-                values = categorical && categorical.values,
-                grouped = values && values.grouped();
-
-            return grouped && grouped.map(g => _.mapValues(
-                new this<DataViewValueColumn>(),
-                (n, i) => g.values.filter(v => v.source.roles[i])[0]));
-        }
-
-        private static getColumnSourcesT<T>(dataView: DataView): BulletChartColumns<T> {
-            const columns: DataViewMetadataColumn[] = dataView && dataView.metadata && dataView.metadata.columns;
-
-            return columns && _.mapValues(
-                new this<T>(), (n, i) => columns.filter(x => x.roles && x.roles[i])[0]);
-        }
-
-        // Data Roles
-        public Category: T = null;
-        public Value: T = null;
-        public TargetValue: T = null;
-        public Minimum: T = null;
-        public NeedsImprovement: T = null;
-        public Satisfactory: T = null;
-        public Good: T = null;
-        public VeryGood: T = null;
-        public Maximum: T = null;
-        public TargetValue2: T = null;
+export class BulletChartColumns<T> {
+    public static getColumnSources(dataView: DataView) {
+        return this.getColumnSourcesT<DataViewMetadataColumn>(dataView);
     }
 
+    public static getTableValues(dataView: DataView): BulletChartColumns<any[]> {
+        const table: DataViewTable = dataView && dataView.table,
+            columns = this.getColumnSourcesT<any[]>(dataView);
+
+        return columns && table && _.mapValues(
+            columns, (n: DataViewMetadataColumn, i) => n && table.rows.map(row => row[n.index]));
+    }
+
+    public static getTableRows(dataView: DataView): BulletChartColumns<any[]>[] {
+        const table: DataViewTable = dataView && dataView.table,
+            columns = this.getColumnSourcesT<any[]>(dataView);
+
+        return columns && table && table.rows.map(row =>
+            _.mapValues(columns, (n: DataViewMetadataColumn, i) => n && row[n.index]));
+    }
+
+    public static getCategoricalValues(dataView: DataView): BulletChartColumns<any[]> {
+        const categorical: DataViewCategorical = dataView && dataView.categorical,
+            categories = categorical && categorical.categories || [],
+            values = categorical && categorical.values || <DataViewValueColumns>[],
+            series = categorical && values.source && this.getSeriesValues(dataView);
+
+        return categorical && _.mapValues(new this<any[]>(), (n, i) =>
+            (<DataViewCategoricalColumn[]>_.toArray(categories)).concat(_.toArray(values))
+                .filter(x => x.source.roles && x.source.roles[i]).map(x => {
+                    const hasHighLight: boolean = !!(<DataViewValueColumn>x).highlights;
+                    let useHighlightAsValue: boolean;
+
+                    if (hasHighLight) {
+                        useHighlightAsValue = (<DataViewValueColumn>x).highlights.every(y => {
+                            if (y === null || y === undefined) {
+                                return false;
+                            }
+                            return true;
+                        });
+                    }
+
+                    return useHighlightAsValue ? (<DataViewValueColumn>x).highlights : (<DataViewValueColumn>x).values;
+                })[0]
+            || values.source && values.source.roles && values.source.roles[i] && series);
+    }
+
+    public static getSeriesValues(dataView: DataView): any[] {
+        return dataView && dataView.categorical && dataView.categorical.values
+            && dataView.categorical.values.map(x => converterHelper.getSeriesName(x.source));
+    }
+
+    public static getCategoricalColumns(dataView: DataView): BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns> {
+        const categorical: DataViewCategorical = dataView && dataView.categorical,
+            categories = categorical && categorical.categories || [],
+            values = categorical && categorical.values || <DataViewValueColumns>[];
+
+        return categorical && _.mapValues(
+            new this<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>(),
+            (n, i) => {
+                let result: any = categories.filter(x => x.source.roles && x.source.roles[i])[0];
+
+                if (!result) {
+                    result = values.source && values.source.roles && values.source.roles[i] && values;
+                }
+
+                if (!result) {
+                    result = values.filter(x => x.source.roles && x.source.roles[i]);
+
+                    if (_.isEmpty(result)) {
+                        result = undefined;
+                    }
+                }
+
+                return result;
+            });
+    }
+
+    public static getGroupedValueColumns(dataView: DataView): BulletChartColumns<DataViewValueColumn>[] {
+        const categorical: DataViewCategorical = dataView && dataView.categorical,
+            values = categorical && categorical.values,
+            grouped = values && values.grouped();
+
+        return grouped && grouped.map(g => _.mapValues(
+            new this<DataViewValueColumn>(),
+            (n, i) => g.values.filter(v => v.source.roles[i])[0]));
+    }
+
+    private static getColumnSourcesT<T>(dataView: DataView): BulletChartColumns<T> {
+        const columns: DataViewMetadataColumn[] = dataView && dataView.metadata && dataView.metadata.columns;
+
+        return columns && _.mapValues(
+            new this<T>(), (n, i) => columns.filter(x => x.roles && x.roles[i])[0]);
+    }
+
+    // Data Roles
+    public Category: T = null;
+    public Value: T = null;
+    public TargetValue: T = null;
+    public Minimum: T = null;
+    public NeedsImprovement: T = null;
+    public Satisfactory: T = null;
+    public Good: T = null;
+    public VeryGood: T = null;
+    public Maximum: T = null;
+    public TargetValue2: T = null;
 }
