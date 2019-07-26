@@ -83,6 +83,7 @@ import { BulletChartColumns } from "./columns";
 import { BulletChartModel, BulletChartTooltipItem, BarValueRect, BarData, BarRect, TargetValue } from "./dataInterfaces";
 import { VisualLayout } from "./visualLayout";
 import { BulletchartSettings, BulletChartOrientation } from "./settings";
+import { IBehaviorOptions } from "powerbi-visuals-utils-interactivityutils/lib/interactivityBaseService";
 
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;
@@ -114,7 +115,7 @@ export class BulletChart implements IVisual {
     private bulletGraphicsContext: d3.Selection<any>;
     private data: BulletChartModel;
     private behavior: BulletWebBehavior;
-    private interactivityService: IInteractivityService;
+    private interactivityService: IInteractivityService<>;
     private hostService: IVisualHost;
     public layout: VisualLayout;
     private colorPalette: IColorPalette;
@@ -1096,11 +1097,11 @@ export module TextMeasurementHelper {
     }
 }
 
-export interface BulletBehaviorOptions {
+export interface BulletBehaviorOptions extends IBehaviorOptions<> {
     rects: d3.Selection<any>;
     valueRects: d3.Selection<any>;
     clearCatcher: d3.Selection<any>;
-    interactivityService: IInteractivityService;
+    interactivityService: IInteractivityService<>;
     bulletChartSettings: BulletchartSettings;
     hasHighlights: boolean;
 }
