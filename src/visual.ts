@@ -30,6 +30,11 @@ import * as d3 from "d3";
 import * as _ from "lodash";
 import powerbi from "powerbi-visuals-api";
 
+// d3
+type Selection<T1, T2 = T1> = d3.Selection<any, T1, any, T2>;
+import ScaleLinear = d3.ScaleLinear;
+import { scaleLinear } from "d3";
+
 import IViewport = powerbi.IViewport;
 import DataView = powerbi.DataView;
 import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
@@ -106,11 +111,11 @@ export class BulletChart implements IVisual {
     private static FontFamily: string = "Segoe UI";
     private baselineDelta: number = 0;
     // Variables
-    private clearCatcher: d3.Selection<any>;
-    private bulletBody: d3.Selection<any>;
-    private scrollContainer: d3.Selection<any>;
-    private labelGraphicsContext: d3.Selection<any>;
-    private bulletGraphicsContext: d3.Selection<any>;
+    private clearCatcher: Selection<any>;
+    private bulletBody: Selection<any>;
+    private scrollContainer: Selection<any>;
+    private labelGraphicsContext: Selection<any>;
+    private bulletGraphicsContext: Selection<any>;
     private data: BulletChartModel;
     private behavior: BulletWebBehavior;
     private interactivityService: IInteractivityService<BaseDataPoint>;
@@ -265,7 +270,7 @@ export class BulletChart implements IVisual {
             satisfactory = _.isNumber(satisfactory) ? satisfactory : good;
             needsImprovement = _.isNumber(needsImprovement) ? needsImprovement : satisfactory;
 
-            let scale: d3.scale.Linear<number, number> = (d3.scale.linear()
+            let scale: ScaleLinear<number, number> = (scaleLinear()
                 .clamp(true)
                 .domain([minimum, maximum])
                 .range(verticalOrientation ? [bulletModel.viewportLength, 0] : [0, bulletModel.viewportLength]));
@@ -567,6 +572,10 @@ export class BulletChart implements IVisual {
     private static bulletScrollRegion: string = "bullet-scroll-region";
 
     constructor(options: VisualConstructorOptions) {
+        if (window.location !== window.parent.location) {
+            require("core-js/stable");
+        }
+
         this.tooltipServiceWrapper = createTooltipServiceWrapper(
             options.host.tooltipService,
             options.element);
@@ -578,7 +587,7 @@ export class BulletChart implements IVisual {
             left: 0
         });
 
-        let body: d3.Selection<any> = d3.select(options.element);
+        let body: Selection<any> = d3.select(options.element);
         this.hostService = options.host;
         this.colorPalette = this.hostService.colorPalette;
         this.colorHelper = new ColorHelper(this.colorPalette);
@@ -623,22 +632,18 @@ export class BulletChart implements IVisual {
             this.interactivityService.applySelectionStateToData(this.data.barRects);
         }
 
-        this.bulletBody.style({
-            "height": PixelConverter.toString(this.layout.viewportIn.height),
-            "width": PixelConverter.toString(this.layout.viewportIn.width),
-        });
+        this.bulletBody
+            .style("height", PixelConverter.toString(this.layout.viewportIn.height))
+            .style("width", PixelConverter.toString(this.layout.viewportIn.width));
+
         if (this.vertical) {
-            this.scrollContainer.attr({
-                width: PixelConverter.toString(this.data.bars.length * BulletChart.SpaceRequiredForBarVertically + BulletChart.XMarginVertical),
-                height: PixelConverter.toString(this.viewportScroll.height)
-            });
+            this.scrollContainer.attr("width", PixelConverter.toString(this.data.bars.length * BulletChart.SpaceRequiredForBarVertically + BulletChart.XMarginVertical))
+                .style("height", PixelConverter.toString(this.viewportScroll.height));
         }
         else {
-            this.scrollContainer.attr({
-                height: (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
-                    + (this.data.settings.axis.axis ? 0 : BulletChart.YMarginHorizontal)) + "px",
-                width: PixelConverter.toString(this.viewportScroll.width)
-            });
+            this.scrollContainer.attr("height", (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
+                + (this.data.settings.axis.axis ? 0 : BulletChart.YMarginHorizontal)) + "px")
+                .style("width", PixelConverter.toString(this.viewportScroll.width));
         }
 
         this.scrollContainer.attr("fill", "none");
@@ -661,7 +666,9 @@ export class BulletChart implements IVisual {
         this.bulletGraphicsContext.selectAll("line").remove();
         this.bulletGraphicsContext.selectAll("tick").remove();
         this.bulletGraphicsContext.selectAll("g").remove();
-        this.scrollContainer.attr({ width: PixelConverter.toString(0), height: PixelConverter.toString(0) });
+        this.scrollContainer
+            .attr("width", PixelConverter.toString(0))
+            .attr("height", PixelConverter.toString(0));
     }
 
     public onClearSelection(): void {
@@ -687,7 +694,7 @@ export class BulletChart implements IVisual {
     private static value4: number = 4;
     private static value14: number = 14;
     private static bulletMiddlePosition: number = (1 / BulletChart.value8 + 1 / BulletChart.value4) * BulletChart.BulletSize;
-    private setUpBulletsHorizontally(bulletBody: d3.Selection<any>, model: BulletChartModel, reveresed: boolean): void {
+    private setUpBulletsHorizontally(bulletBody: Selection<any>, model: BulletChartModel, reveresed: boolean): void {
         let bars: BarData[] = model.bars;
         let rects: BarRect[] = model.barRects;
         let valueRects: BarValueRect[] = model.valueRects;
@@ -695,7 +702,7 @@ export class BulletChart implements IVisual {
         let barSelection: any = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
         let rectSelection: any = this.bulletGraphicsContext.selectAll("rect.range").data(rects, (d: BarRect) => d.key);
         // Draw bullets
-        let bullets: d3.Selection<any> = rectSelection.enter().append("rect").attr({
+        let bullets: Selection<any> = rectSelection.enter().append("rect").attr({
             "x": ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))),
             "y": ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y)),
             "width": ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)),
@@ -742,19 +749,17 @@ export class BulletChart implements IVisual {
                 let bar: BarData = bars[idx],
                     barGroup = this.bulletGraphicsContext.append("g");
 
-                barGroup.append("g").attr({
-                    "transform": () => {
-                        let xLocation: number = this.calculateLabelWidth(bar, null, reveresed);
-                        let yLocation: number = bar.y + BulletChart.BulletSize;
+                barGroup.append("g").attr("transform", () => {
+                    let xLocation: number = this.calculateLabelWidth(bar, null, reveresed);
+                    let yLocation: number = bar.y + BulletChart.BulletSize;
 
-                        return "translate(" + xLocation + "," + yLocation + ")";
-                    },
-                }).classed("axis", true).call(bar.xAxisProperties.axis).style({
-                    "fill": model.settings.axis.axisColor,
-                    "font-size": PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
-                }).selectAll("line").style({
-                    "stroke": model.settings.axis.axisColor,
-                });
+                    return "translate(" + xLocation + "," + yLocation + ")";
+                })
+                    .classed("axis", true).call(bar.xAxisProperties.axis)
+                    .style("fill", model.settings.axis.axisColor)
+                    .style("font-size", PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt))
+                    .selectAll("line")
+                    .style("stroke", model.settings.axis.axisColor);
 
                 barGroup.selectAll(".tick text").call(
                     AxisHelper.LabelLayoutStrategy.clip,
@@ -825,7 +830,7 @@ export class BulletChart implements IVisual {
     }
     private static value3: number = 3;
     private static value10: number = 10;
-    private setUpBulletsVertically(bulletBody: d3.Selection<any>, model: BulletChartModel, reveresed: boolean) {
+    private setUpBulletsVertically(bulletBody: Selection<any>, model: BulletChartModel, reveresed: boolean) {
         let bars: BarData[] = model.bars;
         let rects: BarRect[] = model.barRects;
         let valueRects: BarValueRect[] = model.valueRects;
@@ -881,18 +886,16 @@ export class BulletChart implements IVisual {
             // needs to be changed to let when typescript 1.8 comes out.
             for (let idx = 0; idx < bars.length; idx++) {
                 let bar = bars[idx];
-                this.bulletGraphicsContext.append("g").attr({
-                    "transform": () => {
-                        let xLocation: number = bar.x;
-                        let yLocation: number = this.calculateLabelHeight(bar, null, reveresed);
-                        return "translate(" + xLocation + "," + yLocation + ")";
-                    },
-                }).classed("axis", true).call(bar.xAxisProperties.axis).style({
-                    "fill": model.settings.axis.axisColor,
-                    "font-size": PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt),
-                }).selectAll("line").style({
-                    "stroke": model.settings.axis.axisColor,
-                });
+                this.bulletGraphicsContext.append("g").attr("transform", () => {
+                    let xLocation: number = bar.x;
+                    let yLocation: number = this.calculateLabelHeight(bar, null, reveresed);
+                    return "translate(" + xLocation + "," + yLocation + ")";
+                })
+                    .classed("axis", true).call(bar.xAxisProperties.axis)
+                    .style("fill", model.settings.axis.axisColor)
+                    .style("font-size", PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt))
+                    .selectAll("line")
+                    .style("stroke", model.settings.axis.axisColor);
             }
 
             this.bulletGraphicsContext.selectAll("g.axis > .tick text").call(
@@ -971,15 +974,13 @@ export class BulletChart implements IVisual {
             .selectAll("line.target")
             .data(targetValues.filter(x => _.isNumber(x.value)));
 
-        selection.enter().append("line").attr({
-            "x1": x1,
-            "x2": x2,
-            "y1": y1,
-            "y2": y2,
-        }).style({
-            "stroke": ((d: TargetValue) => d.fill),
-            "stroke-width": 2,
-        }).classed("target", true);
+        selection.enter().append("line").attr("x1", x1)
+            .attr("x2", x2)
+            .attr("y1", y1)
+            .attr("y2", y2)
+            .style("stroke", ((d: TargetValue) => d.fill))
+            .style("stroke-width", 2)
+            .classed("target", true);
 
         selection.exit().remove();
     }
@@ -999,25 +1000,21 @@ export class BulletChart implements IVisual {
             "stroke-width": 2
         };
 
-        enterSelection.append("line").attr({
-            "x1": ((d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize),
-            "y1": ((d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize),
-            "x2": ((d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize),
-            "y2": ((d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize),
-        }).style({
-            "stroke": ((d: TargetValue) => d.fill),
-            "stroke-width": 2
-        }).classed("target2", true);
+        enterSelection.append("line").attr("x1", ((d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize))
+            .attr("y1", ((d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize))
+            .attr("x2", ((d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize))
+            .attr("y2", ((d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize))
+            .style("stroke", ((d: TargetValue) => d.fill))
+            .style("stroke-width", 2)
+            .classed("target2", true);
 
-        enterSelection.append("line").attr({
-            "x1": ((d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize),
-            "y1": ((d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize),
-            "x2": ((d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize),
-            "y2": ((d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize),
-        }).style({
-            "stroke": ((d: TargetValue) => d.fill),
-            "stroke-width": 2
-        }).classed("target2", true);
+        enterSelection.append("line").attr("x1", ((d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize))
+            .attr("y1", ((d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize))
+            .attr("x2", ((d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize))
+            .attr("y2", ((d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize))
+            .style("stroke", ((d: TargetValue) => d.fill))
+            .style("stroke-width", 2)
+            .classed("target2", true);
 
         selection.exit().remove();
     }
@@ -1039,7 +1036,7 @@ export module TextMeasurementHelper {
     }
 
     let spanElement: JQuery;
-    let svgTextElement: d3.Selection<any>;
+    let svgTextElement: Selection<any>;
     let canvasCtx: CanvasContext;
 
     export function estimateSvgTextBaselineDelta(textProperties: TextProperties): number {
@@ -1055,11 +1052,9 @@ export module TextMeasurementHelper {
         // The style hides the svg element from the canvas, preventing canvas from scrolling down to show svg black square.
         svgTextElement = d3.select(d3.select("body")[0][0])
             .append("svg")
-            .style({
-                "height": "0px",
-                "width": "0px",
-                "position": "absolute"
-            })
+            .style("height", "0px")
+            .style("width", "0px")
+            .style("position", "absolute")
             .append("text");
 
         canvasCtx = (<CanvasElement>document.createElement("canvas")).getContext("2d");
@@ -1072,14 +1067,12 @@ export module TextMeasurementHelper {
         svgTextElement.style(null);
         svgTextElement
             .text(textProperties.text)
-            .attr({
-                "visibility": "hidden",
-                "font-family": textProperties.fontFamily,
-                "font-size": textProperties.fontSize,
-                "font-weight": textProperties.fontWeight,
-                "font-style": textProperties.fontStyle,
-                "white-space": textProperties.whiteSpace || "nowrap"
-            });
+            .attr("visibility", "hidden")
+            .attr("font-family", textProperties.fontFamily)
+            .attr("font-size", textProperties.fontSize)
+            .attr("font-weight", textProperties.fontWeight)
+            .attr("font-style", textProperties.fontStyle)
+            .attr("white-space", textProperties.whiteSpace || "nowrap");
 
         // We're expecting the browser to give a synchronous measurement here
         // We're using SVGTextElement because it works across all browsers
@@ -1100,9 +1093,9 @@ export module TextMeasurementHelper {
 }
 
 export interface BulletBehaviorOptions extends IBehaviorOptions<BaseDataPoint> {
-    rects: d3.Selection<any>;
-    valueRects: d3.Selection<any>;
-    clearCatcher: d3.Selection<any>;
+    rects: Selection<any>;
+    valueRects: Selection<any>;
+    clearCatcher: Selection<any>;
     interactivityService: IInteractivityService<BaseDataPoint>;
     bulletChartSettings: BulletchartSettings;
     hasHighlights: boolean;
