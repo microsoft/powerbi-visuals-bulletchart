@@ -47,7 +47,9 @@ import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 
-
+// powerbi.visuals
+import ISelectionId = powerbi.visuals.ISelectionId;
+import ISelectionIdBuilder = powerbi.visuals.ISelectionIdBuilder;
 
 // powerbi.extensibility.utils.type
 import { pixelConverter as PixelConverter } from "powerbi-visuals-utils-typeutils";
@@ -75,15 +77,11 @@ import { TooltipEventArgs, ITooltipServiceWrapper, createTooltipServiceWrapper }
 // powerbi.extensibility.utils.color
 import { ColorHelper } from "powerbi-visuals-utils-colorutils";
 
-// powerbi.extensibility.utils.dataview
-import { converterHelper as ch } from "powerbi-visuals-utils-dataviewutils";
-import converterHelper = ch.converterHelper;
-
 import { BulletChartColumns } from "./columns";
 import { BulletChartModel, BulletChartTooltipItem, BarValueRect, BarData, BarRect, TargetValue } from "./dataInterfaces";
 import { VisualLayout } from "./visualLayout";
 import { BulletchartSettings, BulletChartOrientation } from "./settings";
-import { IBehaviorOptions } from "powerbi-visuals-utils-interactivityutils/lib/interactivityBaseService";
+import { IBehaviorOptions, BaseDataPoint } from "powerbi-visuals-utils-interactivityutils/lib/interactivityBaseService";
 
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;
@@ -115,7 +113,7 @@ export class BulletChart implements IVisual {
     private bulletGraphicsContext: d3.Selection<any>;
     private data: BulletChartModel;
     private behavior: BulletWebBehavior;
-    private interactivityService: IInteractivityService<>;
+    private interactivityService: IInteractivityService<BaseDataPoint>;
     private hostService: IVisualHost;
     public layout: VisualLayout;
     private colorPalette: IColorPalette;
@@ -534,7 +532,7 @@ export class BulletChart implements IVisual {
                 tooltipInfo: BulletChart.createTooltipInfo(tooltipInfo),
                 selected: false,
                 identity: selectionIdBuilder.createSelectionId(),
-                key: (selectionIdBuilder.withMeasure(start + " " + end).createSelectionId() as powerbi.visuals.ISelectionId).getKey(),
+                key: (selectionIdBuilder.withMeasure(start + " " + end).createSelectionId() as ISelectionId).getKey(),
                 highlight: highlight,
             });
     }
@@ -800,6 +798,7 @@ export class BulletChart implements IVisual {
         }
 
         if (this.interactivityService) {
+            let targetCollection = this.data.barRects.concat(this.data.valueRects);
             let behaviorOptions: BulletBehaviorOptions = {
                 rects: bullets,
                 valueRects: valueSelection,
@@ -807,10 +806,11 @@ export class BulletChart implements IVisual {
                 interactivityService: this.interactivityService,
                 bulletChartSettings: this.data.settings,
                 hasHighlights: this.data.hasHighlights,
+                behavior: this.behavior,
+                dataPoints: targetCollection
             };
 
-            let targetCollection = this.data.barRects.concat(this.data.valueRects);
-            this.interactivityService.bind(targetCollection, this.behavior, behaviorOptions);
+            this.interactivityService.bind(behaviorOptions);
         }
 
         barSelection.exit();
@@ -934,6 +934,7 @@ export class BulletChart implements IVisual {
         }
 
         if (this.interactivityService) {
+            let targetCollection: BarRect[] = this.data.barRects.concat(this.data.valueRects);
             let behaviorOptions: BulletBehaviorOptions = {
                 rects: bullets,
                 valueRects: valueSelection,
@@ -941,10 +942,11 @@ export class BulletChart implements IVisual {
                 interactivityService: this.interactivityService,
                 bulletChartSettings: this.data.settings,
                 hasHighlights: this.data.hasHighlights,
+                behavior: this.behavior,
+                dataPoints: targetCollection
             };
 
-            let targetCollection: BarRect[] = this.data.barRects.concat(this.data.valueRects);
-            this.interactivityService.bind(targetCollection, this.behavior, behaviorOptions);
+            this.interactivityService.bind(behaviorOptions);
         }
 
         barSelection.exit();
@@ -1097,11 +1099,11 @@ export module TextMeasurementHelper {
     }
 }
 
-export interface BulletBehaviorOptions extends IBehaviorOptions<> {
+export interface BulletBehaviorOptions extends IBehaviorOptions<BaseDataPoint> {
     rects: d3.Selection<any>;
     valueRects: d3.Selection<any>;
     clearCatcher: d3.Selection<any>;
-    interactivityService: IInteractivityService<>;
+    interactivityService: IInteractivityService<BaseDataPoint>;
     bulletChartSettings: BulletchartSettings;
     hasHighlights: boolean;
 }
