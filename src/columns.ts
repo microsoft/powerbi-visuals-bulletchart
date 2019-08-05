@@ -53,7 +53,7 @@ export class BulletChartColumns<T> {
             columns, (n: DataViewMetadataColumn, i) => n && table.rows.map(row => row[n.index]));
     }
 
-    public static getTableRows(dataView: DataView): BulletChartColumns<any[]>[] {
+    public static getTableRows(dataView: DataView): BulletChartColumns<any>[] {
         const table: DataViewTable = dataView && dataView.table,
             columns = this.getColumnSourcesT<any[]>(dataView);
 
@@ -128,7 +128,7 @@ export class BulletChartColumns<T> {
             (n, i) => g.values.filter(v => v.source.roles[i])[0]));
     }
 
-    private static getColumnSourcesT<T>(dataView: DataView): BulletChartColumns<T> {
+    private static getColumnSourcesT<T>(dataView: DataView): BulletChartColumns<DataViewMetadataColumn> {
         const columns: DataViewMetadataColumn[] = dataView && dataView.metadata && dataView.metadata.columns;
 
         return columns && _.mapValues(
