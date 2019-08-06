@@ -60,12 +60,11 @@ import ISelectionIdBuilder = powerbi.visuals.ISelectionIdBuilder;
 import { pixelConverter as PixelConverter } from "powerbi-visuals-utils-typeutils";
 
 // powerbi.extensibility.utils.interactivity
-import { interactivityBaseService as interactivityService, interactivitySelectionService } from "powerbi-visuals-utils-interactivityutils";
+import { interactivityBaseService as interactivityService, interactivitySelectionService, interactivityBaseService } from "powerbi-visuals-utils-interactivityutils";
 import appendClearCatcher = interactivityService.appendClearCatcher;
-import IInteractiveBehavior = interactivityService.IInteractiveBehavior;
 import IInteractivityService = interactivityService.IInteractivityService;
 import createInteractivityService = interactivitySelectionService.createInteractivitySelectionService;
-import ISelectionHandler = interactivityService.ISelectionHandler;
+import BaseDataPoint = interactivityBaseService.BaseDataPoint;
 
 // powerbi.extensibility.utils.formatting
 import { textMeasurementService as tms, valueFormatter } from "powerbi-visuals-utils-formattingutils";
@@ -77,7 +76,7 @@ import { axisInterfaces, axisScale, axis as AxisHelper } from "powerbi-visuals-u
 import IAxisProperties = axisInterfaces.IAxisProperties;
 
 // powerbi.extensibility.utils.tooltip
-import { TooltipEventArgs, ITooltipServiceWrapper, createTooltipServiceWrapper } from "powerbi-visuals-utils-tooltiputils";
+import { TooltipEventArgs, ITooltipServiceWrapper, createTooltipServiceWrapper, TooltipEnabledDataPoint } from "powerbi-visuals-utils-tooltiputils";
 
 // powerbi.extensibility.utils.color
 import { ColorHelper } from "powerbi-visuals-utils-colorutils";
@@ -86,7 +85,7 @@ import { BulletChartColumns } from "./columns";
 import { BulletChartModel, BulletChartTooltipItem, BarValueRect, BarData, BarRect, TargetValue } from "./dataInterfaces";
 import { VisualLayout } from "./visualLayout";
 import { BulletchartSettings, BulletChartOrientation } from "./settings";
-import { IBehaviorOptions, BaseDataPoint } from "powerbi-visuals-utils-interactivityutils/lib/interactivityBaseService";
+import { BulletBehaviorOptions, BulletWebBehavior } from "./behavior";
 
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;
@@ -705,7 +704,9 @@ export class BulletChart implements IVisual {
         let bullets: Selection<any> = rectSelection
             .enter()
             .append("rect")
-            .merge(rectSelection)
+            .merge(rectSelection);
+
+        bullets
             .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y)))
             .attr("width", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
@@ -719,10 +720,12 @@ export class BulletChart implements IVisual {
 
         // Draw value rects
         let valueSelection: Selection<any> = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
-        valueSelection
+        let valueSelectionMerged = valueSelection
             .enter()
             .append("rect")
-            .merge(valueSelection)
+            .merge(valueSelection);
+
+        valueSelectionMerged
             .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))))
             .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y + BulletChart.bulletMiddlePosition)))
             .attr("width", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
@@ -750,25 +753,41 @@ export class BulletChart implements IVisual {
             // Using var instead of let since you can"t pass let parameters to functions inside loops.
             // needs to be changed to let when typescript 1.8 comes out.
             for (let idx: number = 0; idx < bars.length; idx++) {
+                const axisColor = model.settings.axis.axisColor;
                 let bar: BarData = bars[idx],
                     barGroup = this.bulletGraphicsContext.append("g");
 
-                barGroup.append("g").attr("transform", () => {
-                    let xLocation: number = this.calculateLabelWidth(bar, null, reveresed);
-                    let yLocation: number = bar.y + BulletChart.BulletSize;
+                barGroup.append("g")
+                    .attr("transform", () => {
+                        let xLocation: number = this.calculateLabelWidth(bar, null, reveresed);
+                        let yLocation: number = bar.y + BulletChart.BulletSize;
 
-                    return "translate(" + xLocation + "," + yLocation + ")";
-                })
-                    .classed("axis", true).call(bar.xAxisProperties.axis)
-                    .style("fill", model.settings.axis.axisColor)
+                        return "translate(" + xLocation + "," + yLocation + ")";
+                    })
+                    .classed("axis", true)
+                    .call(bar.xAxisProperties.axis)
+                    .style("fill", axisColor)
                     .style("font-size", PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt))
                     .selectAll("line")
-                    .style("stroke", model.settings.axis.axisColor);
+                    .style("stroke", axisColor);
+
+                barGroup
+                    .selectAll("path")
+                    .style("stroke", axisColor);
+
+                barGroup
+                    .selectAll(".tick line")
+                    .style("stroke", axisColor);
+
+                barGroup
+                    .selectAll(".tick text")
+                    .style("fill", axisColor);
 
                 barGroup.selectAll(".tick text").call(
                     AxisHelper.LabelLayoutStrategy.clip,
                     bar.xAxisProperties.xLabelMaxWidth,
-                    TextMeasurementService.svgEllipsis);
+                    TextMeasurementService.svgEllipsis,
+                    axisColor);
             }
         }
 
@@ -817,7 +836,7 @@ export class BulletChart implements IVisual {
             let targetCollection = this.data.barRects.concat(this.data.valueRects);
             let behaviorOptions: BulletBehaviorOptions = {
                 rects: bullets,
-                valueRects: valueSelection,
+                valueRects: valueSelectionMerged,
                 clearCatcher: this.clearCatcher,
                 interactivityService: this.interactivityService,
                 bulletChartSettings: this.data.settings,
@@ -832,12 +851,12 @@ export class BulletChart implements IVisual {
         barSelection.exit();
 
         this.tooltipServiceWrapper.addTooltip(
-            valueSelection,
-            (tooltipEvent: TooltipEventArgs<BarValueRect>) => tooltipEvent.data.tooltipInfo);
+            valueSelectionMerged,
+            (tooltipEvent: TooltipEventArgs<TooltipEnabledDataPoint>) => tooltipEvent.data.tooltipInfo);
 
         this.tooltipServiceWrapper.addTooltip(
-            rectSelection,
-            (tooltipEvent: TooltipEventArgs<BarRect>) => tooltipEvent.data.tooltipInfo);
+            bullets,
+            (tooltipEvent: TooltipEventArgs<TooltipEnabledDataPoint>) => tooltipEvent.data.tooltipInfo);
     }
     private static value3: number = 3;
     private static value10: number = 10;
@@ -853,7 +872,9 @@ export class BulletChart implements IVisual {
         let bullets: Selection<any> = rectSelection
             .enter()
             .append("rect")
-            .merge(rectSelection)
+            .merge(rectSelection);
+
+        bullets
             .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x)))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reveresed))))
             .attr("height", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
@@ -867,7 +888,7 @@ export class BulletChart implements IVisual {
 
         // Draw value rects
         let valueSelection: Selection<any> = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
-        valueSelection
+        let valueSelectionMerged = valueSelection
             .enter()
             .append("rect")
             .merge(valueSelection)
@@ -962,7 +983,7 @@ export class BulletChart implements IVisual {
             let targetCollection: BarRect[] = this.data.barRects.concat(this.data.valueRects);
             let behaviorOptions: BulletBehaviorOptions = {
                 rects: bullets,
-                valueRects: valueSelection,
+                valueRects: valueSelectionMerged,
                 clearCatcher: this.clearCatcher,
                 interactivityService: this.interactivityService,
                 bulletChartSettings: this.data.settings,
@@ -977,12 +998,12 @@ export class BulletChart implements IVisual {
         barSelection.exit();
 
         this.tooltipServiceWrapper.addTooltip(
-            valueSelection,
-            (tooltipEvent: TooltipEventArgs<BarValueRect>) => tooltipEvent.data.tooltipInfo);
+            valueSelectionMerged,
+            (tooltipEvent: TooltipEventArgs<TooltipEnabledDataPoint>) => tooltipEvent.data.tooltipInfo);
 
         this.tooltipServiceWrapper.addTooltip(
-            rectSelection,
-            (tooltipEvent: TooltipEventArgs<BarRect>) => tooltipEvent.data.tooltipInfo);
+            bullets,
+            (tooltipEvent: TooltipEventArgs<TooltipEnabledDataPoint>) => tooltipEvent.data.tooltipInfo);
     }
 
     private drawFirstTargets(
@@ -1126,55 +1147,5 @@ export module TextMeasurementHelper {
         let rect = measureSvgTextRect(estimatedTextProperties);
 
         return rect;
-    }
-}
-
-export interface BulletBehaviorOptions extends IBehaviorOptions<BaseDataPoint> {
-    rects: Selection<any>;
-    valueRects: Selection<any>;
-    clearCatcher: Selection<any>;
-    interactivityService: IInteractivityService<BaseDataPoint>;
-    bulletChartSettings: BulletchartSettings;
-    hasHighlights: boolean;
-}
-
-export class BulletWebBehavior implements IInteractiveBehavior {
-    private static DimmedOpacity: number = 0.4;
-    private static DefaultOpacity: number = 1.0;
-
-    private static getFillOpacity(selected: boolean, highlight: boolean, hasSelection: boolean, hasPartialHighlights: boolean): number {
-        if ((hasPartialHighlights && !highlight) || (hasSelection && !selected))
-            return BulletWebBehavior.DimmedOpacity;
-        return BulletWebBehavior.DefaultOpacity;
-    }
-
-    private options: BulletBehaviorOptions;
-
-    public bindEvents(options: BulletBehaviorOptions, selectionHandler: ISelectionHandler) {
-        this.options = options;
-        let clearCatcher = options.clearCatcher;
-
-        options.valueRects.on("click", (d: BarValueRect) => {
-            selectionHandler.handleSelection(d, (d3.event as MouseEvent).ctrlKey);
-        });
-
-        options.rects.on("click", (d: BarRect) => {
-            selectionHandler.handleSelection(d, (d3.event as MouseEvent).ctrlKey);
-        });
-
-        clearCatcher.on("click", () => {
-            selectionHandler.handleClearSelection();
-        });
-    }
-
-    public renderSelection(hasSelection: boolean) {
-        let options = this.options;
-        let hasHighlights = options.hasHighlights;
-
-        options.valueRects.style("opacity", (d: BarValueRect) =>
-            BulletWebBehavior.getFillOpacity(d.selected, d.highlight, !d.highlight && hasSelection, !d.selected && hasHighlights));
-
-        options.rects.style("opacity", (d: BarRect) =>
-            BulletWebBehavior.getFillOpacity(d.selected, d.highlight, !d.highlight && hasSelection, !d.selected && hasHighlights));
     }
 }
