@@ -24,66 +24,65 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual {
-    import DataViewObjectsParser  = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
+import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
+import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
-    export class BulletchartSettings extends DataViewObjectsParser {
-        public values: ValuesSettings = new ValuesSettings();
-        public tooltips: TooltipsSettings = new TooltipsSettings();
-        public labels: LabelsSettings = new LabelsSettings();
-        public orientation: OrientationSettings = new OrientationSettings();
-        public colors: ColorsSettings = new ColorsSettings();
-        public axis: AxisSettings = new AxisSettings();
-    }
+export class BulletchartSettings extends DataViewObjectsParser {
+    public values: ValuesSettings = new ValuesSettings();
+    public tooltips: TooltipsSettings = new TooltipsSettings();
+    public labels: LabelsSettings = new LabelsSettings();
+    public orientation: OrientationSettings = new OrientationSettings();
+    public colors: ColorsSettings = new ColorsSettings();
+    public axis: AxisSettings = new AxisSettings();
+}
 
-    export class TooltipsSettings {
-        public valueCustomName: string = "";
-        public targetCustomName: string = "";
-        public target2CustomName: string = "";
-    }
+export class TooltipsSettings {
+    public valueCustomName: string = "";
+    public targetCustomName: string = "";
+    public target2CustomName: string = "";
+}
 
-    export class ValuesSettings {
-        public targetValue: number = null;
-        public targetValue2: number = null;
-        public minimumPercent: number = 0;
-        public needsImprovementPercent: number = null;
-        public satisfactoryPercent: number = null;
-        public goodPercent: number = null;
-        public veryGoodPercent: number = null;
-        public maximumPercent: number = null;
-    }
+export class ValuesSettings {
+    public targetValue: number = null;
+    public targetValue2: number = null;
+    public minimumPercent: number = 0;
+    public needsImprovementPercent: number = null;
+    public satisfactoryPercent: number = null;
+    public goodPercent: number = null;
+    public veryGoodPercent: number = null;
+    public maximumPercent: number = null;
+}
 
-    export class LabelsSettings {
-        public show: boolean = true;
-        public labelColor: string = "Black";
-        public fontSize: number = 11;
-        public maxWidth: number = 80;
-    }
+export class LabelsSettings {
+    public show: boolean = true;
+    public labelColor: string = "Black";
+    public fontSize: number = 11;
+    public maxWidth: number = 80;
+}
 
-    export enum BulletChartOrientation {
-        HorizontalLeft = <any>"HorizontalLeft",
-        HorizontalRight = <any>"HorizontalRight",
-        VerticalTop = <any>"VerticalTop",
-        VerticalBottom = <any>"VerticalBottom"
-    }
+export enum BulletChartOrientation {
+    HorizontalLeft = <any>"HorizontalLeft",
+    HorizontalRight = <any>"HorizontalRight",
+    VerticalTop = <any>"VerticalTop",
+    VerticalBottom = <any>"VerticalBottom"
+}
 
-    export class OrientationSettings {
-        public orientation: BulletChartOrientation = BulletChartOrientation.HorizontalLeft;
-    }
+export class OrientationSettings {
+    public orientation: BulletChartOrientation = BulletChartOrientation.HorizontalLeft;
+}
 
-    export class ColorsSettings {
-        public minColor: string = "#8b0000"; // Darkred
-        public needsImprovementColor: string = "#FF0000"; // Red
-        public satisfactoryColor: string = "#FFFF00"; // Yellow
-        public goodColor: string = "#008000"; // Green
-        public veryGoodColor: string = "#006400"; // Darkgreen
-        public bulletColor: string = "#000000"; // Black
-    }
+export class ColorsSettings {
+    public minColor: string = "#8b0000"; // Darkred
+    public needsImprovementColor: string = "#FF0000"; // Red
+    public satisfactoryColor: string = "#FFFF00"; // Yellow
+    public goodColor: string = "#008000"; // Green
+    public veryGoodColor: string = "#006400"; // Darkgreen
+    public bulletColor: string = "#000000"; // Black
+}
 
-    export class AxisSettings {
-        public axis: boolean = true;
-        public axisColor: string = "Grey";
-        public measureUnits: string = "";
-        public unitsColor: string = "Grey";
-    }
+export class AxisSettings {
+    public axis: boolean = true;
+    public axisColor: string = "Grey";
+    public measureUnits: string = "";
+    public unitsColor: string = "Grey";
 }
