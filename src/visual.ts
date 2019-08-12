@@ -786,8 +786,7 @@ export class BulletChart implements IVisual {
                 barGroup.selectAll(".tick text").call(
                     AxisHelper.LabelLayoutStrategy.clip,
                     bar.xAxisProperties.xLabelMaxWidth,
-                    TextMeasurementService.svgEllipsis,
-                    axisColor);
+                    TextMeasurementService.svgEllipsis);
             }
         }
 
@@ -917,6 +916,7 @@ export class BulletChart implements IVisual {
 
         // // Draw axes
         if (model.settings.axis.axis) {
+            const axisColor = model.settings.axis.axisColor;
 
             // Using var instead of let since you can't pass let parameters to functions inside loops.
             // needs to be changed to let when typescript 1.8 comes out.
@@ -928,11 +928,23 @@ export class BulletChart implements IVisual {
                     return "translate(" + xLocation + "," + yLocation + ")";
                 })
                     .classed("axis", true).call(bar.xAxisProperties.axis)
-                    .style("fill", model.settings.axis.axisColor)
+                    .style("fill", axisColor)
                     .style("font-size", PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt))
                     .selectAll("line")
-                    .style("stroke", model.settings.axis.axisColor);
+                    .style("stroke", axisColor);
             }
+
+            this.bulletGraphicsContext
+                .selectAll("g.axis path")
+                .style("stroke", axisColor);
+
+            this.bulletGraphicsContext
+                .selectAll(".tick line")
+                .style("stroke", axisColor);
+
+            this.bulletGraphicsContext
+                .selectAll(".tick text")
+                .style("fill", axisColor);
 
             this.bulletGraphicsContext.selectAll("g.axis > .tick text").call(
                 AxisHelper.LabelLayoutStrategy.clip,
