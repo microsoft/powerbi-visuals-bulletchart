@@ -21,14 +21,14 @@
     "url": "git+https://github.com/Microsoft/PowerBI-visuals-bulletchart.git"
   },
   "dependencies": {
-    "d3": "5.11.0",
+    "d3": "7.0.0",
     "lodash": "4.17.15",
-    "powerbi-visuals-utils-chartutils": "2.4.1",
+    "powerbi-visuals-utils-chartutils": "2.6.0",
     "powerbi-visuals-utils-colorutils": "2.2.1",
     "powerbi-visuals-utils-dataviewutils": "2.2.1",
     "powerbi-visuals-utils-formattingutils": "4.4.2",
-    "powerbi-visuals-utils-interactivityutils": "5.5.3",
-    "powerbi-visuals-utils-tooltiputils": "2.3.1"
+    "powerbi-visuals-utils-interactivityutils": "5.7.1",
+    "powerbi-visuals-utils-tooltiputils": "2.4.0"
   },
   "devDependencies": {
     "@types/d3": "5.7.2",
