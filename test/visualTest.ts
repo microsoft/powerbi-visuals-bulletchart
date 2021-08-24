@@ -25,7 +25,9 @@
  */
 
 import powerbi from "powerbi-visuals-api";
-import * as _ from "lodash";
+import lodashIsnumber from "lodash.isnumber";
+import lodashSumby from "lodash.sumby";
+import lodashTakeright from "lodash.takeright";
 
 import DataView = powerbi.DataView;
 
@@ -44,18 +46,22 @@ import { BulletChartTooltipItem } from "../src/dataInterfaces";
 import { isColorAppliedToElements, areColorsEqual } from "./helpers/helpers";
 
 export function roundTo(value: number | string, round: number): number {
-    value = _.isNumber(value) ? value : parseFloat(value);
-    return _.isNumber(value) ? parseFloat((<number>value).toFixed(round)) : <any>value;
+    value = lodashIsnumber(value) ? value : parseFloat(value);
+    return lodashIsnumber(value) ? parseFloat((<number>value).toFixed(round)) : <any>value;
 }
 
 export function convertAnySizeToPixel(size: string, round?: number): number {
     let result: number;
-    switch (_.takeRight(size, 2).join("").toLowerCase()) {
-        case "pt": result = fromPointToPixel(parseFloat(size)); break;
-        case "px": result = parseFloat(size); break;
+    switch (lodashTakeright(size, 2).join("").toLowerCase()) {
+      case "pt":
+        result = fromPointToPixel(parseFloat(size));
+        break;
+      case "px":
+        result = parseFloat(size);
+        break;
     }
 
-    return _.isNumber(round) ? roundTo(result, round) : result;
+    return lodashIsnumber(round) ? roundTo(result, round) : result;
 }
 
 export function assertSizeMatch(actual: string, expected: string, invert?: boolean): boolean {
@@ -98,10 +104,14 @@ describe("BulletChart", () => {
 
         it("update", (done) => {
             visualBuilder.updateRenderTimeout(dataView, () => {
-                expect(visualBuilder.mainElement.children("g").first().children("text").length)
+                expect(visualBuilder.mainElement.querySelector("g")[0].children("text").length)
                     .toBe(dataView.categorical.categories[0].values.length);
-                expect(visualBuilder.element.find(".bulletChart").css("height")).toBe(`${visualBuilder.viewport.height}px`);
-                expect(visualBuilder.element.find(".bulletChart").css("width")).toBe(`${visualBuilder.viewport.width}px`);
+                expect(
+                  visualBuilder.element
+                    .querySelector(".bulletChart")
+                    .style("height")
+                ).toBe(`${visualBuilder.viewport.height}px`);
+                expect(visualBuilder.element.querySelector(".bulletChart").style("width")).toBe(`${visualBuilder.viewport.width}px`);
 
                 done();
             });
@@ -168,26 +178,26 @@ describe("BulletChart", () => {
 
             visualBuilder.updateRenderTimeout(dataView, () => {
                 let valuesLength: number = dataView.categorical.categories[0].values.length,
-                    rangeRects: JQuery = visualBuilder.rangeRects.filter((i, e) => parseFloat($(e).attr("width")) > 0),
+                    rangeRects: Element = visualBuilder.rangeRects.filter((i, e) => parseFloat($(e).attr("width")) > 0),
                     settings: BulletchartSettings = visualBuilder.getSettings();
 
-                let badRange: JQuery = rangeRects.filter((i, element: Element) => {
+                let badRange: Element = rangeRects.filter((i, element: Element) => {
                     return areColorsEqual($(element).css("fill"), settings.colors.minColor);
                 });
 
-                let needsImprovementRange: JQuery = rangeRects.filter((i, element: Element) => {
+                let needsImprovementRange: Element = rangeRects.filter((i, element: Element) => {
                     return areColorsEqual($(element).css("fill"), settings.colors.needsImprovementColor);
                 });
 
-                let satisfactoryRange: JQuery = rangeRects.filter((i, element: Element) => {
+                let satisfactoryRange: Element = rangeRects.filter((i, element: Element) => {
                     return areColorsEqual($(element).css("fill"), settings.colors.satisfactoryColor);
                 });
 
-                let goodRange: JQuery = rangeRects.filter((i, element: Element) => {
+                let goodRange: Element = rangeRects.filter((i, element: Element) => {
                     return areColorsEqual($(element).css("fill"), settings.colors.goodColor);
                 });
 
-                let veryGoodRange: JQuery = rangeRects.filter((i, element: Element) => {
+                let veryGoodRange: Element = rangeRects.filter((i, element: Element) => {
                     return areColorsEqual($(element).css("fill"), settings.colors.veryGoodColor);
                 });
 
@@ -221,8 +231,8 @@ describe("BulletChart", () => {
             };
 
             visualBuilder.updateRenderTimeout(dataView, () => {
-                let ticks: JQuery = visualBuilder.axis.first().children("g.tick"),
-                    ticksLengthSum = _.sumBy(
+                let ticks: Element = visualBuilder.axis.first().children("g.tick"),
+                    ticksLengthSum = lodashSumby(
                         ticks.toArray(),
                         (e: Element) => e.getBoundingClientRect().width);
 
@@ -237,9 +247,9 @@ describe("BulletChart", () => {
 
             const grouped = visualBuilder.rangeRectsGrouped;
 
-            let firstBar: JQuery = grouped[0].first();
-            let secondBar: JQuery = grouped[1].first();
-            let thirdBar: JQuery = grouped[2].first();
+            let firstBar: SVGElement = grouped[0].first();
+            let secondBar: SVGElement = grouped[1].first();
+            let thirdBar: EleSVGElementment = grouped[2].first();
 
             clickElement(firstBar);
             clickElement(secondBar, true);
@@ -412,7 +422,7 @@ describe("BulletChart", () => {
                 (dataView.metadata.objects as any).axis.axis = false;
 
                 visualBuilder.updateFlushAllD3Transitions(dataView);
-                expect(visualBuilder.element.find(".axis").length).toBe(0);
+                expect(visualBuilder.element.querySelectorAll(".axis").length).toBe(0);
             });
 
             it("axis color", () => {
@@ -420,9 +430,9 @@ describe("BulletChart", () => {
                 (dataView.metadata.objects as any).axis.axisColor = getSolidColorStructuralObject(color);
 
                 visualBuilder.updateFlushAllD3Transitions(dataView);
-                expect(visualBuilder.element.find(".axis")).toBeDefined();
-                assertColorsMatch(visualBuilder.axis.css("fill"), color);
-                assertColorsMatch(visualBuilder.axis.find("line").css("stroke"), color);
+                expect(visualBuilder.element.querySelector(".axis")).toBeDefined();
+                assertColorsMatch(visualBuilder.axis.style("fill"), color);
+                assertColorsMatch(visualBuilder.axis.querySelector("line").style("stroke"), color);
             });
 
             it("measure units", () => {
@@ -552,8 +562,12 @@ describe("BulletChart", () => {
 
             it("should not use fill style", (done) => {
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    const valueRects: JQuery<any>[] = visualBuilder.valueRects.toArray().map($);
-                    const rangeRects: JQuery<any>[] = visualBuilder.rangeRects.toArray().map($);
+                    const valueRects: SVGElement[] = visualBuilder.valueRects
+                      .toArray()
+                      .map($);
+                    const rangeRects: SVGElement[] = visualBuilder.rangeRects
+                      .toArray()
+                      .map($);
 
                     expect(isColorAppliedToElements(valueRects, null, "fill"));
                     expect(isColorAppliedToElements(rangeRects, null, "fill"));
@@ -563,8 +577,12 @@ describe("BulletChart", () => {
 
             it("should use stroke style", (done) => {
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    const valueRects: JQuery<any>[] = visualBuilder.valueRects.toArray().map($);
-                    const rangeRects: JQuery<any>[] = visualBuilder.rangeRects.toArray().map($);
+                    const valueRects: SVGElement[] = visualBuilder.valueRects
+                      .toArray()
+                      .map($);
+                    const rangeRects: SVGElement[] = visualBuilder.rangeRects
+                      .toArray()
+                      .map($);
 
                     expect(isColorAppliedToElements(valueRects, null, "fill"));
                     expect(isColorAppliedToElements(rangeRects, null, "fill"));
@@ -574,8 +592,8 @@ describe("BulletChart", () => {
         });
 
         describe("empty categories", () => {
-            let rangeRects: JQuery<any>[];
-            let valueRects: JQuery<any>[];
+            let rangeRects: SVGElement[];
+            let valueRects: SVGElement[];
 
             beforeEach(() => {
                 dataView = defaultDataViewBuilder.getDataView([

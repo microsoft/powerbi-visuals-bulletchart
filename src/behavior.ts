@@ -1,6 +1,6 @@
 // d3
-import * as d3 from "d3";
-type Selection<T1, T2 = T1> = d3.Selection<any, T1, any, T2>;
+import { Selection } from "d3-selection";
+type d3Selection<T1, T2 = T1> = Selection<any, T1, any, T2>;
 
 // powerbi.extensibility.utils.interactivity
 import { interactivityBaseService as interactivityService } from "powerbi-visuals-utils-interactivityutils";
@@ -14,9 +14,9 @@ import { BulletchartSettings } from "./settings";
 import { BarRect, BarValueRect } from "./dataInterfaces";
 
 export interface BulletBehaviorOptions extends IBehaviorOptions<BaseDataPoint> {
-    rects: Selection<any>;
-    valueRects: Selection<any>;
-    clearCatcher: Selection<any>;
+    rects: d3Selection<any>;
+    valueRects: d3Selection<any>;
+    clearCatcher: d3Selection<any>;
     interactivityService: IInteractivityService<BaseDataPoint>;
     bulletChartSettings: BulletchartSettings;
     hasHighlights: boolean;
@@ -39,11 +39,11 @@ export class BulletWebBehavior implements IInteractiveBehavior {
         let clearCatcher = options.clearCatcher;
 
         options.valueRects.on("click", (d: BarValueRect) => {
-            selectionHandler.handleSelection(d, (d3.event as MouseEvent).ctrlKey);
+            selectionHandler.handleSelection(d, (event as MouseEvent).ctrlKey);
         });
 
         options.rects.on("click", (d: BarRect) => {
-            selectionHandler.handleSelection(d, (d3.event as MouseEvent).ctrlKey);
+            selectionHandler.handleSelection(d, (event as MouseEvent).ctrlKey);
         });
 
         clearCatcher.on("click", () => {

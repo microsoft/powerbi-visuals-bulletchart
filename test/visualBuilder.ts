@@ -25,7 +25,8 @@
  */
 
 import powerbi from "powerbi-visuals-api";
-import * as _ from "lodash";
+import lodashGroupby from "lodash.groupby";
+import lodashKeys from "lodash.keys";
 
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 
@@ -41,47 +42,41 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
     }
 
     public get mainElement() {
-        return this.element
-            .children("div")
-            .children("svg");
+        return this.element.querySelector("div").querySelector("svg");
     }
 
     public get valueRects() {
-        return this.mainElement
-            .children("g")
-            .children("rect.value");
+        return this.mainElement.querySelector("g").querySelector("rect.value");
     }
 
     public get rangeRects() {
-        return this.mainElement
-            .children("g")
-            .children("rect.range");
+        return this.mainElement.querySelector("g").querySelector("rect.range");
     }
 
     public get axis() {
         return this.mainElement
-            .children("g")
-            .children("g")
-            .children("g.axis");
+          .querySelector("g")
+          .querySelector("g")
+          .querySelector("g.axis");
     }
 
     public get categoryLabels() {
-        return this.mainElement
-            .children("g")
-            .children("text.title");
+        return this.mainElement.querySelector("g").querySelector("text.title");
     }
 
     public get measureUnits() {
         return this.mainElement
-            .children("g")
-            .children("text")
-            .not(".title");
+          .querySelector("g")
+          .querySelector("text")
+          .not(".title");
     }
 
-    public get rangeRectsGrouped(): JQuery[] {
+    public get rangeRectsGrouped(): SVGElement {
         let groupBy = this.isVertical ? "x" : "y",
-            grouped = _.groupBy(this.rangeRects.toArray(), e => $(e).attr(groupBy)),
-            groups = _.keys(grouped).map(x => $(grouped[x]));
+          grouped = lodashGroupby(Array.from(this.rangeRects), (e) =>
+            $(e).attr(groupBy)
+          ),
+          groups = lodashKeys(grouped).map((x) => $(grouped[x]));
 
         return groups;
     }
