@@ -37,69 +37,69 @@ import { BulletChart as VisualClass } from "../src/visual";
 import { BulletchartSettings as VisualSettings, BulletChartOrientation } from "../src/settings";
 
 export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
-    constructor(width: number, height: number) {
-        super(width, height, "BulletChart1443347686880");
-    }
+  constructor(width: number, height: number) {
+    super(width, height, "BulletChart1443347686880");
+  }
 
-    public get mainElement() {
-        return this.element.querySelector("div").querySelector("svg");
-    }
+  public get mainElement(): SVGElement {
+    return this.element.querySelector("div").querySelector("svg");
+  }
 
-    public get valueRects() {
-        return this.mainElement.querySelector("g").querySelector("rect.value");
-    }
+  public get valueRects(): NodeListOf<SVGElement> {
+    return this.mainElement.querySelectorAll("g rect.value");
+  }
 
-    public get rangeRects() {
-        return this.mainElement.querySelector("g").querySelector("rect.range");
-    }
+  public get rangeRects(): NodeListOf<SVGElement> {
+    return this.mainElement.querySelectorAll("rect.range");
+  }
 
-    public get axis() {
-        return this.mainElement
-          .querySelector("g")
-          .querySelector("g")
-          .querySelector("g.axis");
-    }
+  public get axis() {
+    return this.mainElement
+      .querySelector("g")
+      .querySelector("g")
+      .querySelector("g.axis");
+  }
 
-    public get categoryLabels() {
-        return this.mainElement.querySelector("g").querySelector("text.title");
-    }
+  public get categoryLabels() {
+    return this.mainElement.querySelector("g").querySelector("text.title");
+  }
 
-    public get measureUnits() {
-        return this.mainElement
-          .querySelector("g")
-          .querySelector("text")
-          .not(".title");
-    }
+  public get measureUnits() {
+    return this.mainElement
+      .querySelector("g")
+      .querySelector("text")
+      .not(".title");
+  }
 
-    public get rangeRectsGrouped(): SVGElement {
-        let groupBy = this.isVertical ? "x" : "y",
-          grouped = lodashGroupby(Array.from(this.rangeRects), (e) =>
-            $(e).attr(groupBy)
-          ),
-          groups = lodashKeys(grouped).map((x) => $(grouped[x]));
+  public get rangeRectsGrouped(): SVGElement {
+    let groupBy = this.isVertical ? "x" : "y",
+      grouped = lodashGroupby(Array.from(this.rangeRects), (e) =>
+        $(e).attr(groupBy)
+      ),
+      groups = lodashKeys(grouped).map((x) => $(grouped[x]));
 
-        return groups;
-    }
+    return groups;
+  }
 
-    public get orientation(): BulletChartOrientation {
-        return this.getSettings().orientation.orientation;
-    }
+  public get orientation(): BulletChartOrientation {
+    return this.getSettings().orientation.orientation;
+  }
 
-    public get isVertical(): boolean {
-        switch (this.orientation) {
-            case BulletChartOrientation.VerticalTop:
-            case BulletChartOrientation.VerticalBottom:
-                return true;
-            default:
-                return false;
-        }
+  public get isVertical(): boolean {
+    switch (this.orientation) {
+      case BulletChartOrientation.VerticalTop:
+      case BulletChartOrientation.VerticalBottom:
+        return true;
+      default:
+        return false;
     }
+  }
 
-    protected build(options: VisualConstructorOptions) {
-        return new VisualClass(options);
-    }
+  protected build(options: VisualConstructorOptions) {
+    return new VisualClass(options);
+  }
 
-    public getSettings(): VisualSettings {
-        return new VisualSettings();
-    }
+  public getSettings(): VisualSettings {
+    return new VisualSettings();
+  }
 }

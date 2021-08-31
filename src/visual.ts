@@ -24,6 +24,7 @@
  *  THE SOFTWARE.
  */
 
+import "regenerator-runtime/runtime.js";
 import "./../style/bulletChart.less";
 
 import { select, Selection } from 'd3-selection';
