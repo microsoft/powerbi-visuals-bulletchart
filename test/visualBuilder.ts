@@ -61,7 +61,7 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
   }
 
   public get categoryLabels() {
-    return this.mainElement.querySelector("g").querySelector("text.title");
+    return this.mainElement.querySelector("g").querySelectorAll("text.title");
   }
 
   public get measureUnits() {
@@ -71,14 +71,17 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
       .not(".title");
   }
 
-  public get rangeRectsGrouped(): SVGElement {
-    let groupBy = this.isVertical ? "x" : "y",
-      grouped = lodashGroupby(Array.from(this.rangeRects), (e) =>
-        $(e).attr(groupBy)
-      ),
-      groups = lodashKeys(grouped).map((x) => $(grouped[x]));
+  public get rangeRectsGrouped(): SVGElement[] {
+    // let groupBy = this.isVertical ? "x" : "y",
+    //   grouped = lodashGroupby(Array.from(this.rangeRects), (e) =>
+    //     e.getAttribute(groupBy)
+    //   ),
+    //   groups = lodashKeys(grouped).map((x) => grouped[x]);
 
-    return groups;
+    // return groups;
+    return Array.from(this.mainElement
+      .querySelector("g")
+      .querySelectorAll("rect.value"));
   }
 
   public get orientation(): BulletChartOrientation {

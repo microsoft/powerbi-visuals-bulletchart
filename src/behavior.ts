@@ -38,12 +38,12 @@ export class BulletWebBehavior implements IInteractiveBehavior {
         this.options = options;
         let clearCatcher = options.clearCatcher;
 
-        options.valueRects.on("click", (d: BarValueRect) => {
-            selectionHandler.handleSelection(d, (event as MouseEvent).ctrlKey);
+        options.valueRects.on("click", (event: MouseEvent, d: BarValueRect) => {
+            selectionHandler.handleSelection(d, event.ctrlKey || event.metaKey);
         });
 
-        options.rects.on("click", (d: BarRect) => {
-            selectionHandler.handleSelection(d, (event as MouseEvent).ctrlKey);
+        options.rects.on("click", (event: MouseEvent, d: BarRect) => {
+            selectionHandler.handleSelection(d, event.ctrlKey || event.metaKey);
         });
 
         clearCatcher.on("click", () => {

@@ -75,7 +75,7 @@ export function assertSizeMatch(
   actual: string,
   expected: string,
   invert?: boolean
-): boolean {
+): void {
   let matchers = expect(convertAnySizeToPixel(actual, 0));
   if (invert) {
     matchers = matchers.not;
@@ -117,15 +117,19 @@ describe("BulletChart", () => {
     it("update", (done) => {
       visualBuilder.updateRenderTimeout(dataView, () => {
         expect(
-          visualBuilder.mainElement.children("g").first().children("text")
+          visualBuilder.mainElement.querySelector("g")[0].querySelector("text")
             .length
         ).toBe(dataView.categorical.categories[0].values.length);
-        expect(visualBuilder.element.find(".bulletChart").css("height")).toBe(
-          `${visualBuilder.viewport.height}px`
-        );
-        expect(visualBuilder.element.find(".bulletChart").css("width")).toBe(
-          `${visualBuilder.viewport.width}px`
-        );
+        expect(
+          (<HTMLElement>(
+            visualBuilder.element.querySelector(".bulletChart")
+          )).style["height"]
+        ).toBe(`${visualBuilder.viewport.height}px`);
+        expect(
+          (<HTMLElement>(
+            visualBuilder.element.querySelector(".bulletChart")
+          )).style["width"]
+        ).toBe(`${visualBuilder.viewport.width}px`);
 
         done();
       });
@@ -145,7 +149,9 @@ describe("BulletChart", () => {
       dataView = defaultDataViewBuilder.getDataView();
 
       visualBuilder.updateRenderTimeout(dataView, () => {
-        expect(visualBuilder.element.find(".rect").length).toBe(0);
+        expect(
+          (<HTMLElement[]>Array.from(visualBuilder.element.querySelectorAll(".rect"))).length
+        ).toBe(0);
         done();
       });
     });
@@ -165,7 +171,7 @@ describe("BulletChart", () => {
 
       let rangeRects: any = visualBuilder.rangeRects;
       let yArray: number[] = rangeRects.map((i, e) => {
-        return parseFloat($(e).attr("y"));
+        return parseFloat(e.getAttribute("y"));
       });
 
       dataView.metadata.objects = {
@@ -177,8 +183,8 @@ describe("BulletChart", () => {
       visualBuilder.updateFlushAllD3Transitions(dataView);
 
       rangeRects = visualBuilder.rangeRects;
-      let yArrayWithNoAxis: any = rangeRects.map((i, e) => {
-        return parseFloat($(e).attr("y"));
+      let yArrayWithNoAxis: number[] = rangeRects.map((i, e) => {
+        return parseFloat(e.getAttribute("y"));
       });
 
       expect(yArray[yArray.length - 1]).toBeGreaterThan(
@@ -209,49 +215,53 @@ describe("BulletChart", () => {
       visualBuilder.updateRenderTimeout(dataView, () => {
         let valuesLength: number =
             dataView.categorical.categories[0].values.length,
-          rangeRects: JQuery = visualBuilder.rangeRects.filter(
-            (i, e) => parseFloat($(e).attr("width")) > 0
+          rangeRects: any = Array.from(visualBuilder.rangeRects).filter(
+            (e, i) => parseFloat(e.getAttribute("width")) > 0
           ),
           settings: BulletchartSettings = visualBuilder.getSettings();
 
-        let badRange: JQuery = rangeRects.filter((i, element: Element) => {
+        let badRange: SVGElement[] = rangeRects.filter((i, element: HTMLElement) => {
           return areColorsEqual(
-            $(element).css("fill"),
+            element.style["fill"],
             settings.colors.minColor
           );
         });
 
-        let needsImprovementRange: JQuery = rangeRects.filter(
-          (i, element: Element) => {
+        let needsImprovementRange: SVGElement[] = rangeRects.filter(
+          (i, element: HTMLElement) => {
             return areColorsEqual(
-              $(element).css("fill"),
+              element.style["fill"],
               settings.colors.needsImprovementColor
             );
           }
         );
 
-        let satisfactoryRange: JQuery = rangeRects.filter(
-          (i, element: Element) => {
+        let satisfactoryRange: SVGElement[] = rangeRects.filter(
+          (i, element: HTMLElement) => {
             return areColorsEqual(
-              $(element).css("fill"),
+              element.style["fill"],
               settings.colors.satisfactoryColor
             );
           }
         );
 
-        let goodRange: JQuery = rangeRects.filter((i, element: Element) => {
-          return areColorsEqual(
-            $(element).css("fill"),
-            settings.colors.goodColor
-          );
-        });
+        let goodRange: SVGElement[] = rangeRects.filter(
+          (i, element: HTMLElement) => {
+            return areColorsEqual(
+              element.style["fill"],
+              settings.colors.goodColor
+            );
+          }
+        );
 
-        let veryGoodRange: JQuery = rangeRects.filter((i, element: Element) => {
-          return areColorsEqual(
-            $(element).css("fill"),
-            settings.colors.veryGoodColor
-          );
-        });
+        let veryGoodRange: SVGElement[] = rangeRects.filter(
+          (i, element: HTMLElement) => {
+            return areColorsEqual(
+              element.style["fill"],
+              settings.colors.veryGoodColor
+            );
+          }
+        );
 
         expect(badRange.length).toEqual(valuesLength);
         expect(needsImprovementRange.length).toEqual(valuesLength);
@@ -286,9 +296,9 @@ describe("BulletChart", () => {
       };
 
       visualBuilder.updateRenderTimeout(dataView, () => {
-        let ticks: JQuery = visualBuilder.axis.first().children("g.tick"),
+        let ticks: HTMLElement[] = visualBuilder.axis[0].children("g.tick"),
           ticksLengthSum = _.sumBy(
-            ticks.toArray(),
+            Array.from(ticks),
             (e: Element) => e.getBoundingClientRect().width
           );
 
@@ -301,18 +311,18 @@ describe("BulletChart", () => {
     it("multi-selection test", () => {
       visualBuilder.updateFlushAllD3Transitions(dataView);
 
-      const grouped = visualBuilder.rangeRectsGrouped;
+      const grouped: SVGElement[] = Array.from(visualBuilder.rangeRectsGrouped);
 
-      let firstBar: JQuery = grouped[0].first();
-      let secondBar: JQuery = grouped[1].first();
-      let thirdBar: JQuery = grouped[2].first();
+      let firstBar: HTMLElement = grouped[0] as unknown as HTMLElement;
+      let secondBar: HTMLElement = grouped[1] as unknown as HTMLElement;
+      let thirdBar: HTMLElement = grouped[2] as unknown as HTMLElement;
 
       clickElement(firstBar);
       clickElement(secondBar, true);
 
-      expect(parseFloat(firstBar.css("opacity"))).toBe(1);
-      expect(parseFloat(secondBar.css("opacity"))).toBe(1);
-      expect(parseFloat(thirdBar.css("opacity"))).toBeLessThan(1);
+      expect(parseFloat(firstBar.style["opacity"])).toBe(1);
+      expect(parseFloat(secondBar.style["opacity"])).toBe(1);
+      expect(parseFloat(thirdBar.style["opacity"])).toBeLessThan(1);
     });
   });
 
@@ -344,11 +354,9 @@ describe("BulletChart", () => {
         (dataView.metadata.objects as any).labels.fontSize = fontSize;
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        visualBuilder.categoryLabels
-          .toArray()
-          .map($)
+        Array.from(visualBuilder.categoryLabels)
           .forEach((e) =>
-            assertSizeMatch(e.attr("font-size"), fontSize + "pt")
+            assertSizeMatch(e.getAttribute("font-size"), fontSize + "pt")
           );
       });
     });
@@ -362,50 +370,38 @@ describe("BulletChart", () => {
         };
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        visualBuilder.categoryLabels
-          .toArray()
-          .map($)
-          .forEach((e) =>
-            expect(parseFloat(e.attr("x"))).toBeLessThan(
-              visualBuilder.viewport.width / 2
-            )
-          );
+        Array.from(visualBuilder.categoryLabels).forEach((e) =>
+          expect(parseFloat(e.getAttribute("x"))).toBeLessThan(
+            visualBuilder.viewport.width / 2
+          )
+        );
 
         (dataView.metadata.objects as any).orientation.orientation =
           BulletChartOrientation.HorizontalRight;
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        visualBuilder.categoryLabels
-          .toArray()
-          .map($)
-          .forEach((e) =>
-            expect(parseFloat(e.attr("x"))).toBeGreaterThan(
-              visualBuilder.viewport.width / 2
-            )
-          );
+        Array.from(visualBuilder.categoryLabels).forEach((e) =>
+          expect(parseFloat(e.getAttribute("x"))).toBeGreaterThan(
+            visualBuilder.viewport.width / 2
+          )
+        );
 
         (dataView.metadata.objects as any).orientation.orientation =
           BulletChartOrientation.VerticalTop;
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        visualBuilder.categoryLabels
-          .toArray()
-          .map($)
-          .forEach((e) =>
-            expect(parseFloat(e.attr("y"))).toBeLessThan(
-              visualBuilder.viewport.height / 2
-            )
-          );
+        Array.from(visualBuilder.categoryLabels).forEach((e) =>
+          expect(parseFloat(e.getAttribute("y"))).toBeLessThan(
+            visualBuilder.viewport.height / 2
+          )
+        );
 
         (dataView.metadata.objects as any).orientation.orientation =
           BulletChartOrientation.VerticalBottom;
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        visualBuilder.categoryLabels
-          .toArray()
-          .map($)
-          .forEach((e) =>
-            expect(parseFloat(e.attr("y"))).toBeGreaterThan(
-              visualBuilder.viewport.height / 2
-            )
-          );
+        Array.from(visualBuilder.categoryLabels).forEach((e) =>
+          expect(parseFloat(e.getAttribute("y"))).toBeGreaterThan(
+            visualBuilder.viewport.height / 2
+          )
+        );
       });
     });
 
@@ -421,8 +417,7 @@ describe("BulletChart", () => {
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
         visualBuilder.rangeRectsGrouped
-          .map((e) => e.eq(0))
-          .forEach((e) => assertColorsMatch(e.css("fill"), color));
+          .forEach((e: SVGElement) => assertColorsMatch(e.style["fill"], color));
       });
 
       it("needs improvement", () => {
@@ -435,9 +430,10 @@ describe("BulletChart", () => {
         };
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        visualBuilder.rangeRectsGrouped
-          .map((e) => e.eq(1))
-          .forEach((e) => assertColorsMatch(e.css("fill"), color));
+        assertColorsMatch(
+          visualBuilder.rangeRectsGrouped[1].style["fill"],
+          color
+        )
       });
 
       it("satisfactory", () => {
@@ -450,9 +446,10 @@ describe("BulletChart", () => {
         };
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        visualBuilder.rangeRectsGrouped
-          .map((e) => e.eq(2))
-          .forEach((e) => assertColorsMatch(e.css("fill"), color));
+        assertColorsMatch(
+          visualBuilder.rangeRectsGrouped[2].style["fill"],
+          color
+        );
       });
 
       it("good", () => {
@@ -495,10 +492,8 @@ describe("BulletChart", () => {
         };
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        visualBuilder.valueRects
-          .toArray()
-          .map($)
-          .forEach((e) => assertColorsMatch(e.css("fill"), color));
+        Array.from(visualBuilder.valueRects)
+          .forEach((e) => assertColorsMatch(e.style["fill"], color));
       });
     });
 
@@ -516,7 +511,7 @@ describe("BulletChart", () => {
         (dataView.metadata.objects as any).axis.axis = false;
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        expect(visualBuilder.element.find(".axis").length).toBe(0);
+        expect(visualBuilder.element.querySelectorAll(".axis").length).toBe(0);
       });
 
       it("axis color", () => {
@@ -525,9 +520,9 @@ describe("BulletChart", () => {
           getSolidColorStructuralObject(color);
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        expect(visualBuilder.element.find(".axis")).toBeDefined();
-        assertColorsMatch(visualBuilder.axis.css("fill"), color);
-        assertColorsMatch(visualBuilder.axis.find("line").css("stroke"), color);
+        expect(visualBuilder.element.querySelector(".axis")).toBeDefined();
+        assertColorsMatch((<HTMLElement>visualBuilder.axis).style["fill"], color);
+        assertColorsMatch(visualBuilder.axis.querySelector("line").style["stroke"], color);
       });
 
       it("measure units", () => {
@@ -592,8 +587,8 @@ describe("BulletChart", () => {
 
       visualBuilder.updateFlushAllD3Transitions(dataView);
 
-      visualBuilder.rangeRectsGrouped[0].each(function () {
-        expect($(this)[0].style["opacity"]).toBe("1");
+      visualBuilder.rangeRectsGrouped.forEach((e: SVGElement) => {
+        expect(e.style["opacity"]).toBe("1");
       });
 
       visualBuilder.rangeRectsGrouped.forEach((x, i) => {
