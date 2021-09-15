@@ -532,10 +532,9 @@ describe("BulletChart", () => {
         visualBuilder.updateFlushAllD3Transitions(dataView);
 
         expect(visualBuilder.measureUnits).toBeInDOM();
-        visualBuilder.measureUnits
-          .toArray()
-          .map($)
-          .forEach((e) => expect(e.text()).toBe(measureUnits));
+        Array.from(visualBuilder.measureUnits).forEach((e) =>
+          expect(e.text()).toBe(measureUnits)
+        );
       });
 
       it("units color", () => {
@@ -546,10 +545,8 @@ describe("BulletChart", () => {
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
 
-        visualBuilder.measureUnits
-          .toArray()
-          .map($)
-          .forEach((e) => assertColorsMatch(e.attr("fill"), color));
+        Array.from(visualBuilder.measureUnits)
+          .forEach((e) => assertColorsMatch(e.style["fill"], color));
       });
     });
   });

@@ -1,7 +1,7 @@
 {
   "name": "powerbi-visuals-bulletchart",
   "description": "Bullet chart",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "author": {
     "name": "Microsoft",
     "email": "pbicvsupport@microsoft.com"
@@ -58,11 +58,9 @@
     "core-js": "3.16.4",
     "coveralls": "3.1.1",
     "css-loader": "6.2.0",
-    "globalize": "1.7.0",
     "istanbul-instrumenter-loader": "3.0.1",
     "jasmine": "3.9.0",
     "jasmine-jquery": "2.1.1",
-    "jquery": "3.6.0",
     "karma": "6.3.4",
     "karma-chrome-launcher": "3.1.0",
     "karma-coverage": "2.0.3",
@@ -76,7 +74,7 @@
     "less": "4.1.1",
     "moment": "2.29.1",
     "powerbi-models": "1.9.3",
-    "powerbi-visuals-api": "^3.8.3",
+    "powerbi-visuals-api": "~3.8.0",
     "powerbi-visuals-tools": "^3.3.2",
     "powerbi-visuals-utils-testutils": "2.4.1",
     "puppeteer": "10.2.0",
