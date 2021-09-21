@@ -64,10 +64,10 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
     return this.mainElement.querySelector("g").querySelectorAll("text.title");
   }
 
-  public get measureUnits() {
+  public get measureUnits(): NodeListOf<SVGElement> {
     return this.mainElement
       .querySelector("g")
-      .querySelector("text");
+      .querySelectorAll("text:not(.title)");
   }
 
   public get rangeRectsGrouped(): SVGElement[] {

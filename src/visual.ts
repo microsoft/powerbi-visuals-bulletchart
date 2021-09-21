@@ -580,11 +580,9 @@ export class BulletChart implements IVisual {
 
     public handleContextMenu() {
         this.bulletBody.on("contextmenu", (event) => {
-        let dataPoint: any = select(event.target).datum();
+        let dataPoint: BarRect = <BarRect>select(event.target).datum();
         this.selectionManager.showContextMenu(
-            dataPoint && dataPoint.selectionIds && dataPoint.selectionIds[0]
-            ? dataPoint.selectionIds[0]
-            : {},
+            dataPoint?.identity || {},
             {
             x: event.clientX,
             y: event.clientY,
@@ -602,6 +600,8 @@ export class BulletChart implements IVisual {
         this.tooltipServiceWrapper = createTooltipServiceWrapper(
             options.host.tooltipService,
             options.element);
+
+        this.selectionManager = options.host.createSelectionManager();
 
         this.layout = new VisualLayout(null, {
             top: 0,
@@ -878,11 +878,12 @@ export class BulletChart implements IVisual {
 
         this.tooltipServiceWrapper.addTooltip(
             valueSelectionMerged,
-            (tooltipEvent: TooltipEventArgs<TooltipEnabledDataPoint>) => tooltipEvent.data.tooltipInfo);
+            (data: TooltipEnabledDataPoint) => data.tooltipInfo);
 
         this.tooltipServiceWrapper.addTooltip(
-            bullets,
-            (tooltipEvent: TooltipEventArgs<TooltipEnabledDataPoint>) => tooltipEvent.data.tooltipInfo);
+          bullets,
+          (data: TooltipEnabledDataPoint) => data.tooltipInfo
+        );
     }
     private static value3: number = 3;
     private static value10: number = 10;

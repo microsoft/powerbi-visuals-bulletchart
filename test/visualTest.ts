@@ -529,26 +529,26 @@ describe("BulletChart", () => {
 
       it("measure units", () => {
         let measureUnits = "azaza";
-        (dataView.metadata.objects as any).axis.measureUnits = measureUnits;
+        (dataView.metadata.objects).axis.measureUnits = measureUnits;
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
 
         expect(visualBuilder.measureUnits).toBeInDOM();
-        Array.from(visualBuilder.measureUnits as any as Element[]).forEach(
-          (e) => expect(e.querySelector("text")).toBe(measureUnits)
+        Array.from(visualBuilder.measureUnits).forEach(
+          (e) => expect(e.querySelector("text").outerHTML).toBe(measureUnits)
         );
       });
 
       it("units color", () => {
         let color = "#333333";
-        (dataView.metadata.objects as any).axis.measureUnits = "azaza";
-        (dataView.metadata.objects as any).axis.unitsColor =
+        (dataView.metadata.objects).axis.measureUnits = "azaza";
+        (dataView.metadata.objects).axis.unitsColor =
           getSolidColorStructuralObject(color);
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
 
-        Array.from(visualBuilder.measureUnits as any as HTMLElement[])
-          .forEach((e) => assertColorsMatch(e.style["fill"], color));
+        Array.from(visualBuilder.measureUnits)
+          .forEach((e: SVGElement) => assertColorsMatch(e.style["fill"], color));
       });
     });
   });
