@@ -462,9 +462,10 @@ describe("BulletChart", () => {
         };
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        visualBuilder.rangeRectsGrouped
-          .map((e) => e.eq(3))
-          .forEach((e) => assertColorsMatch(e.css("fill"), color));
+        assertColorsMatch(
+          visualBuilder.rangeRectsGrouped[3].style["fill"],
+          color
+        );
       });
 
       it("very good", () => {
@@ -477,9 +478,10 @@ describe("BulletChart", () => {
         };
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
-        visualBuilder.rangeRectsGrouped
-          .map((e) => e.eq(4))
-          .forEach((e) => assertColorsMatch(e.css("fill"), color));
+        assertColorsMatch(
+          visualBuilder.rangeRectsGrouped[4].style["fill"],
+          color
+        );
       });
 
       it("bullet", () => {
@@ -532,8 +534,8 @@ describe("BulletChart", () => {
         visualBuilder.updateFlushAllD3Transitions(dataView);
 
         expect(visualBuilder.measureUnits).toBeInDOM();
-        Array.from(visualBuilder.measureUnits).forEach((e) =>
-          expect(e.text()).toBe(measureUnits)
+        Array.from(visualBuilder.measureUnits as any as Element[]).forEach(
+          (e) => expect(e.querySelector("text")).toBe(measureUnits)
         );
       });
 
@@ -545,7 +547,7 @@ describe("BulletChart", () => {
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
 
-        Array.from(visualBuilder.measureUnits)
+        Array.from(visualBuilder.measureUnits as any as HTMLElement[])
           .forEach((e) => assertColorsMatch(e.style["fill"], color));
       });
     });
