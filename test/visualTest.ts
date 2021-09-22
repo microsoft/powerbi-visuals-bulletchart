@@ -25,7 +25,9 @@
  */
 
 import powerbi from "powerbi-visuals-api";
-import * as _ from "lodash";
+import lodashSunBy from "lodash.sumby";
+import lodashIsnumber from "lodash.isnumber";
+import lodashTakeRight from "lodash.takeright";
 
 import DataView = powerbi.DataView;
 
@@ -51,15 +53,15 @@ import { BulletChartTooltipItem } from "../src/dataInterfaces";
 import { isColorAppliedToElements, areColorsEqual } from "./helpers/helpers";
 
 export function roundTo(value: number | string, round: number): number {
-  value = _.isNumber(value) ? value : parseFloat(value);
-  return _.isNumber(value)
+  value = lodashIsnumber(value) ? value : parseFloat(value);
+  return lodashIsnumber(value)
     ? parseFloat((<number>value).toFixed(round))
     : <any>value;
 }
 
 export function convertAnySizeToPixel(size: string, round?: number): number {
   let result: number;
-  switch (_.takeRight(size, 2).join("").toLowerCase()) {
+  switch (lodashTakeRight(size, 2).join("").toLowerCase()) {
     case "pt":
       result = fromPointToPixel(parseFloat(size));
       break;
@@ -68,7 +70,7 @@ export function convertAnySizeToPixel(size: string, round?: number): number {
       break;
   }
 
-  return _.isNumber(round) ? roundTo(result, round) : result;
+  return lodashIsnumber(round) ? roundTo(result, round) : result;
 }
 
 export function assertSizeMatch(
@@ -117,8 +119,7 @@ describe("BulletChart", () => {
     it("update", (done) => {
       visualBuilder.updateRenderTimeout(dataView, () => {
         expect(
-          visualBuilder.mainElement.querySelector("g")[0].querySelector("text")
-            .length
+          visualBuilder.mainElement.querySelectorAll("g text").length
         ).toBe(dataView.categorical.categories[0].values.length);
         expect(
           (<HTMLElement>(
@@ -297,7 +298,7 @@ describe("BulletChart", () => {
 
       visualBuilder.updateRenderTimeout(dataView, () => {
         let ticks: HTMLElement[] = visualBuilder.axis[0].children("g.tick"),
-          ticksLengthSum = _.sumBy(
+          ticksLengthSum = lodashSunBy(
             Array.from(ticks),
             (e: Element) => e.getBoundingClientRect().width
           );

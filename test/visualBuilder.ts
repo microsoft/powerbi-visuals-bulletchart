@@ -42,7 +42,7 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
   }
 
   public get mainElement(): SVGElement {
-    return this.element.querySelector("div").querySelector("svg");
+    return this.element.querySelector("svg");
   }
 
   public get valueRects(): NodeListOf<SVGElement> {
@@ -55,7 +55,6 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 
   public get axis() {
     return this.mainElement
-      .querySelector("g")
       .querySelector("g")
       .querySelector("g.axis");
   }
