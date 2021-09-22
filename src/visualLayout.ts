@@ -25,7 +25,6 @@
  */
 // powerbi
 import powerbi from "powerbi-visuals-api";
-import * as _ from "lodash";
 import lodashKeys from "lodash.keys";
 import lodashClone from "lodash.clone";
 
