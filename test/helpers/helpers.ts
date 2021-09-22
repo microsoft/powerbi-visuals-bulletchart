@@ -11,17 +11,17 @@ export function areColorsEqual(firstColor: string, secondColor: string): boolean
 }
 
 export function isColorAppliedToElements(
-    elements: JQuery[],
-    color?: string,
-    colorStyleName: string = "fill"
+  elements: SVGElement[],
+  color?: string,
+  colorStyleName: string = "fill"
 ): boolean {
-    return elements.some((element: JQuery) => {
-        const currentColor: string = element.css(colorStyleName);
+  return elements.some((element: SVGElement) => {
+    const currentColor: string = element.style[colorStyleName];
 
-        if (!currentColor || !color) {
-            return currentColor === color;
-        }
+    if (!currentColor || !color) {
+      return currentColor === color;
+    }
 
-        return areColorsEqual(currentColor, color);
-    });
+    return areColorsEqual(currentColor, color);
+  });
 }

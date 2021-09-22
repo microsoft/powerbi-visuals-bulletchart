@@ -25,7 +25,8 @@
  */
 
 import powerbi from "powerbi-visuals-api";
-import * as _ from "lodash";
+import lodashGroupby from "lodash.groupby";
+import lodashKeys from "lodash.keys";
 
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 
@@ -36,75 +37,63 @@ import { BulletChart as VisualClass } from "../src/visual";
 import { BulletchartSettings as VisualSettings, BulletChartOrientation } from "../src/settings";
 
 export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
-    constructor(width: number, height: number) {
-        super(width, height, "BulletChart1443347686880");
-    }
+  constructor(width: number, height: number) {
+    super(width, height, "BulletChart1443347686880");
+  }
 
-    public get mainElement() {
-        return this.element
-            .children("div")
-            .children("svg");
-    }
+  public get mainElement(): SVGElement {
+    return this.element.querySelector("svg");
+  }
 
-    public get valueRects() {
-        return this.mainElement
-            .children("g")
-            .children("rect.value");
-    }
+  public get valueRects(): NodeListOf<SVGElement> {
+    return this.mainElement.querySelectorAll("g rect.value");
+  }
 
-    public get rangeRects() {
-        return this.mainElement
-            .children("g")
-            .children("rect.range");
-    }
+  public get rangeRects(): NodeListOf<SVGElement> {
+    return this.mainElement.querySelectorAll("rect.range");
+  }
 
-    public get axis() {
-        return this.mainElement
-            .children("g")
-            .children("g")
-            .children("g.axis");
-    }
+  public get axis() {
+    return this.mainElement
+      .querySelector("g")
+      .querySelector("g.axis");
+  }
 
-    public get categoryLabels() {
-        return this.mainElement
-            .children("g")
-            .children("text.title");
-    }
+  public get categoryLabels() {
+    return this.mainElement.querySelector("g").querySelectorAll("text.title");
+  }
 
-    public get measureUnits() {
-        return this.mainElement
-            .children("g")
-            .children("text")
-            .not(".title");
-    }
+  public get measureUnits(): NodeListOf<SVGElement> {
+    return this.mainElement
+      .querySelector("g")
+      .querySelectorAll("text:not(.title)");
+  }
 
-    public get rangeRectsGrouped(): JQuery[] {
-        let groupBy = this.isVertical ? "x" : "y",
-            grouped = _.groupBy(this.rangeRects.toArray(), e => $(e).attr(groupBy)),
-            groups = _.keys(grouped).map(x => $(grouped[x]));
+  public get rangeRectsGrouped(): SVGElement[] {
+    return Array.from(this.mainElement
+      .querySelector("g")
+      .querySelectorAll("rect.value"));
+  }
 
-        return groups;
-    }
+  public get orientation(): BulletChartOrientation {
+    return this.getSettings().orientation.orientation;
+  }
 
-    public get orientation(): BulletChartOrientation {
-        return this.getSettings().orientation.orientation;
+  public get isVertical(): boolean {
+    switch (this.orientation) {
+      case BulletChartOrientation.VerticalTop:
+      case BulletChartOrientation.VerticalBottom:
+        return true;
+      default:
+        return false;
     }
+  }
 
-    public get isVertical(): boolean {
-        switch (this.orientation) {
-            case BulletChartOrientation.VerticalTop:
-            case BulletChartOrientation.VerticalBottom:
-                return true;
-            default:
-                return false;
-        }
-    }
+  protected build(options: VisualConstructorOptions) {
+    return new VisualClass(options);
+  }
 
-    protected build(options: VisualConstructorOptions) {
-        return new VisualClass(options);
-    }
-
-    public getSettings(): VisualSettings {
-        return new VisualSettings();
-    }
+  public getSettings(): VisualSettings {
+    return new VisualSettings();
+  }
 }

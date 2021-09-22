@@ -25,7 +25,8 @@
  */
 
 import powerbi from "powerbi-visuals-api";
-import * as _ from "lodash";
+import lodashMapvalues from "lodash.mapvalues";
+import lodashIsempty from "lodash.isempty";
 
 
 import DataView = powerbi.DataView;
@@ -49,7 +50,7 @@ export class BulletChartColumns<T> {
         const table: DataViewTable = dataView && dataView.table,
             columns = this.getColumnSourcesT<any[]>(dataView);
 
-        return columns && table && _.mapValues(
+        return columns && table && lodashMapvalues(
             columns, (n: DataViewMetadataColumn, i) => n && table.rows.map(row => row[n.index]));
     }
 
@@ -58,7 +59,7 @@ export class BulletChartColumns<T> {
             columns = this.getColumnSourcesT<any[]>(dataView);
 
         return columns && table && table.rows.map(row =>
-            _.mapValues(columns, (n: DataViewMetadataColumn, i) => n && row[n.index]));
+            lodashMapvalues(columns, (n: DataViewMetadataColumn, i) => n && row[n.index]));
     }
 
     public static getCategoricalValues(dataView: DataView): BulletChartColumns<any[]> {
@@ -67,8 +68,8 @@ export class BulletChartColumns<T> {
             values = categorical && categorical.values || <DataViewValueColumns>[],
             series = categorical && values.source && this.getSeriesValues(dataView);
 
-        return categorical && _.mapValues(new this<any[]>(), (n, i) =>
-            (<DataViewCategoricalColumn[]>_.toArray(categories)).concat(_.toArray(values))
+        return categorical && lodashMapvalues(new this<any[]>(), (n, i) =>
+            (<DataViewCategoricalColumn[]>Array.from(categories)).concat(Array.from(values))
                 .filter(x => x.source.roles && x.source.roles[i]).map(x => {
                     const hasHighLight: boolean = !!(<DataViewValueColumn>x).highlights;
                     let useHighlightAsValue: boolean;
@@ -97,7 +98,7 @@ export class BulletChartColumns<T> {
             categories = categorical && categorical.categories || [],
             values = categorical && categorical.values || <DataViewValueColumns>[];
 
-        return categorical && _.mapValues(
+        return categorical && lodashMapvalues(
             new this<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>(),
             (n, i) => {
                 let result: any = categories.filter(x => x.source.roles && x.source.roles[i])[0];
@@ -109,7 +110,7 @@ export class BulletChartColumns<T> {
                 if (!result) {
                     result = values.filter(x => x.source.roles && x.source.roles[i]);
 
-                    if (_.isEmpty(result)) {
+                    if (lodashIsempty(result)) {
                         result = undefined;
                     }
                 }
@@ -123,7 +124,7 @@ export class BulletChartColumns<T> {
             values = categorical && categorical.values,
             grouped = values && values.grouped();
 
-        return grouped && grouped.map(g => _.mapValues(
+        return grouped && grouped.map(g => lodashMapvalues(
             new this<DataViewValueColumn>(),
             (n, i) => g.values.filter(v => v.source.roles[i])[0]));
     }
@@ -131,7 +132,7 @@ export class BulletChartColumns<T> {
     private static getColumnSourcesT<T>(dataView: DataView): BulletChartColumns<DataViewMetadataColumn> {
         const columns: DataViewMetadataColumn[] = dataView && dataView.metadata && dataView.metadata.columns;
 
-        return columns && _.mapValues(
+        return columns && lodashMapvalues(
             new this<T>(), (n, i) => columns.filter(x => x.roles && x.roles[i])[0]);
     }
 
