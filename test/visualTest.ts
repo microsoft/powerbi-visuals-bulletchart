@@ -24,16 +24,16 @@
  *  THE SOFTWARE.
  */
 
-import powerbi from "powerbi-visuals-api";
-import lodashSunBy from "lodash.sumby";
+import powerbiVisualsApi from "powerbi-visuals-api";
+import lodashSumby from "lodash.sumby";
 import lodashIsnumber from "lodash.isnumber";
-import lodashTakeRight from "lodash.takeright";
+import lodashTakeright from "lodash.takeright";
 
-import DataView = powerbi.DataView;
+import DataView = powerbiVisualsApi.DataView;
 
 // powerbi.extensibility.visual
-import { BulletChartBuilder } from "./visualBuilder";
-import { BulletChartData } from "./visualData";
+import { BulletChartBuilder } from "./BulletChartBuilder";
+import { BulletChartData } from "./BulletChartData";
 
 // powerbi.extensibility.utils.test
 import { pixelConverter } from "powerbi-visuals-utils-typeutils";
@@ -61,7 +61,7 @@ export function roundTo(value: number | string, round: number): number {
 
 export function convertAnySizeToPixel(size: string, round?: number): number {
   let result: number;
-  switch (lodashTakeRight(size, 2).join("").toLowerCase()) {
+  switch (lodashTakeright(size, 2).join("").toLowerCase()) {
     case "pt":
       result = fromPointToPixel(parseFloat(size));
       break;
@@ -91,18 +91,17 @@ describe("BulletChart", () => {
     defaultDataViewBuilder: BulletChartData,
     dataView: DataView,
     previousCreateSelectionId: any;
-  let customMockISelectionIdBuilder = new MockISelectionIdBuilder();
+  let customMockISelectionIdBuilder;
 
   beforeEach(() => {
     let selectionIdIndex: number = 0;
-
+    customMockISelectionIdBuilder = new MockISelectionIdBuilder();
     visualBuilder = new BulletChartBuilder(1000, 500);
     defaultDataViewBuilder = new BulletChartData();
     dataView = defaultDataViewBuilder.getDataView();
 
     previousCreateSelectionId = createSelectionId;
     customMockISelectionIdBuilder.createSelectionId = () => {
-      // TODO: It's temporary solution in order to add keys. We'll consider any other way to inject dependencies.
       return new MockISelectionId((selectionIdIndex++).toString());
     };
   });
@@ -298,7 +297,7 @@ describe("BulletChart", () => {
 
       visualBuilder.updateRenderTimeout(dataView, () => {
         let ticks: HTMLElement[] = visualBuilder.axis[0].children("g.tick"),
-          ticksLengthSum = lodashSunBy(
+          ticksLengthSum = lodashSumby(
             Array.from(ticks),
             (e: Element) => e.getBoundingClientRect().width
           );
@@ -314,9 +313,9 @@ describe("BulletChart", () => {
 
       const grouped: SVGElement[] = Array.from(visualBuilder.rangeRectsGrouped);
 
-      let firstBar: HTMLElement = grouped[0] as unknown as HTMLElement;
-      let secondBar: HTMLElement = grouped[1] as unknown as HTMLElement;
-      let thirdBar: HTMLElement = grouped[2] as unknown as HTMLElement;
+      let firstBar: HTMLElement = <HTMLElement>(<unknown>grouped[0]);
+      let secondBar: HTMLElement = <HTMLElement>(<unknown>grouped[1]);
+      let thirdBar: HTMLElement = <HTMLElement>(<unknown>grouped[2]);
 
       clickElement(firstBar);
       clickElement(secondBar, true);
@@ -352,7 +351,7 @@ describe("BulletChart", () => {
       it("font size", () => {
         let fontSize: number = 25;
 
-        (dataView.metadata.objects as any).labels.fontSize = fontSize;
+        (dataView.metadata.objects).labels.fontSize = fontSize;
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
         Array.from(visualBuilder.categoryLabels)
@@ -377,7 +376,7 @@ describe("BulletChart", () => {
           )
         );
 
-        (dataView.metadata.objects as any).orientation.orientation =
+        (dataView.metadata.objects).orientation.orientation =
           BulletChartOrientation.HorizontalRight;
         visualBuilder.updateFlushAllD3Transitions(dataView);
         Array.from(visualBuilder.categoryLabels).forEach((e) =>
@@ -386,7 +385,7 @@ describe("BulletChart", () => {
           )
         );
 
-        (dataView.metadata.objects as any).orientation.orientation =
+        (dataView.metadata.objects).orientation.orientation =
           BulletChartOrientation.VerticalTop;
         visualBuilder.updateFlushAllD3Transitions(dataView);
         Array.from(visualBuilder.categoryLabels).forEach((e) =>
@@ -395,7 +394,7 @@ describe("BulletChart", () => {
           )
         );
 
-        (dataView.metadata.objects as any).orientation.orientation =
+        (dataView.metadata.objects).orientation.orientation =
           BulletChartOrientation.VerticalBottom;
         visualBuilder.updateFlushAllD3Transitions(dataView);
         Array.from(visualBuilder.categoryLabels).forEach((e) =>
@@ -511,7 +510,7 @@ describe("BulletChart", () => {
       });
 
       it("show", () => {
-        (dataView.metadata.objects as any).axis.axis = false;
+        (dataView.metadata.objects).axis.axis = false;
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
         expect(visualBuilder.element.querySelectorAll(".axis").length).toBe(0);
@@ -519,7 +518,7 @@ describe("BulletChart", () => {
 
       it("axis color", () => {
         let color = "#333333";
-        (dataView.metadata.objects as any).axis.axisColor =
+        (dataView.metadata.objects).axis.axisColor =
           getSolidColorStructuralObject(color);
 
         visualBuilder.updateFlushAllD3Transitions(dataView);
@@ -556,7 +555,9 @@ describe("BulletChart", () => {
 
   describe("createTooltipInfo", () => {
     it("should return an empty array if metadata isn't defined", () => {
-      const tooltipItems: BulletChartTooltipItem[] = [
+      const tooltipItems: BulletChartTooltipItem[] = (<
+        BulletChartTooltipItem[]
+      >[
         {
           value: "Microsoft",
           metadata: undefined,
@@ -565,9 +566,9 @@ describe("BulletChart", () => {
           value: "Power BI",
           metadata: null,
         },
-      ] as BulletChartTooltipItem[];
+      ]);
 
-      expect(VisualClass.createTooltipInfo(tooltipItems).length).toBe(0);
+      expect(VisualClass.CREATETOOLTIPINFO(tooltipItems).length).toBe(0);
     });
   });
 
@@ -613,7 +614,7 @@ describe("BulletChart", () => {
         ];
 
       lengthArray.forEach((x) => {
-        expect(VisualClass.getFitTicksCount(x)).toBeGreaterThan(0);
+        expect(VisualClass.GETFITTICKSCOUNT(x)).toBeGreaterThan(0);
       });
     });
   });
@@ -646,7 +647,7 @@ describe("BulletChart", () => {
       let jsonData = getJSONFixture("capabilities.json");
 
       let objectsChecker: Function = (obj) => {
-        for (let property in obj) {
+        for (let property of obj) {
           let value: any = obj[property];
 
           if (value.displayName) {

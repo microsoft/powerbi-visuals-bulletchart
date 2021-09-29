@@ -24,11 +24,11 @@
  *  THE SOFTWARE.
  */
 // powerbi
-import powerbi from "powerbi-visuals-api";
+import powerbiVisualsApi from "powerbi-visuals-api";
 import lodashKeys from "lodash.keys";
 import lodashClone from "lodash.clone";
 
-import IViewport = powerbi.IViewport;
+import IViewport = powerbiVisualsApi.IViewport;
 
 import * as SVGUtil from "powerbi-visuals-utils-svgutils";
 import IMargin = SVGUtil.IMargin;

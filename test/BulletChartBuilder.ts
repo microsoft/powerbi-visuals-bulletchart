@@ -24,11 +24,11 @@
  *  THE SOFTWARE.
  */
 
-import powerbi from "powerbi-visuals-api";
+import powerbiVisualsApi from "powerbi-visuals-api";
 import lodashGroupby from "lodash.groupby";
 import lodashKeys from "lodash.keys";
 
-import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
+import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualConstructorOptions;
 
 // powerbi.extensibility.utils.test
 import { VisualBuilderBase } from "powerbi-visuals-utils-testutils";
