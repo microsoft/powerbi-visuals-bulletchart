@@ -705,7 +705,7 @@ export class BulletChart implements IVisual {
             .selectAll("line")
             .style("stroke", axisColor);
 
-          barGroup.selectAll("path").style("stroke", axisColor);
+          barGroup.selectAll("path.bullet").style("stroke", axisColor);
 
           barGroup.selectAll(".tick line").style("stroke", axisColor);
 
