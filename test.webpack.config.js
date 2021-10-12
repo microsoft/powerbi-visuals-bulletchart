@@ -35,7 +35,9 @@ module.exports = {
                     {
                         loader: 'less-loader',
                         options: {
-                            paths: [path.resolve(__dirname, 'node_modules')]
+                            lessOptions: {
+                                paths: [path.resolve(__dirname, 'node_modules')]
+                            }
                         }
                     }
                 ]
@@ -53,7 +55,8 @@ module.exports = {
     },
     plugins: [
         new webpack.ProvidePlugin({
-            'powerbi-visuals-api': null
+            'powerbi-visuals-api': null,
+            process: "process/browser"
         })
     ]
 };
