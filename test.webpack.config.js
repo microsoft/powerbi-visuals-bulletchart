@@ -4,16 +4,14 @@ const webpack = require("webpack");
 module.exports = {
     devtool: 'source-map',
     mode: 'development',
+    optimization: {
+        minimize: false
+    },
     module: {
-        rules: [
-            {
+        rules: [{
                 test: /\.tsx?$/,
                 use: 'ts-loader',
                 exclude: /node_modules/
-            },
-            {
-                test: /\.json$/,
-                loader: 'json-loader'
             },
             {
                 test: /\.tsx?$/i,
@@ -21,12 +19,17 @@ module.exports = {
                 include: /(src)/,
                 exclude: /(node_modules|resources\/js\/vendor)/,
                 loader: 'istanbul-instrumenter-loader',
-                options: { esModules: true }
+                options: {
+                    esModules: true
+                }
+            },
+            {
+                test: /\.json$/,
+                loader: 'json-loader'
             },
             {
                 test: /\.less$/,
-                use: [
-                    {
+                use: [{
                         loader: 'style-loader'
                     },
                     {
@@ -34,11 +37,6 @@ module.exports = {
                     },
                     {
                         loader: 'less-loader',
-                        options: {
-                            lessOptions: {
-                                paths: [path.resolve(__dirname, 'node_modules')]
-                            }
-                        }
                     }
                 ]
             }
@@ -56,7 +54,7 @@ module.exports = {
     plugins: [
         new webpack.ProvidePlugin({
             'powerbi-visuals-api': null,
-            process: "process/browser"
+            process: "process/browser",
         })
     ]
 };

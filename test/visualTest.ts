@@ -104,6 +104,7 @@ describe("BulletChart", () => {
     customMockISelectionIdBuilder.createSelectionId = () => {
       return new MockISelectionId((selectionIdIndex++).toString());
     };
+    console.log("BEFORE EACH", visualBuilder.mainElement);
   });
 
   afterEach(() => {
@@ -112,7 +113,7 @@ describe("BulletChart", () => {
 
   describe("DOM tests", () => {
     // it("svg element created", () => {
-    //   expect(visualBuilder.mainElement[0]).toBeInDOM();
+    //   expect(visualBuilder.mainElement).toBeInDOM();
     // });
 
     it("update", (done) => {

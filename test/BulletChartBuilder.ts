@@ -41,7 +41,16 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
     super(width, height, "BulletChart1443347686880");
   }
 
+  protected build(options: VisualConstructorOptions) {
+    return new VisualClass(options);
+  }
+
+  public getSettings(): VisualSettings {
+    return new VisualSettings();
+  }
+  
   public get mainElement(): SVGElement {
+    debugger;
     return this.element.querySelector("svg");
   }
 
@@ -54,9 +63,7 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
   }
 
   public get axis() {
-    return this.mainElement
-      .querySelector("g")
-      .querySelector("g.axis");
+    return this.mainElement.querySelector("g").querySelector("g.axis");
   }
 
   public get categoryLabels() {
@@ -70,9 +77,9 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
   }
 
   public get rangeRectsGrouped(): SVGElement[] {
-    return Array.from(this.mainElement
-      .querySelector("g")
-      .querySelectorAll("rect.value"));
+    return Array.from(
+      this.mainElement.querySelector("g").querySelectorAll("rect.value")
+    );
   }
 
   public get orientation(): BulletChartOrientation {
@@ -87,13 +94,5 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
       default:
         return false;
     }
-  }
-
-  protected build(options: VisualConstructorOptions) {
-    return new VisualClass(options);
-  }
-
-  public getSettings(): VisualSettings {
-    return new VisualSettings();
   }
 }
