@@ -24,10 +24,11 @@
  *  THE SOFTWARE.
  */
 // powerbi
-import powerbi from "powerbi-visuals-api";
-import * as _ from "lodash";
+import powerbiVisualsApi from "powerbi-visuals-api";
+import lodashKeys from "lodash.keys";
+import lodashClone from "lodash.clone";
 
-import IViewport = powerbi.IViewport;
+import IViewport = powerbiVisualsApi.IViewport;
 
 import * as SVGUtil from "powerbi-visuals-utils-svgutils";
 import IMargin = SVGUtil.IMargin;
@@ -53,7 +54,7 @@ export class VisualLayout {
     }
 
     public get viewportCopy(): IViewport {
-        return _.clone(this.viewport);
+        return lodashClone(this.viewport);
     }
 
     // Returns viewport minus margin
@@ -74,8 +75,8 @@ export class VisualLayout {
     }
 
     public set viewport(value: IViewport) {
-        this.previousOriginalViewportValue = _.clone(this.originalViewportValue);
-        this.originalViewportValue = _.clone(value);
+        this.previousOriginalViewportValue = lodashClone(this.originalViewportValue);
+        this.originalViewportValue = lodashClone(value);
         this.setUpdateObject(value,
             v => this.viewportValue = v,
             o => VisualLayout.restrictToMinMax(o, this.minViewport));
@@ -108,7 +109,7 @@ export class VisualLayout {
     }
 
     private setUpdateObject<T>(object: T, setObjectFn: (T) => void, beforeUpdateFn?: (T) => void): void {
-        object = _.clone(object);
+        object = lodashClone(object);
         setObjectFn(VisualLayout.createNotifyChangedObject(object, o => {
             if (beforeUpdateFn) beforeUpdateFn(object);
             this.update();
@@ -121,7 +122,7 @@ export class VisualLayout {
     private static createNotifyChangedObject<T>(object: T, objectChanged: (o?: T, key?: string) => void): T {
         let result: T = <any>{};
 
-        _.keys(object).forEach(key => Object.defineProperty(result, key, {
+        lodashKeys(object).forEach(key => Object.defineProperty(result, key, {
             get: () => object[key],
             set: (value) => { object[key] = value; objectChanged(object, key); },
             enumerable: true,
@@ -132,7 +133,7 @@ export class VisualLayout {
     }
 
     private static restrictToMinMax<T>(value: T, minValue?: T): T {
-        _.keys(value).forEach(x => value[x] = Math.max(minValue && minValue[x] || 0, value[x]));
+        lodashKeys(value).forEach(x => value[x] = Math.max(minValue && minValue[x] || 0, value[x]));
 
         return value;
     }

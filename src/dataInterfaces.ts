@@ -24,10 +24,10 @@
  *  THE SOFTWARE.
  */
 
-import powerbi from "powerbi-visuals-api";
+import powerbiVisualsApi from "powerbi-visuals-api";
 
-import DataViewValueColumn = powerbi.DataViewValueColumn;
-import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
+import DataViewValueColumn = powerbiVisualsApi.DataViewValueColumn;
+import VisualTooltipDataItem = powerbiVisualsApi.extensibility.VisualTooltipDataItem;
 
 import { interactivitySelectionService as interactivityService } from "powerbi-visuals-utils-interactivityutils";
 import SelectableDataPoint = interactivityService.SelectableDataPoint;
