@@ -50,7 +50,6 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	}
 	
 	public get mainElement(): SVGElement {
-		debugger;
 		return this.element.querySelector("svg");
 	}
 
@@ -59,15 +58,15 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	}
 
 	public get rangeRects(): NodeListOf<SVGElement> {
-		return this.mainElement.querySelectorAll("rect.range");
+		return this.mainElement.querySelectorAll("g > rect.range");
 	}
 
-	public get axis() {
-		return this.mainElement.querySelector("g").querySelector("g.axis");
+	public get axis(): NodeListOf<HTMLElement> {
+		return this.mainElement.querySelectorAll("g > g > g.axis")
 	}
 
-	public get categoryLabels() {
-		return this.mainElement.querySelector("g").querySelectorAll("text.title");
+	public get categoryLabels(): NodeListOf<HTMLElement> {
+		return this.mainElement.querySelectorAll("g > text.title");
 	}
 
 	public get measureUnits(): NodeListOf<SVGElement> {
@@ -76,17 +75,19 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 		.querySelectorAll("text:not(.title)");
 	}
 
-	public get rangeRectsGrouped(): SVGElement[] {
-		return Array.from(
-		this.mainElement.querySelector("g").querySelectorAll("rect.value")
-		);
+	public get rangeRectsGrouped(): SVGElement[][] {
+		let groupBy = this.isVertical ? "x" : "y",
+			grouped = lodashGroupby(Array.from(this.rangeRects), e => e.getAttribute(groupBy)),
+			groups = Array.from(lodashKeys(grouped).map(key => grouped[key]));
+
+		return groups;
 	}
 
 	public get orientation(): BulletChartOrientation {
 		return this.getSettings().orientation.orientation;
 	}
 
-  	public get isVertical(): boolean {
+	public get isVertical(): boolean {
 		switch (this.orientation) {
 		case BulletChartOrientation.VerticalTop:
 		case BulletChartOrientation.VerticalBottom:
@@ -94,5 +95,5 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 		default:
 			return false;
 		}
- 	}
+	}
 }

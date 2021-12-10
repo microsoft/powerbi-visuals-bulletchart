@@ -669,7 +669,7 @@ export class BulletChart implements IVisual {
     private static value14: number = 14;
     private static bulletMiddlePosition: number = (1 / BulletChart.value8 + 1 / BulletChart.value4) * BulletChart.BulletSize;
 
-    private drawAxesLabels(model: BulletChartModel, reveresed: boolean) {
+    private drawAxesLabels(model: BulletChartModel, reversed: boolean) {
       let bars: BarData[] = model.bars;
       let barSelection: BulletSelection<any> = this.labelGraphicsContext
         .selectAll("text")
@@ -689,7 +689,7 @@ export class BulletChart implements IVisual {
               let xLocation: number = this.calculateLabelWidth(
                 bar,
                 null,
-                reveresed
+                reversed
               );
               let yLocation: number = bar.y + BulletChart.BulletSize;
 
@@ -728,7 +728,7 @@ export class BulletChart implements IVisual {
           .merge(barSelection)
           .classed("title", true)
           .attr("x", (d: BarData) => {
-            if (reveresed)
+            if (reversed)
               return (
                 BulletChart.XMarginHorizontalLeft +
                 BulletChart.XMarginHorizontalRight +

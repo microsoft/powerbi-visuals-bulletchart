@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
@@ -42,7 +42,7 @@ import { converterHelper as ch } from "powerbi-visuals-utils-dataviewutils";
 import converterHelper = ch.converterHelper;
 
 export class BulletChartColumns<T> {
-    public static GETCOLUNSOURCES(dataView: DataView) {
+    public static GETCOLUMNSOURCES(dataView: DataView) {
         return this.getcolumnsourcesT<DataViewMetadataColumn>(dataView);
     }
 
