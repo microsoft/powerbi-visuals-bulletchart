@@ -1,282 +1,451 @@
 {
-            "dataRoles": [
-                {
-                    "name": "Category",
-                    "kind": "Grouping",
-                    "displayName": "Category",
-                    "displayNameKey": "Visual_Category"
-                }, {
-                    "name": "Value",
-                    "kind": "Measure",
-                    "displayName": "Value",
-                    "displayNameKey": "Visual_Value"
-                }, {
-                    "name": "TargetValue",
-                    "kind": "Measure",
+    "dataRoles": [
+        {
+            "name": "Category",
+            "kind": "Grouping",
+            "displayName": "Category",
+            "displayNameKey": "Visual_Category"
+        },
+        {
+            "name": "Value",
+            "kind": "Measure",
+            "displayName": "Value",
+            "displayNameKey": "Visual_Value"
+        },
+        {
+            "name": "TargetValue",
+            "kind": "Measure",
+            "displayName": "Target Value",
+            "displayNameKey": "Visual_TargetValue"
+        },
+        {
+            "name": "Minimum",
+            "kind": "Measure",
+            "displayName": "Minimum",
+            "displayNameKey": "Visual_Minimum"
+        },
+        {
+            "name": "NeedsImprovement",
+            "kind": "Measure",
+            "displayName": "Needs Improvement",
+            "displayNameKey": "Visual_NeedsImprovement"
+        },
+        {
+            "name": "Satisfactory",
+            "kind": "Measure",
+            "displayName": "Satisfactory",
+            "displayNameKey": "Visual_Satisfactory"
+        },
+        {
+            "name": "Good",
+            "kind": "Measure",
+            "displayName": "Good",
+            "displayNameKey": "Visual_Good"
+        },
+        {
+            "name": "VeryGood",
+            "kind": "Measure",
+            "displayName": "Very Good",
+            "displayNameKey": "Visual_VeryGood"
+        },
+        {
+            "name": "Maximum",
+            "kind": "Measure",
+            "displayName": "Maximum",
+            "displayNameKey": "Visual_Maximum"
+        },
+        {
+            "name": "TargetValue2",
+            "kind": "Measure",
+            "displayName": "Target Value 2",
+            "displayNameKey": "Visual_TargetValue2"
+        }
+    ],
+    "objects": {
+        "values": {
+            "displayName": "Data values",
+            "displayNameKey": "Visual_DataValues",
+            "properties": {
+                "targetValue": {
                     "displayName": "Target Value",
-                    "displayNameKey": "Visual_TargetValue"
-                }, {
-                    "name": "Minimum",
-                    "kind": "Measure",
-                    "displayName": "Minimum",
-                    "displayNameKey": "Visual_Minimum"
-                }, {
-                    "name": "NeedsImprovement",
-                    "kind": "Measure",
-                    "displayName": "Needs Improvement",
-                    "displayNameKey": "Visual_NeedsImprovement"
-                }, {
-                    "name": "Satisfactory",
-                    "kind": "Measure",
-                    "displayName": "Satisfactory",
-                    "displayNameKey": "Visual_Satisfactory"
-                }, {
-                    "name": "Good",
-                    "kind": "Measure",
-                    "displayName": "Good",
-                    "displayNameKey": "Visual_Good"
-                }, {
-                    "name": "VeryGood",
-                    "kind": "Measure",
-                    "displayName": "Very Good",
-                    "displayNameKey": "Visual_VeryGood"
-                }, {
-                    "name": "Maximum",
-                    "kind": "Measure",
-                    "displayName": "Maximum",
-                    "displayNameKey": "Visual_Maximum"
-                }, {
-                    "name": "TargetValue2",
-                    "kind": "Measure",
-                    "displayName": "Target Value 2",
-                    "displayNameKey": "Visual_TargetValue2"
-                }
-            ],
-            "objects": {
-                "values": {
-                    "displayName": "Data values",
-                    "displayNameKey": "Visual_DataValues",
-                    "properties": {
-                        "targetValue": {
-                            "displayName": "Target Value",
-                            "displayNameKey": "Visual_DataValues_TargetValue",
-                            "type": { "numeric": true }
-                        },
-                        "targetValue2": {
-                            "displayName": "Target Value 2",
-                            "displayNameKey": "Visual_DataValues_TargetValue2",
-                            "type": { "numeric": true }
-                        },
-                        "minimumPercent": {
-                            "displayName": "Minimum %",
-                            "displayNameKey": "Visual_DataValues_MinimumPercent",
-                            "type": { "numeric": true }
-                        },
-                        "needsImprovementPercent": {
-                            "displayName": "Needs Improvement %",
-                            "displayNameKey": "Visual_DataValues_NeedsImprovementPercent",
-                            "type": { "numeric": true }
-                        },
-                        "satisfactoryPercent": {
-                            "displayName": "Satisfactory %",
-                            "displayNameKey": "Visual_DataValues_SatisfactoryPercent",
-                            "type": { "numeric": true }
-                        },
-                        "goodPercent": {
-                            "displayName": "Good %",
-                            "displayNameKey": "Visual_DataValues_GoodPercent",
-                            "type": { "numeric": true }
-                        },
-                        "veryGoodPercent": {
-                            "displayName": "Very Good %",
-                            "displayNameKey": "Visual_DataValues_VeryGoodPercent",
-                            "type": { "numeric": true }
-                        },
-                        "maximumPercent": {
-                            "displayName": "Maximum %",
-                            "displayNameKey": "Visual_DataValues_MaximumPercent",
-                            "type": { "numeric": true }
-                        }
-                    }
-                },
-                "tooltips": {
-                    "displayName": "Tooltips",
-                    "displayNameKey": "Visual_Tooltips",
-                    "properties": {
-                        "valueCustomName": {
-                            "displayName": "\"Value\" custom name",                            
-                            "displayNameKey": "Visual_ValueCustomName",
-                            "type": { "text": true }
-                        },
-                        "targetCustomName": {
-                            "displayName": "\"Target Value\" custom name",                            
-                            "displayNameKey": "Visual_TargetValueCustomName",
-                            "type": { "text": true }
-                        },
-                        "target2CustomName": {
-                            "displayName": "\"Target Value 2\" custom name",                            
-                            "displayNameKey": "Visual_TargetValue2CustomName",
-                            "type": { "text": true }
-                        }
-                    }
-                },
-                "labels": {
-                    "displayName": "Category labels",                    
-                    "displayNameKey": "Visual_CategoryLabels",
-                    "properties": {
-                        "show": {
-                            "displayName": "Show",
-                            "displayNameKey": "Visual_Show",
-                            "type": { "bool":  true }
-                        },
-                        "labelColor": {
-                            "displayName": "color",                            
-                            "displayNameKey": "Visual_Color",
-                            "description": "Select color for data labels",
-                            "descriptionKey": "Visual_Description_Color",
-                            "type": { "fill": { "solid": {"color": true } } }
-                        },
-                        "fontSize": {
-                            "displayName": "Text Size",                
-                            "displayNameKey": "Visual_TextSize",
-                            "type": { "formatting": { "fontSize": true } }
-                        },
-                        "maxWidth": {
-                            "displayName": "Maximum width",
-                            "displayNameKey": "Visual_MaxWidth",
-                            "type": { "numeric": true }
-                        }
-                    }
-                },
-              "orientation": {
-                "displayName": "Orientation", 
-                "displayNameKey": "Visual_Orientation",
-                "properties": {
-                  "orientation": {
-                    "displayName": "Orientation",                    
-                    "displayNameKey": "Visual_Orientation",     
+                    "displayNameKey": "Visual_DataValues_TargetValue",
                     "type": {
-                      "enumeration": [
-                        {
-                          "value": "HorizontalLeft",                                   
-                          "displayNameKey": "Visual_Orientation_HorizontalLeft", 
-                          "displayName": "Horizontal Left"
-                        },
-                        {
-                          "value": "HorizontalRight",     
-                          "displayNameKey": "Visual_Orientation_HorizontalRight", 
-                          "displayName": "Horizontal Right"
-                        },
-                        {
-                          "value": "VerticalTop",
-                          "displayNameKey": "Visual_Orientation_VerticalTop", 
-                          "displayName": "Vertical Top"
-                        },
-                        {
-                          "value": "VerticalBottom",
-                          "displayNameKey": "Visual_Orientation_VerticalBottom", 
-                          "displayName": "Vertical Bottom"
-                        }
-                      ]
+                        "numeric": true
                     }
-                  }
+                },
+                "targetValue2": {
+                    "displayName": "Target Value 2",
+                    "displayNameKey": "Visual_DataValues_TargetValue2",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "minimumPercent": {
+                    "displayName": "Minimum %",
+                    "displayNameKey": "Visual_DataValues_MinimumPercent",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "needsImprovementPercent": {
+                    "displayName": "Needs Improvement %",
+                    "displayNameKey": "Visual_DataValues_NeedsImprovementPercent",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "satisfactoryPercent": {
+                    "displayName": "Satisfactory %",
+                    "displayNameKey": "Visual_DataValues_SatisfactoryPercent",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "goodPercent": {
+                    "displayName": "Good %",
+                    "displayNameKey": "Visual_DataValues_GoodPercent",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "veryGoodPercent": {
+                    "displayName": "Very Good %",
+                    "displayNameKey": "Visual_DataValues_VeryGoodPercent",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "maximumPercent": {
+                    "displayName": "Maximum %",
+                    "displayNameKey": "Visual_DataValues_MaximumPercent",
+                    "type": {
+                        "numeric": true
+                    }
                 }
-              },
-                "colors": {
-                    "displayName": "Colors",
-                    "displayNameKey": "Visual_Colors", 
-                    "properties": {
-                        "minColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Minimum color",                            
-                            "displayNameKey": "Visual_Colors_MinimumColor" 
-                        },
-                        "needsImprovementColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Needs Improvement color",                                       
-                            "displayNameKey": "Visual_Colors_NeedsImprovementColor" 
-                        },
-                        "satisfactoryColor": {
-                            "type": { "fill": { "solid": { "color": true } } },      
-                            "displayName": "Satisfactory color",
-                            "displayNameKey": "Visual_Colors_SatisfactoryColor"
-                        },
-                        "goodColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Good color",
-                            "displayNameKey": "Visual_Colors_GoodColor"
-                        },
-                        "veryGoodColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Very Good color",                            
-                            "displayNameKey": "Visual_Colors_VeryGoodColor"
-                        },
-                        "bulletColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Bullet color",
-                            "displayNameKey": "Visual_Colors_BulletColor"
+            }
+        },
+        "tooltips": {
+            "displayName": "Tooltips",
+            "displayNameKey": "Visual_Tooltips",
+            "properties": {
+                "valueCustomName": {
+                    "displayName": "\"Value\" custom name",
+                    "displayNameKey": "Visual_ValueCustomName",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "targetCustomName": {
+                    "displayName": "\"Target Value\" custom name",
+                    "displayNameKey": "Visual_TargetValueCustomName",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "target2CustomName": {
+                    "displayName": "\"Target Value 2\" custom name",
+                    "displayNameKey": "Visual_TargetValue2CustomName",
+                    "type": {
+                        "text": true
+                    }
+                }
+            }
+        },
+        "labels": {
+            "displayName": "Category labels",
+            "displayNameKey": "Visual_CategoryLabels",
+            "properties": {
+                "show": {
+                    "displayName": "Show",
+                    "displayNameKey": "Visual_Show",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "labelColor": {
+                    "displayName": "color",
+                    "displayNameKey": "Visual_Color",
+                    "description": "Select color for data labels",
+                    "descriptionKey": "Visual_Description_Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
                         }
                     }
                 },
-                "axis": {
-                    "displayName": "Axis",
-                    "displayNameKey": "Visual_Axis",
-                    "properties": {
-                        "axis": {
-                            "displayName": "Axis",
-                            "displayNameKey": "Visual_Axis",
-                            "type": { "bool":  true }
-                        },
-                        "axisColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Axis color",
-                            "displayNameKey": "Visual_AxisColor"
-                        },
-                        "measureUnits": {
-                            "type": { "text": true },
-                            "displayName": "Measure Units",
-                            "displayNameKey": "Visual_MeasureUnits"
-                        },
-                        "unitsColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Units color",
-                            "displayNameKey": "Visual_UnitsColor"
+                "fontSize": {
+                    "displayName": "Text Size",
+                    "displayNameKey": "Visual_TextSize",
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
                         }
                     }
-                }
-            },
-            "dataViewMappings": [{
-                "conditions": [
-                    {
-                        "Category": { "max": 1 }, "Value": { "max": 1 }, "TargetValue": { "max": 1 }, "Minimum": { "max": 1 }, "NeedsImprovement": { "max": 1 },
-                        "Satisfactory": { "max": 1 }, "Good": { "max": 1 }, "VeryGood": { "max": 1 }, "Maximum": { "max": 1 }, "TargetValue2": { "max": 1 }
+                },
+                "maxWidth": {
+                    "displayName": "Maximum width",
+                    "displayNameKey": "Visual_MaxWidth",
+                    "type": {
+                        "numeric": true
                     }
-                ],
-                "categorical": {
-                    "categories": {
-                        "for": { "in": "Category" },
-                        "dataReductionAlgorithm": { "top": {} }
-                    },
-                    "values": {
-                        "select": [
-                            { "bind": { "to": "Value" } },
-                            { "bind": { "to": "TargetValue" } },
-                            { "bind": { "to": "TargetValue2" } },
-                            { "bind": { "to": "Minimum" } },
-                            { "bind": { "to": "NeedsImprovement" } },
-                            { "bind": { "to": "Satisfactory" } },
-                            { "bind": { "to": "Good" } },
-                            { "bind": { "to": "VeryGood" } },
-                            { "bind": { "to": "Maximum" } }
+                }
+            }
+        },
+        "orientation": {
+            "displayName": "Orientation",
+            "displayNameKey": "Visual_Orientation",
+            "properties": {
+                "orientation": {
+                    "displayName": "Orientation",
+                    "displayNameKey": "Visual_Orientation",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "HorizontalLeft",
+                                "displayNameKey": "Visual_Orientation_HorizontalLeft",
+                                "displayName": "Horizontal Left"
+                            },
+                            {
+                                "value": "HorizontalRight",
+                                "displayNameKey": "Visual_Orientation_HorizontalRight",
+                                "displayName": "Horizontal Right"
+                            },
+                            {
+                                "value": "VerticalTop",
+                                "displayNameKey": "Visual_Orientation_VerticalTop",
+                                "displayName": "Vertical Top"
+                            },
+                            {
+                                "value": "VerticalBottom",
+                                "displayNameKey": "Visual_Orientation_VerticalBottom",
+                                "displayName": "Vertical Bottom"
+                            }
                         ]
                     }
                 }
-            }],
-            "supportsHighlight": true,
-            "sorting": {
-                "default": {}
-            },
-            "drilldown": {
-                "roles": ["Category"]
             }
+        },
+        "colors": {
+            "displayName": "Colors",
+            "displayNameKey": "Visual_Colors",
+            "properties": {
+                "minColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    },
+                    "displayName": "Minimum color",
+                    "displayNameKey": "Visual_Colors_MinimumColor"
+                },
+                "needsImprovementColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    },
+                    "displayName": "Needs Improvement color",
+                    "displayNameKey": "Visual_Colors_NeedsImprovementColor"
+                },
+                "satisfactoryColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    },
+                    "displayName": "Satisfactory color",
+                    "displayNameKey": "Visual_Colors_SatisfactoryColor"
+                },
+                "goodColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    },
+                    "displayName": "Good color",
+                    "displayNameKey": "Visual_Colors_GoodColor"
+                },
+                "veryGoodColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    },
+                    "displayName": "Very Good color",
+                    "displayNameKey": "Visual_Colors_VeryGoodColor"
+                },
+                "bulletColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    },
+                    "displayName": "Bullet color",
+                    "displayNameKey": "Visual_Colors_BulletColor"
+                }
+            }
+        },
+        "axis": {
+            "displayName": "Axis",
+            "displayNameKey": "Visual_Axis",
+            "properties": {
+                "axis": {
+                    "displayName": "Axis",
+                    "displayNameKey": "Visual_Axis",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "axisColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    },
+                    "displayName": "Axis color",
+                    "displayNameKey": "Visual_AxisColor"
+                },
+                "measureUnits": {
+                    "type": {
+                        "text": true
+                    },
+                    "displayName": "Measure Units",
+                    "displayNameKey": "Visual_MeasureUnits"
+                },
+                "unitsColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    },
+                    "displayName": "Units color",
+                    "displayNameKey": "Visual_UnitsColor"
+                }
+            }
+        }
+    },
+    "dataViewMappings": [
+        {
+            "conditions": [
+                {
+                    "Category": {
+                        "max": 1
+                    },
+                    "Value": {
+                        "max": 1
+                    },
+                    "TargetValue": {
+                        "max": 1
+                    },
+                    "Minimum": {
+                        "max": 1
+                    },
+                    "NeedsImprovement": {
+                        "max": 1
+                    },
+                    "Satisfactory": {
+                        "max": 1
+                    },
+                    "Good": {
+                        "max": 1
+                    },
+                    "VeryGood": {
+                        "max": 1
+                    },
+                    "Maximum": {
+                        "max": 1
+                    },
+                    "TargetValue2": {
+                        "max": 1
+                    }
+                }
+            ],
+            "categorical": {
+                "categories": {
+                    "for": {
+                        "in": "Category"
+                    },
+                    "dataReductionAlgorithm": {
+                        "top": {}
+                    }
+                },
+                "values": {
+                    "select": [
+                        {
+                            "bind": {
+                                "to": "Value"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "TargetValue"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "TargetValue2"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "Minimum"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "NeedsImprovement"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "Satisfactory"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "Good"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "VeryGood"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "Maximum"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "supportsHighlight": true,
+    "sorting": {
+        "default": {}
+    },
+    "drilldown": {
+        "roles": [
+            "Category"
+        ]
+    }
 }
