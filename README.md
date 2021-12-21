@@ -1,5 +1,5 @@
 # powerbi-visuals-bulletchart
-![Build](https://github.com/microsoft/powerbi-visuals-bulletchart/workflows/build/badge.svg)[![Coverage Status](https://coveralls.io/repos/github/Microsoft/powerbi-visuals-bulletchart/badge.svg?branch=master)](https://coveralls.io/github/Microsoft/powerbi-visuals-bulletchart?branch=master)
+![Build](https://github.com/microsoft/powerbi-visuals-bulletchart/workflows/build/badge.svg)[![Coverage Status](https://coveralls.io/repos/github/Microsoft/powerbi-visuals-bulletchart/badge.svg?branch=main)](https://coveralls.io/github/Microsoft/powerbi-visuals-bulletchart?branch=main)
 
 > A bullet chart that includes four orientations and a few customization options. Use to feature a single measure against a qualitative range.
 
