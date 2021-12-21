@@ -3,7 +3,7 @@
 
 > A bullet chart that includes four orientations and a few customization options. Use to feature a single measure against a qualitative range.
 
-![Bullet chart screenshot](https://az158878.vo.msecnd.net/marketing/Partner_21474836617/Product_42949680538/Asset_5af45ce2-9b52-4aca-8c72-17e2a47b1c0b/BulletChartscreenshot3.png)
+![Bullet chart screenshot](https://github.com/microsoft/powerbi-visuals-bulletchart/blob/main/assets/thumbnail.png?raw=true)
 # Overview
 
 Bullet chart serves as a replacement for dashboard gauges and meters. Bullet charts were developed to overcome the fundamental issues of gauges and meters.
