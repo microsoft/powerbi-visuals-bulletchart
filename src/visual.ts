@@ -91,8 +91,9 @@ import { ColorHelper } from "powerbi-visuals-utils-colorutils";
 import { BulletChartColumns } from "./BulletChartColumns";
 import { BulletChartModel, BulletChartTooltipItem, BarValueRect, BarData, BarRect, TargetValue } from "./dataInterfaces";
 import { VisualLayout } from "./visualLayout";
-import { BulletchartSettings, BulletChartOrientation } from "./settings";
+import { BulletchartSettings } from "./settings";
 import { BulletBehaviorOptions, BulletWebBehavior } from "./behavior";
+import {BulletChartOrientation} from "./BulletChartOrientation";
 
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;

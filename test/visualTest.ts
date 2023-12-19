@@ -48,9 +48,10 @@ import {
 } from "powerbi-visuals-utils-testutils";
 
 import { BulletChart as VisualClass } from "../src/visual";
-import { BulletChartOrientation, BulletchartSettings } from "../src/settings";
+import { BulletchartSettings } from "../src/settings";
 import { BulletChartTooltipItem } from "../src/dataInterfaces";
 import { isColorAppliedToElements, areColorsEqual } from "./helpers/helpers";
+import {BulletChartOrientation} from "../src/BulletChartOrientation";
 
 export function roundTo(value: number | string, round: number): number {
   value = lodashIsnumber(value) ? value : parseFloat(value);

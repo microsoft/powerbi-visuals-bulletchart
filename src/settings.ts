@@ -24,7 +24,8 @@
  *  THE SOFTWARE.
  */
 
-import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
+import {dataViewObjectsParser} from "powerbi-visuals-utils-dataviewutils";
+import {BulletChartOrientation} from "./BulletChartOrientation";
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
 export class BulletchartSettings extends DataViewObjectsParser {
@@ -58,13 +59,6 @@ export class LabelsSettings {
     public labelColor: string = "Black";
     public fontSize: number = 11;
     public maxWidth: number = 80;
-}
-
-export enum BulletChartOrientation {
-    HorizontalLeft = <any>"HorizontalLeft",
-    HorizontalRight = <any>"HorizontalRight",
-    VerticalTop = <any>"VerticalTop",
-    VerticalBottom = <any>"VerticalBottom"
 }
 
 export class OrientationSettings {

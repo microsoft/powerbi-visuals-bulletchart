@@ -34,7 +34,8 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 import { VisualBuilderBase } from "powerbi-visuals-utils-testutils";
 
 import { BulletChart as VisualClass } from "../src/visual";
-import { BulletchartSettings as VisualSettings, BulletChartOrientation } from "../src/settings";
+import { BulletchartSettings as VisualSettings } from "../src/settings";
+import {BulletChartOrientation} from "../src/BulletChartOrientation";
 
 export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	constructor(width: number, height: number) {
