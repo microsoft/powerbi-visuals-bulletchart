@@ -38,8 +38,7 @@ import DataViewCategoricalColumn = powerbiVisualsApi.DataViewCategoricalColumn;
 import DataViewMetadataColumn = powerbiVisualsApi.DataViewMetadataColumn;
 import DataViewTable = powerbiVisualsApi.DataViewTable;
 
-import { converterHelper as ch } from "powerbi-visuals-utils-dataviewutils";
-import converterHelper = ch.converterHelper;
+import { converterHelper } from "powerbi-visuals-utils-dataviewutils";
 
 export class BulletChartColumns<T> {
     public static GETCOLUMNSOURCES(dataView: DataView) {

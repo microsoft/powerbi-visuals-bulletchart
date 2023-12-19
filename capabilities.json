@@ -439,6 +439,7 @@
             }
         }
     ],
+    "privileges": [],
     "supportsHighlight": true,
     "sorting": {
         "default": {}

@@ -74,7 +74,7 @@ import BaseDataPoint = interactivityBaseService.BaseDataPoint;
 // import TextProperties = tms.TextProperties;
 // import TextMeasurementService = tms.textMeasurementService;
 
-import { textMeasurementService as TextMeasurementService } from "powerbi-visuals-utils-formattingutils/lib/src/textMeasurementService";
+import { textMeasurementService as TextMeasurementService } from "powerbi-visuals-utils-formattingutils";
 import * as valueFormatter from "powerbi-visuals-utils-formattingutils/lib/src/valueFormatter";
 import { TextProperties } from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
 
