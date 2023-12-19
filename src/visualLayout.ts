@@ -110,7 +110,7 @@ export class VisualLayout {
 
     private setUpdateObject<T>(object: T, setObjectFn: (T) => void, beforeUpdateFn?: (T) => void): void {
         object = lodashClone(object);
-        setObjectFn(VisualLayout.createNotifyChangedObject(object, o => {
+        setObjectFn(VisualLayout.createNotifyChangedObject(object, () => {
             if (beforeUpdateFn) beforeUpdateFn(object);
             this.update();
         }));
@@ -120,7 +120,7 @@ export class VisualLayout {
     }
 
     private static createNotifyChangedObject<T>(object: T, objectChanged: (o?: T, key?: string) => void): T {
-        let result: T = <any>{};
+        const result: T = <any>{};
 
         lodashKeys(object).forEach(key => Object.defineProperty(result, key, {
             get: () => object[key],

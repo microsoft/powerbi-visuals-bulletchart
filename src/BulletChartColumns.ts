@@ -51,7 +51,7 @@ export class BulletChartColumns<T> {
             columns = this.getcolumnsourcesT<any[]>(dataView);
 
         return columns && table && lodashMapvalues(
-            columns, (n: DataViewMetadataColumn, i) => n && table.rows.map(row => row[n.index]));
+            columns, (n: DataViewMetadataColumn) => n && table.rows.map(row => row[n.index]));
     }
 
     public static GETTABLEROWS(dataView: DataView): BulletChartColumns<any>[] {
@@ -59,7 +59,7 @@ export class BulletChartColumns<T> {
             columns = this.getcolumnsourcesT<any[]>(dataView);
 
         return columns && table && table.rows.map(row =>
-            lodashMapvalues(columns, (n: DataViewMetadataColumn, i) => n && row[n.index]));
+            lodashMapvalues(columns, (n: DataViewMetadataColumn) => n && row[n.index]));
     }
 
     public static GETCATEGORICALVALUES(dataView: DataView): BulletChartColumns<any[]> {

@@ -36,7 +36,7 @@ export class BulletWebBehavior implements IInteractiveBehavior {
 
     public bindEvents(options: BulletBehaviorOptions, selectionHandler: ISelectionHandler) {
         this.options = options;
-        let clearCatcher = options.clearCatcher;
+        const clearCatcher = options.clearCatcher;
 
         options.valueRects.on("click", (event: MouseEvent, d: BarValueRect) => {
             selectionHandler.handleSelection(d, event.ctrlKey || event.metaKey);
@@ -52,8 +52,8 @@ export class BulletWebBehavior implements IInteractiveBehavior {
     }
 
     public renderSelection(hasSelection: boolean) {
-        let options = this.options;
-        let hasHighlights = options.hasHighlights;
+        const options = this.options;
+        const hasHighlights = options.hasHighlights;
 
         options.valueRects.style("opacity", (d: BarValueRect) =>
             BulletWebBehavior.getFillOpacity(d.selected, d.highlight, !d.highlight && hasSelection, !d.selected && hasHighlights));
