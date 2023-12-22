@@ -10,15 +10,15 @@ import ISelectionHandler = interactivityService.ISelectionHandler;
 import IBehaviorOptions = interactivityService.IBehaviorOptions;
 import BaseDataPoint = interactivityService.BaseDataPoint;
 
-import { BulletchartSettings } from "./settings";
 import { BarRect, BarValueRect } from "./dataInterfaces";
+import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
 
 export interface BulletBehaviorOptions extends IBehaviorOptions<BaseDataPoint> {
     rects: d3Selection<any>;
     valueRects: d3Selection<any>;
     clearCatcher: d3Selection<any>;
     interactivityService: IInteractivityService<BaseDataPoint>;
-    bulletChartSettings: BulletchartSettings;
+    bulletChartSettings: BulletChartSettingsModel;
     hasHighlights: boolean;
 }
 

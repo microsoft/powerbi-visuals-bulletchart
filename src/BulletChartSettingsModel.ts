@@ -5,6 +5,7 @@ import Card = formattingSettings.SimpleCard;
 import {SimpleSlice} from "powerbi-visuals-utils-formattingmodel/lib/FormattingSettingsComponents";
 import IEnumMember = powerbi.IEnumMember;
 import {BulletChartOrientation} from "./BulletChartOrientation";
+import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 
 class TextSizeDefaults {
     public static readonly DefaultSize = 11;
@@ -24,14 +25,14 @@ class DataValuesCard extends Card {
         name: "targetValue",
         displayName: "Target Value",
         displayNameKey: "Visual_DataValues_TargetValue",
-        value: undefined,
+        value: null,
     });
 
     targetValue2 = new formattingSettings.NumUpDown({
         name: "targetValue2",
         displayName: "Target Value 2",
         displayNameKey: "Visual_DataValues_TargetValue2",
-        value: undefined,
+        value: null,
     });
 
     minimumPercent = new formattingSettings.NumUpDown({
@@ -45,35 +46,35 @@ class DataValuesCard extends Card {
         name: "needsImprovementPercent",
         displayName: "Needs Improvement %",
         displayNameKey: "Visual_DataValues_NeedsImprovementPercent",
-        value: undefined,
+        value: null,
     });
 
     satisfactoryPercent = new formattingSettings.NumUpDown({
         name: "satisfactoryPercent",
         displayName: "Satisfactory %",
         displayNameKey: "Visual_DataValues_SatisfactoryPercent",
-        value: undefined,
+        value: null,
     });
 
     goodPercent = new formattingSettings.NumUpDown({
         name: "goodPercent",
         displayName: "Good %",
         displayNameKey: "Visual_DataValues_GoodPercent",
-        value: undefined,
+        value: null,
     });
 
     veryGoodPercent = new formattingSettings.NumUpDown({
         name: "veryGoodPercent",
         displayName: "Very Good %",
         displayNameKey: "Visual_DataValues_VeryGoodPercent",
-        value: undefined,
+        value: null,
     });
 
     maximumPercent = new formattingSettings.NumUpDown({
         name: "maximumPercent",
         displayName: "Maximum %",
         displayNameKey: "Visual_DataValues_MaximumPercent",
-        value: undefined,
+        value: null,
     });
 
     name: string = "values";
@@ -124,12 +125,14 @@ class TooltipsCard extends Card {
 }
 
 class LabelsCard extends Card {
-    topLevelSlice: SimpleSlice<boolean> = new formattingSettings.ToggleSwitch({
+    show: SimpleSlice<boolean> = new formattingSettings.ToggleSwitch({
         name: "show",
         displayName: "Show",
         displayNameKey: "Visual_Show",
         value: true,
     });
+
+    topLevelSlice = this.show;
 
     labelColor = new formattingSettings.ColorPicker({
         name: "labelColor",
@@ -183,42 +186,42 @@ class ColorsCard extends Card {
     minColor = new formattingSettings.ColorPicker({
         name: "minColor",
         displayName: "Minimum color",
-        displayNameKey: "Visual_Color_MinimumColor",
+        displayNameKey: "Visual_Colors_MinimumColor",
         value: { value: "#8b0000" }
     });
 
     needsImprovementColor = new formattingSettings.ColorPicker({
         name: "needsImprovementColor",
         displayName: "Needs Improvement color",
-        displayNameKey: "Visual_Color_NeedsImprovementColor",
+        displayNameKey: "Visual_Colors_NeedsImprovementColor",
         value: { value: "#FF0000" }
     });
 
     satisfactoryColor = new formattingSettings.ColorPicker({
         name: "satisfactoryColor",
         displayName: "Satisfactory color",
-        displayNameKey: "Visual_Color_SatisfactoryColor",
+        displayNameKey: "Visual_Colors_SatisfactoryColor",
         value: { value: "#FFFF00" }
     });
 
     goodColor = new formattingSettings.ColorPicker({
         name: "goodColor",
         displayName: "Good color",
-        displayNameKey: "Visual_Color_GoodColor",
+        displayNameKey: "Visual_Colors_GoodColor",
         value: { value: "#008000" }
     });
 
     veryGoodColor = new formattingSettings.ColorPicker({
         name: "veryGoodColor",
         displayName: "Very Good color",
-        displayNameKey: "Visual_Color_VeryGoodColor",
+        displayNameKey: "Visual_Colors_VeryGoodColor",
         value: { value: "#006400" }
     });
 
     bulletColor = new formattingSettings.ColorPicker({
         name: "bulletColor",
         displayName: "Bullet color",
-        displayNameKey: "Visual_Color_BulletColor",
+        displayNameKey: "Visual_Colors_BulletColor",
         value: { value: "#000000" }
     });
 
@@ -275,7 +278,7 @@ class AxisCard extends Card {
 }
 
 export class BulletChartSettingsModel extends Model {
-    dataValues = new DataValuesCard();
+    values = new DataValuesCard();
     tooltips = new TooltipsCard();
     labels = new LabelsCard();
     orientation = new OrientationCard();
@@ -283,11 +286,21 @@ export class BulletChartSettingsModel extends Model {
     axis = new AxisCard();
 
     cards = [
-        this.dataValues,
+        this.values,
         this.tooltips,
         this.labels,
         this.orientation,
         this.colors,
         this.axis,
-    ]
+    ];
+
+    public setLocalizedOptions(localizationManager: ILocalizationManager) {
+        this.setLocalizedDisplayName(orientationOptions, localizationManager);
+    }
+
+    private setLocalizedDisplayName(options: IEnumMember[], localizationManager: ILocalizationManager) {
+        options.forEach((option: IEnumMember) => {
+            option.displayName = localizationManager.getDisplayName(option.displayName.toString());
+        });
+    }
 }

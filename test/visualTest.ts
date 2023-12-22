@@ -48,10 +48,10 @@ import {
 } from "powerbi-visuals-utils-testutils";
 
 import { BulletChart as VisualClass } from "../src/visual";
-import { BulletchartSettings } from "../src/settings";
 import { BulletChartTooltipItem } from "../src/dataInterfaces";
 import { isColorAppliedToElements, areColorsEqual } from "./helpers/helpers";
 import {BulletChartOrientation} from "../src/BulletChartOrientation";
+import {BulletChartSettingsModel} from "../src/BulletChartSettingsModel";
 
 export function roundTo(value: number | string, round: number): number {
   value = lodashIsnumber(value) ? value : parseFloat(value);
@@ -220,13 +220,13 @@ describe("BulletChart", () => {
           rangeRects: any = Array.from(visualBuilder.rangeRects).filter(
             (e, i) => parseFloat(e.getAttribute("width")) > 0
           ),
-          settings: BulletchartSettings = visualBuilder.getSettings();
+          settings: BulletChartSettingsModel = visualBuilder.getSettings();
 
         let badRange: SVGElement[] = rangeRects.filter(
           (element: HTMLElement) => {
             return areColorsEqual(
               element.style["fill"],
-              settings.colors.minColor
+              settings.colors.minColor.value.value
             );
           }
         );
@@ -235,7 +235,7 @@ describe("BulletChart", () => {
           (element: HTMLElement) => {
             return areColorsEqual(
               element.style["fill"],
-              settings.colors.needsImprovementColor
+              settings.colors.needsImprovementColor.value.value
             );
           }
         );
@@ -244,7 +244,7 @@ describe("BulletChart", () => {
           (element: HTMLElement) => {
             return areColorsEqual(
               element.style["fill"],
-              settings.colors.satisfactoryColor
+              settings.colors.satisfactoryColor.value.value
             );
           }
         );
@@ -253,7 +253,7 @@ describe("BulletChart", () => {
           (element: HTMLElement) => {
             return areColorsEqual(
               element.style["fill"],
-              settings.colors.goodColor
+              settings.colors.goodColor.value.value
             );
           }
         );
@@ -262,7 +262,7 @@ describe("BulletChart", () => {
           (element: HTMLElement) => {
             return areColorsEqual(
               element.style["fill"],
-              settings.colors.veryGoodColor
+              settings.colors.veryGoodColor.value.value
             );
           }
         );
@@ -637,9 +637,9 @@ describe("BulletChart", () => {
       visualBuilder.updateFlushAllD3Transitions(dataView);
       let sett = visualBuilder.getSettings();
       expect(sett.values.minimumPercent).not.toBeGreaterThan(
-        sett.values.maximumPercent
+        sett.values.maximumPercent.value
       );
-      expect(sett.labels.maxWidth).not.toBe(0);
+      expect(sett.labels.maxWidth.value).not.toBe(0);
     });
   });
 
