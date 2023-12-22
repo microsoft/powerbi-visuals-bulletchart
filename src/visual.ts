@@ -1173,10 +1173,10 @@ export class BulletChart implements IVisual {
         barSelection.exit();
         this.tooltipServiceWrapper.addTooltip(
             valueSelectionMerged,
-            (tooltipEvent: TooltipEventArgs<TooltipEnabledDataPoint>) => tooltipEvent.data.tooltipInfo);
+            (data: TooltipEnabledDataPoint) => data.tooltipInfo);
         this.tooltipServiceWrapper.addTooltip(
             bullets,
-            (tooltipEvent: TooltipEventArgs<TooltipEnabledDataPoint>) => tooltipEvent.data.tooltipInfo);
+        (data: TooltipEnabledDataPoint) => data.tooltipInfo);
     }
 
     private drawFirstTargets(
