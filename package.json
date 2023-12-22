@@ -21,7 +21,8 @@
     "url": "git+https://github.com/Microsoft/PowerBI-visuals-bulletchart.git"
   },
   "dependencies": {
-    "d3": "^7.2.0",
+    "d3-scale": "^4.0.2",
+    "d3-selection": "^3.0.0",
     "lodash.clone": "^4.5.0",
     "lodash.groupby": "^4.6.0",
     "lodash.isempty": "4.4.0",
@@ -42,7 +43,8 @@
     "terser-webpack-plugin": "^5.2.4"
   },
   "devDependencies": {
-    "@types/d3": "5.7.2",
+    "@types/d3-scale": "^4.0.8",
+    "@types/d3-selection": "^3.0.10",
     "@types/jasmine": "3.8.2",
     "@types/jasmine-jquery": "1.5.34",
     "@types/karma": "6.3.1",
