@@ -27,6 +27,7 @@
 	"Visual_Colors_BulletColor": "Bullet color",
 	"Visual_Axis": "Axis",
 	"Visual_AxisColor": "Axis color",
+	"Visual_AxisSync": "Sync axis",
 	"Visual_MeasureUnits": "Measure Units",
 	"Visual_UnitsColor": "Units color",
 	"Visual_MaxWidth": "Maximum width",

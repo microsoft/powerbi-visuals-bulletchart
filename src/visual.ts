@@ -30,6 +30,7 @@ import "./../style/bulletChart.less";
 import {select, Selection} from 'd3-selection';
 import lodashIsnumber from "lodash.isnumber";
 import lodashMax from "lodash.max";
+import lodashGroupby from "lodash.groupby";
 import powerbiVisualsApi from "powerbi-visuals-api";
 
 // d3
@@ -102,6 +103,7 @@ import {BulletChartOrientation} from "./BulletChartOrientation";
 import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
 import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
+import lodashKeys from "lodash.keys";
 
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;
@@ -348,6 +350,10 @@ export class BulletChart implements IVisual {
         const categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
         const length: number = categoricalValues.Value.length;
 
+
+        const categoryMinValue: number = categoricalValues.Minimum ? Math.min(...categoricalValues.Minimum) : undefined;
+        const categoryMaxValue: number = categoricalValues.Maximum ? Math.max(...categoricalValues.Maximum) : undefined;
+
         for (let idx = 0; idx < length; idx++) {
             const toolTipItems: BulletChartTooltipItem[] = [];
 
@@ -404,6 +410,8 @@ export class BulletChart implements IVisual {
                 toolTipItems,
                 categorical,
                 categoricalValues,
+                categoryMinValue,
+                categoryMaxValue,
                 colorHelper,
                 bulletModel,
                 visualHost,
@@ -458,16 +466,31 @@ export class BulletChart implements IVisual {
         toolTipItems: BulletChartTooltipItem[],
         categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
         categoricalValues: BulletChartColumns<any[]>,
+        categoryMinValue: number,
+        categoryMaxValue: number,
         colorHelper: ColorHelper,
         bulletModel: BulletChartModel,
         visualHost: IVisualHost,
-    ) {
-        let minimum: number = BulletChart.GETRANGEVALUE(categoricalValues.Minimum ? categoricalValues.Minimum[idx] : undefined, visualSettings.values.minimumPercent.value, targetValue);
+    ): BarData {
+
+        let minimum: number;
+        if (visualSettings.axis.axisSync.value) {
+            minimum = categoryMinValue;
+        } else {
+            minimum = BulletChart.GETRANGEVALUE(categoricalValues.Minimum ? categoricalValues.Minimum[idx] : undefined, visualSettings.values.minimumPercent.value, targetValue);
+        }
+
         let needsImprovement: number = BulletChart.GETRANGEVALUE(categoricalValues.NeedsImprovement ? categoricalValues.NeedsImprovement[idx] : undefined, visualSettings.values.needsImprovementPercent.value, targetValue, minimum);
         let satisfactory: number = BulletChart.GETRANGEVALUE(categoricalValues.Satisfactory ? categoricalValues.Satisfactory[idx] : undefined, visualSettings.values.satisfactoryPercent.value, targetValue, minimum);
         let good: number = BulletChart.GETRANGEVALUE(categoricalValues.Good ? categoricalValues.Good[idx] : undefined, visualSettings.values.goodPercent.value, targetValue, minimum);
         let veryGood: number = BulletChart.GETRANGEVALUE(categoricalValues.VeryGood ? categoricalValues.VeryGood[idx] : undefined, visualSettings.values.veryGoodPercent.value, targetValue, minimum);
-        let maximum: number = BulletChart.GETRANGEVALUE(categoricalValues.Maximum ? categoricalValues.Maximum[idx] : undefined, visualSettings.values.maximumPercent.value, targetValue, minimum);
+        let maximum: number;
+        if (visualSettings.axis.axisSync.value) {
+            maximum = categoryMaxValue;
+        } else {
+            maximum = BulletChart.GETRANGEVALUE(categoricalValues.Maximum ? categoricalValues.Maximum[idx] : undefined, visualSettings.values.maximumPercent.value, targetValue, minimum);
+        }
+
         const anyRangeIsDefined: boolean = [needsImprovement, satisfactory, good, veryGood].some(lodashIsnumber);
 
         minimum = lodashIsnumber(minimum) ? minimum : BulletChart.zeroValue;
@@ -482,7 +505,10 @@ export class BulletChart implements IVisual {
         satisfactory = lodashIsnumber(satisfactory) ? satisfactory : good;
         needsImprovement = lodashIsnumber(needsImprovement) ? needsImprovement : satisfactory;
 
-        const scale: ScaleLinear<number, number> = (scaleLinear().clamp(true).domain([minimum, maximum]).range(isVerticalOrientation ? [bulletModel.viewportLength, 0] : [0, bulletModel.viewportLength]));
+        const scale: ScaleLinear<number, number> = scaleLinear()
+            .clamp(true)
+            .domain([minimum, maximum])
+            .range(isVerticalOrientation ? [bulletModel.viewportLength, 0] : [0, bulletModel.viewportLength]);
 
         const firstScale: number = scale(minimum);
         const secondScale: number = scale(needsImprovement);
@@ -816,7 +842,7 @@ export class BulletChart implements IVisual {
     private static value14: number = 14;
     private static bulletMiddlePosition: number = (1 / BulletChart.value8 + 1 / BulletChart.value4) * BulletChart.BulletSize;
 
-    private drawAxesLabels(model: BulletChartModel, reversed: boolean) {
+    private drawAxisLabels(model: BulletChartModel, reversed: boolean) {
         const bars: BarData[] = model.bars;
         const barSelection: BulletSelection<any> = this.labelGraphicsContext
             .selectAll("text")
@@ -901,13 +927,18 @@ export class BulletChart implements IVisual {
         }
     }
 
-    private setUpBulletsHorizontally(bulletBody: BulletSelection<any>, model: BulletChartModel, reveresed: boolean): void {
+    private setUpBulletsHorizontally(
+        bulletBody: BulletSelection<any>,
+        model: BulletChartModel,
+        reversed: boolean,
+    ): void {
         const bars: BarData[] = model.bars;
         const rects: BarRect[] = model.barRects;
         const valueRects: BarValueRect[] = model.valueRects;
         const targetValues: TargetValue[] = model.targetValues;
         const barSelection: BulletSelection<any> = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
         const rectSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.range").data(rects, (d: BarRect) => d.key);
+
         // Draw bullets
         const bullets: BulletSelection<any> = rectSelection
             .enter()
@@ -915,7 +946,7 @@ export class BulletChart implements IVisual {
             .merge(rectSelection);
 
         bullets
-            .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))))
+            .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y)))
             .attr("width", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
             .attr("height", BulletChart.BulletSize)
@@ -934,7 +965,7 @@ export class BulletChart implements IVisual {
             .merge(valueSelection);
 
         valueSelectionMerged
-            .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))))
+            .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
             .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y + BulletChart.bulletMiddlePosition)))
             .attr("width", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
             .attr("height", BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4)
@@ -946,17 +977,17 @@ export class BulletChart implements IVisual {
         valueSelection.exit();
         // Draw markers
         this.drawFirstTargets(targetValues,
-            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reveresed) + d.value,
-            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reveresed) + d.value,
+            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value,
+            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value,
             (d: TargetValue) => bars[d.barIndex].y + BulletChart.MarkerMarginHorizontal,
             (d: TargetValue) => bars[d.barIndex].y + BulletChart.MarkerMarginHorizontalEnd);
 
         this.drawSecondTargets(
             targetValues,
-            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reveresed) + d.value2,
+            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value2,
             (d: TargetValue) => bars[d.barIndex].y + BulletChart.BulletSize / BulletChart.value2);
 
-        this.drawAxesLabels(model, reveresed);
+        this.drawAxisLabels(model, reversed);
         const measureUnitsText = TextMeasurementService.getTailoredTextOrDefault(
             BulletChart.getTextProperties(model.settings.axis.measureUnits.value, BulletChart.DefaultSubtitleFontSizeInPt),
             BulletChart.MaxMeasureUnitWidth);
@@ -967,7 +998,7 @@ export class BulletChart implements IVisual {
                 .append("text")
                 .merge(barSelection)
                 .attr("x", ((d: BarData) => {
-                    if (reveresed)
+                    if (reversed)
                         return BulletChart.XMarginHorizontalLeft + BulletChart.XMarginHorizontalRight + model.viewportLength + BulletChart.SubtitleMargin;
                     return d.x - BulletChart.SubtitleMargin;
                 }))
@@ -1004,11 +1035,12 @@ export class BulletChart implements IVisual {
     private static value3: number = 3;
     private static value10: number = 10;
 
-    private drawAxes(model: BulletChartModel, reveresed: boolean, labelsStartPos) {
+    private drawAxis(model: BulletChartModel, reversed: boolean, labelsStartPosition: number) {
         const bars: BarData[] = model.bars;
         const barSelection: BulletSelection<any> = this.labelGraphicsContext
             .selectAll("text")
             .data(bars, (d: BarData) => d.key);
+
         if (model.settings.axis.axis.value) {
             const axisColor = model.settings.axis.axisColor.value.value;
 
@@ -1023,7 +1055,7 @@ export class BulletChart implements IVisual {
                         const yLocation: number = this.calculateLabelHeight(
                             bar,
                             null,
-                            reveresed
+                            reversed
                         );
                         return "translate(" + xLocation + "," + yLocation + ")";
                     })
@@ -1068,7 +1100,7 @@ export class BulletChart implements IVisual {
                 .classed("title", true)
                 .attr("x", (d: BarData) => d.x)
                 .attr("y", () => {
-                    return labelsStartPos;
+                    return labelsStartPosition;
                 })
                 .attr("fill", model.settings.labels.labelColor.value.value)
                 .attr(
@@ -1081,7 +1113,11 @@ export class BulletChart implements IVisual {
         }
     }
 
-    private setUpBulletsVertically(bulletBody: BulletSelection<any>, model: BulletChartModel, reveresed: boolean) {
+    private setUpBulletsVertically(
+        bulletBody: BulletSelection<any>,
+        model: BulletChartModel,
+        reversed: boolean,
+    ) {
         const bars: BarData[] = model.bars;
         const rects: BarRect[] = model.barRects;
         const valueRects: BarValueRect[] = model.valueRects;
@@ -1097,7 +1133,7 @@ export class BulletChart implements IVisual {
 
         bullets
             .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x)))
-            .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reveresed))))
+            .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
             .attr("height", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
             .attr("width", BulletChart.BulletSize)
             .classed("range", true)
@@ -1114,7 +1150,7 @@ export class BulletChart implements IVisual {
             .append("rect")
             .merge(valueSelection)
             .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + BulletChart.bulletMiddlePosition)))
-            .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reveresed))))
+            .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
             .attr("height", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
             .attr("width", BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4)
             .classed("value", true)
@@ -1128,16 +1164,16 @@ export class BulletChart implements IVisual {
             targetValues,
             (d: TargetValue) => bars[d.barIndex].x + BulletChart.MarkerMarginVertical,
             (d: TargetValue) => bars[d.barIndex].x + (BulletChart.MarkerMarginVertical * BulletChart.value3),
-            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reveresed) + d.value,
-            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reveresed) + d.value);
+            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value,
+            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value);
         this.drawSecondTargets(targetValues,
             (d: TargetValue) => bars[d.barIndex].x + BulletChart.BulletSize / BulletChart.value2,
-            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reveresed) + d.value2);
+            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value2);
         const labelsStartPos: number =
             BulletChart.YMarginVertical +
-            (reveresed ? model.viewportLength + 15 : 0) +
+            (reversed ? model.viewportLength + 15 : 0) +
             this.data.labelHeightTop;
-        this.drawAxes(model, reveresed, labelsStartPos);
+        this.drawAxis(model, reversed, labelsStartPos);
         const measureUnitsText: string = TextMeasurementService.getTailoredTextOrDefault(
             BulletChart.getTextProperties(model.settings.axis.measureUnits.value, BulletChart.DefaultSubtitleFontSizeInPt),
             BulletChart.MaxMeasureUnitWidth);

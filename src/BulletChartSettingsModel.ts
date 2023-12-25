@@ -270,11 +270,18 @@ class AxisCard extends Card {
         value: { value: "#808080" },
     });
 
+    axisSync = new formattingSettings.ToggleSwitch({
+        name: "axisSync",
+        displayName: "Sync Axis",
+        displayNameKey: "Visual_AxisSync",
+        value: false,
+    });
+
 
     name: string = "axis";
     displayName: string = "Axis";
     displayNameKey: string =  "Visual_Axis";
-    slices = [this.axisColor, this.measureUnits, this.unitsColor];
+    slices = [this.axisColor, this.measureUnits, this.unitsColor, this.axisSync];
 }
 
 export class BulletChartSettingsModel extends Model {

@@ -338,6 +338,11 @@
                     },
                     "displayName": "Units color",
                     "displayNameKey": "Visual_UnitsColor"
+                },
+                "axisSync": {
+                    "type": {
+                        "bool": true
+                    }
                 }
             }
         }
