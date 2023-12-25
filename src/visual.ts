@@ -474,7 +474,7 @@ export class BulletChart implements IVisual {
     ): BarData {
 
         let minimum: number;
-        if (visualSettings.axis.axisSync.value) {
+        if (visualSettings.axis.syncAxis.value) {
             minimum = categoryMinValue;
         } else {
             minimum = BulletChart.GETRANGEVALUE(categoricalValues.Minimum ? categoricalValues.Minimum[idx] : undefined, visualSettings.values.minimumPercent.value, targetValue);
@@ -485,7 +485,7 @@ export class BulletChart implements IVisual {
         let good: number = BulletChart.GETRANGEVALUE(categoricalValues.Good ? categoricalValues.Good[idx] : undefined, visualSettings.values.goodPercent.value, targetValue, minimum);
         let veryGood: number = BulletChart.GETRANGEVALUE(categoricalValues.VeryGood ? categoricalValues.VeryGood[idx] : undefined, visualSettings.values.veryGoodPercent.value, targetValue, minimum);
         let maximum: number;
-        if (visualSettings.axis.axisSync.value) {
+        if (visualSettings.axis.syncAxis.value) {
             maximum = categoryMaxValue;
         } else {
             maximum = BulletChart.GETRANGEVALUE(categoricalValues.Maximum ? categoricalValues.Maximum[idx] : undefined, visualSettings.values.maximumPercent.value, targetValue, minimum);
@@ -842,16 +842,19 @@ export class BulletChart implements IVisual {
     private static value14: number = 14;
     private static bulletMiddlePosition: number = (1 / BulletChart.value8 + 1 / BulletChart.value4) * BulletChart.BulletSize;
 
-    private drawAxisLabels(model: BulletChartModel, reversed: boolean) {
+    private drawAxisLabelsForHorizontalOrientation(model: BulletChartModel, reversed: boolean) {
         const bars: BarData[] = model.bars;
         const barSelection: BulletSelection<any> = this.labelGraphicsContext
             .selectAll("text")
             .data(bars, (d: BarData) => d.key);
+
         // Draw axes
         if (model.settings.axis.axis.value) {
-            // Using var instead of let since you can"t pass let parameters to functions inside loops.
-            // needs to be changed to let when typescript 1.8 comes out.
-            for (let idx: number = 0; idx < bars.length; idx++) {
+            const barsLength = model.settings.axis.showMainAxis.value
+                ? 1
+                : bars.length;
+
+            for (let idx: number = 0; idx < barsLength; idx++) {
                 const axisColor = model.settings.axis.axisColor.value.value;
                 const bar: BarData = bars[idx];
                 const barGroup = this.bulletGraphicsContext.append("g");
@@ -987,7 +990,7 @@ export class BulletChart implements IVisual {
             (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value2,
             (d: TargetValue) => bars[d.barIndex].y + BulletChart.BulletSize / BulletChart.value2);
 
-        this.drawAxisLabels(model, reversed);
+        this.drawAxisLabelsForHorizontalOrientation(model, reversed);
         const measureUnitsText = TextMeasurementService.getTailoredTextOrDefault(
             BulletChart.getTextProperties(model.settings.axis.measureUnits.value, BulletChart.DefaultSubtitleFontSizeInPt),
             BulletChart.MaxMeasureUnitWidth);
@@ -1035,7 +1038,7 @@ export class BulletChart implements IVisual {
     private static value3: number = 3;
     private static value10: number = 10;
 
-    private drawAxis(model: BulletChartModel, reversed: boolean, labelsStartPosition: number) {
+    private drawAxisAndLabelsForVerticalOrientation(model: BulletChartModel, reversed: boolean, labelsStartPosition: number) {
         const bars: BarData[] = model.bars;
         const barSelection: BulletSelection<any> = this.labelGraphicsContext
             .selectAll("text")
@@ -1044,9 +1047,11 @@ export class BulletChart implements IVisual {
         if (model.settings.axis.axis.value) {
             const axisColor = model.settings.axis.axisColor.value.value;
 
-            // Using var instead of let since you can't pass let parameters to functions inside loops.
-            // needs to be changed to let when typescript 1.8 comes out.
-            for (let idx = 0; idx < bars.length; idx++) {
+            const barsLength = model.settings.axis.showMainAxis.value
+                ? 1
+                : bars.length;
+
+            for (let idx = 0; idx < barsLength; idx++) {
                 const bar = bars[idx];
                 this.bulletGraphicsContext
                     .append("g")
@@ -1173,7 +1178,7 @@ export class BulletChart implements IVisual {
             BulletChart.YMarginVertical +
             (reversed ? model.viewportLength + 15 : 0) +
             this.data.labelHeightTop;
-        this.drawAxis(model, reversed, labelsStartPos);
+        this.drawAxisAndLabelsForVerticalOrientation(model, reversed, labelsStartPos);
         const measureUnitsText: string = TextMeasurementService.getTailoredTextOrDefault(
             BulletChart.getTextProperties(model.settings.axis.measureUnits.value, BulletChart.DefaultSubtitleFontSizeInPt),
             BulletChart.MaxMeasureUnitWidth);

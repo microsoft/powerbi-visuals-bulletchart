@@ -339,7 +339,12 @@
                     "displayName": "Units color",
                     "displayNameKey": "Visual_UnitsColor"
                 },
-                "axisSync": {
+                "syncAxis": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showMainAxis": {
                     "type": {
                         "bool": true
                     }
