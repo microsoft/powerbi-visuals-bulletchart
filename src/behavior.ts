@@ -46,6 +46,14 @@ export class BulletWebBehavior implements IInteractiveBehavior {
             selectionHandler.handleSelection(d, event.ctrlKey || event.metaKey);
         });
 
+        options.rects.on("keydown", (event: KeyboardEvent, d: BarRect) => {
+            if (event.code !== "Enter" && event.code !== "Space") {
+                return;
+            }
+
+            selectionHandler.handleSelection(d, event.ctrlKey || event.metaKey);
+        });
+
         clearCatcher.on("click", () => {
             selectionHandler.handleClearSelection();
         });

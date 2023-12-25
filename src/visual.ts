@@ -949,6 +949,8 @@ export class BulletChart implements IVisual {
             .merge(rectSelection);
 
         bullets
+            .attr("focusable", true)
+            .attr("tabindex", (d) => Math.max(BulletChart.zeroValue, d.end - d.start) === BulletChart.zeroValue ? -1 : 0)
             .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y)))
             .attr("width", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
@@ -1137,6 +1139,8 @@ export class BulletChart implements IVisual {
             .merge(rectSelection);
 
         bullets
+            .attr("focusable", true)
+            .attr("tabindex", (d) => Math.max(BulletChart.zeroValue, d.start - d.end) === BulletChart.zeroValue ? -1 : 0)
             .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x)))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
             .attr("height", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
