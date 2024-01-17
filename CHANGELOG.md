@@ -1,3 +1,11 @@
+# 2.4.0
+* Update powerbi packages, API to 5.4.0
+* Migrate from tslint to eslint
+* Use new formatting model API
+* Split d3 into submodules to reduce dependencies size
+* Add keyboard navigation support
+* Add settings to sync axis
+
 ## 2.0.1
  * Packages update
 
