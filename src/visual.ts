@@ -30,7 +30,6 @@ import "./../style/bulletChart.less";
 import {select, Selection} from 'd3-selection';
 import lodashIsnumber from "lodash.isnumber";
 import lodashMax from "lodash.max";
-import lodashGroupby from "lodash.groupby";
 import powerbiVisualsApi from "powerbi-visuals-api";
 
 // d3
@@ -842,59 +841,26 @@ export class BulletChart implements IVisual {
     private static value14: number = 14;
     private static bulletMiddlePosition: number = (1 / BulletChart.value8 + 1 / BulletChart.value4) * BulletChart.BulletSize;
 
-    private drawAxisLabelsForHorizontalOrientation(model: BulletChartModel, reversed: boolean) {
+    private drawAxisAndLabelsForHorizontalOrientation(model: BulletChartModel, reversed: boolean) {
         const bars: BarData[] = model.bars;
         const barSelection: BulletSelection<any> = this.labelGraphicsContext
             .selectAll("text")
             .data(bars, (d: BarData) => d.key);
 
-        // Draw axes
         if (model.settings.axis.axis.value) {
-            const barsLength = model.settings.axis.showMainAxis.value
-                ? 1
-                : bars.length;
+            const axisColor = model.settings.axis.axisColor.value.value;
 
-            for (let idx: number = 0; idx < barsLength; idx++) {
-                const axisColor = model.settings.axis.axisColor.value.value;
-                const bar: BarData = bars[idx];
-                const barGroup = this.bulletGraphicsContext.append("g");
-
-                barGroup
-                    .append("g")
-                    .attr("transform", () => {
-                        const xLocation: number = this.calculateLabelWidth(
-                            bar,
-                            null,
-                            reversed
-                        );
-                        const yLocation: number = bar.y + BulletChart.BulletSize;
-
-                        return "translate(" + xLocation + "," + yLocation + ")";
-                    })
-                    .classed("axis", true)
-                    .call(bar.xAxisProperties.axis)
-                    .style(
-                        "font-size",
-                        PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
-                    )
-                    .selectAll("line")
-                    .style("stroke", axisColor);
-
-                barGroup.selectAll("path.bullet").style("stroke", axisColor);
-
-                barGroup.selectAll(".tick line").style("stroke", axisColor);
-
-                barGroup.selectAll(".tick text").style("fill", axisColor);
-
-                barGroup
-                    .selectAll(".tick text")
-                    .call(
-                        AxisHelper.LabelLayoutStrategy.clip,
-                        bar.xAxisProperties.xLabelMaxWidth,
-                        TextMeasurementService.svgEllipsis
-                    );
+            if (model.settings.axis.showMainAxis.value) {
+                // main axis should be last/at the bottom
+                const mainBar = bars[bars.length - 1];
+                this.renderAxisHorizontally(mainBar, reversed, axisColor);
+            } else {
+                for (let idx: number = 0; idx < bars.length; idx++) {
+                    this.renderAxisHorizontally(bars[idx], reversed, axisColor);
+                }
             }
         }
+
         // Draw Labels
         if (model.settings.labels.show.value) {
             barSelection
@@ -991,7 +957,7 @@ export class BulletChart implements IVisual {
             (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value2,
             (d: TargetValue) => bars[d.barIndex].y + BulletChart.BulletSize / BulletChart.value2);
 
-        this.drawAxisLabelsForHorizontalOrientation(model, reversed);
+        this.drawAxisAndLabelsForHorizontalOrientation(model, reversed);
         const measureUnitsText = TextMeasurementService.getTailoredTextOrDefault(
             BulletChart.getTextProperties(model.settings.axis.measureUnits.value, BulletChart.DefaultSubtitleFontSizeInPt),
             BulletChart.MaxMeasureUnitWidth);
@@ -1048,31 +1014,14 @@ export class BulletChart implements IVisual {
         if (model.settings.axis.axis.value) {
             const axisColor = model.settings.axis.axisColor.value.value;
 
-            const barsLength = model.settings.axis.showMainAxis.value
-                ? 1
-                : bars.length;
-
-            for (let idx = 0; idx < barsLength; idx++) {
-                const bar = bars[idx];
-                this.bulletGraphicsContext
-                    .append("g")
-                    .attr("transform", () => {
-                        const xLocation: number = bar.x;
-                        const yLocation: number = this.calculateLabelHeight(
-                            bar,
-                            null,
-                            reversed
-                        );
-                        return "translate(" + xLocation + "," + yLocation + ")";
-                    })
-                    .classed("axis", true)
-                    .call(bar.xAxisProperties.axis)
-                    .style(
-                        "font-size",
-                        PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
-                    )
-                    .selectAll("line")
-                    .style("stroke", axisColor);
+            if (model.settings.axis.showMainAxis.value) {
+                const mainBar = bars[0];
+                this.renderAxisVertically(mainBar, reversed, axisColor);
+            } else {
+                for (let idx = 0; idx < bars.length; idx++) {
+                    const bar = bars[idx];
+                    this.renderAxisVertically(bar, reversed, axisColor);
+                }
             }
 
             this.bulletGraphicsContext
@@ -1116,6 +1065,67 @@ export class BulletChart implements IVisual {
                 .append("title")
                 .text((d: BarData) => d.categoryLabel);
         }
+    }
+
+    private renderAxisVertically(bar: BarData, reversed: boolean, axisColor: string) {
+        this.bulletGraphicsContext
+            .append("g")
+            .attr("transform", () => {
+                const xLocation: number = bar.x;
+                const yLocation: number = this.calculateLabelHeight(
+                    bar,
+                    null,
+                    reversed
+                );
+                return "translate(" + xLocation + "," + yLocation + ")";
+            })
+            .classed("axis", true)
+            .call(bar.xAxisProperties.axis)
+            .style(
+                "font-size",
+                PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
+            )
+            .selectAll("line")
+            .style("stroke", axisColor);
+    }
+
+    private renderAxisHorizontally(bar: BarData, reversed: boolean, axisColor: string) {
+        const barGroup = this.bulletGraphicsContext.append("g");
+
+        barGroup
+            .append("g")
+            .attr("transform", () => {
+                const xLocation: number = this.calculateLabelWidth(
+                    bar,
+                    null,
+                    reversed
+                );
+                const yLocation: number = bar.y + BulletChart.BulletSize;
+
+                return "translate(" + xLocation + "," + yLocation + ")";
+            })
+            .classed("axis", true)
+            .call(bar.xAxisProperties.axis)
+            .style(
+                "font-size",
+                PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
+            )
+            .selectAll("line")
+            .style("stroke", axisColor);
+
+        barGroup.selectAll("path.bullet").style("stroke", axisColor);
+
+        barGroup.selectAll(".tick line").style("stroke", axisColor);
+
+        barGroup.selectAll(".tick text").style("fill", axisColor);
+
+        barGroup
+            .selectAll(".tick text")
+            .call(
+                AxisHelper.LabelLayoutStrategy.clip,
+                bar.xAxisProperties.xLabelMaxWidth,
+                TextMeasurementService.svgEllipsis
+            );
     }
 
     private setUpBulletsVertically(
