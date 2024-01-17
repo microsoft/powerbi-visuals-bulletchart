@@ -320,13 +320,13 @@ export class BulletChart implements IVisual {
     public static CONVERTER(dataView: DataView, options: VisualUpdateOptions, visualHost: IVisualHost, colorHelper: ColorHelper, visualSettings: BulletChartSettingsModel): BulletChartModel {
         const categorical: BulletChartColumns<
             DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns
-        > = BulletChartColumns.GETCATEGORICALCOLUMNS(dataView);
+        > = BulletChartColumns.GET_CATEGORICAL_COLUMNS(dataView);
         if (!categorical || !categorical.Value || !categorical.Value[0]) {
             return null;
         }
 
         const categoricalValues: BulletChartColumns<any[]> =
-            BulletChartColumns.GETCATEGORICALVALUES(dataView);
+            BulletChartColumns.GET_CATEGORICAL_VALUES(dataView);
 
         BulletChart.limitProperties(visualSettings);
         visualSettings = this.SetHighContrastColors(visualSettings, colorHelper);
