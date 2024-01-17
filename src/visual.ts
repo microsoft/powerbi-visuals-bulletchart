@@ -873,7 +873,6 @@ export class BulletChart implements IVisual {
                     })
                     .classed("axis", true)
                     .call(bar.xAxisProperties.axis)
-                    .style("fill", axisColor)
                     .style(
                         "font-size",
                         PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
@@ -1068,7 +1067,6 @@ export class BulletChart implements IVisual {
                     })
                     .classed("axis", true)
                     .call(bar.xAxisProperties.axis)
-                    .style("fill", axisColor)
                     .style(
                         "font-size",
                         PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
