@@ -270,6 +270,13 @@ class AxisCard extends Card {
         value: { value: "#808080" },
     });
 
+    name: string = "axis";
+    displayName: string = "Axis";
+    displayNameKey: string =  "Visual_Axis";
+    slices = [this.axisColor, this.measureUnits, this.unitsColor];
+}
+
+class SyncAxis extends Card {
     syncAxis = new formattingSettings.ToggleSwitch({
         name: "syncAxis",
         displayName: "Sync Axis",
@@ -284,10 +291,10 @@ class AxisCard extends Card {
         value: false,
     });
 
-    name: string = "axis";
-    displayName: string = "Axis";
-    displayNameKey: string =  "Visual_Axis";
-    slices = [this.axisColor, this.measureUnits, this.unitsColor, this.syncAxis, this.showMainAxis];
+    name: string = "syncAxis";
+    displayName: string = "Sync axis";
+    displayNameKey: string = "Visual_AxisSync";
+    slices = [this.syncAxis, this.showMainAxis];
 }
 
 export class BulletChartSettingsModel extends Model {
@@ -297,6 +304,7 @@ export class BulletChartSettingsModel extends Model {
     orientation = new OrientationCard();
     colors = new ColorsCard();
     axis = new AxisCard();
+    syncAxis = new SyncAxis();
 
     cards = [
         this.values,
@@ -305,6 +313,7 @@ export class BulletChartSettingsModel extends Model {
         this.orientation,
         this.colors,
         this.axis,
+        this.syncAxis,
     ];
 
     public setLocalizedOptions(localizationManager: ILocalizationManager) {

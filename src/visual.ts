@@ -473,7 +473,7 @@ export class BulletChart implements IVisual {
     ): BarData {
 
         let minimum: number;
-        if (visualSettings.axis.syncAxis.value) {
+        if (visualSettings.syncAxis.syncAxis.value) {
             minimum = categoryMinValue;
         } else {
             minimum = BulletChart.GETRANGEVALUE(categoricalValues.Minimum ? categoricalValues.Minimum[idx] : undefined, visualSettings.values.minimumPercent.value, targetValue);
@@ -484,7 +484,7 @@ export class BulletChart implements IVisual {
         let good: number = BulletChart.GETRANGEVALUE(categoricalValues.Good ? categoricalValues.Good[idx] : undefined, visualSettings.values.goodPercent.value, targetValue, minimum);
         let veryGood: number = BulletChart.GETRANGEVALUE(categoricalValues.VeryGood ? categoricalValues.VeryGood[idx] : undefined, visualSettings.values.veryGoodPercent.value, targetValue, minimum);
         let maximum: number;
-        if (visualSettings.axis.syncAxis.value) {
+        if (visualSettings.syncAxis.syncAxis.value) {
             maximum = categoryMaxValue;
         } else {
             maximum = BulletChart.GETRANGEVALUE(categoricalValues.Maximum ? categoricalValues.Maximum[idx] : undefined, visualSettings.values.maximumPercent.value, targetValue, minimum);
@@ -850,7 +850,7 @@ export class BulletChart implements IVisual {
         if (model.settings.axis.axis.value) {
             const axisColor = model.settings.axis.axisColor.value.value;
 
-            if (model.settings.axis.showMainAxis.value) {
+            if (model.settings.syncAxis.showMainAxis.value) {
                 // main axis should be last/at the bottom
                 const mainBar = bars[bars.length - 1];
                 this.renderAxisHorizontally(mainBar, reversed, axisColor);
@@ -1014,7 +1014,7 @@ export class BulletChart implements IVisual {
         if (model.settings.axis.axis.value) {
             const axisColor = model.settings.axis.axisColor.value.value;
 
-            if (model.settings.axis.showMainAxis.value) {
+            if (model.settings.syncAxis.showMainAxis.value) {
                 const mainBar = bars[0];
                 this.renderAxisVertically(mainBar, reversed, axisColor);
             } else {

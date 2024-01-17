@@ -338,7 +338,11 @@
                     },
                     "displayName": "Units color",
                     "displayNameKey": "Visual_UnitsColor"
-                },
+                }
+            }
+        },
+        "syncAxis": {
+            "properties": {
                 "syncAxis": {
                     "type": {
                         "bool": true
