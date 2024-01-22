@@ -284,6 +284,8 @@ class SyncAxis extends Card {
         value: false,
     });
 
+    topLevelSlice = this.syncAxis;
+
     showMainAxis = new formattingSettings.ToggleSwitch({
         name: "showMainAxis",
         displayName: "Show main axis",
@@ -294,7 +296,7 @@ class SyncAxis extends Card {
     name: string = "syncAxis";
     displayName: string = "Sync axis";
     displayNameKey: string = "Visual_AxisSync";
-    slices = [this.syncAxis, this.showMainAxis];
+    slices = [this.showMainAxis];
 }
 
 export class BulletChartSettingsModel extends Model {
