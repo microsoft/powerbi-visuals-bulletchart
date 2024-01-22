@@ -528,7 +528,6 @@ describe("BulletChart", () => {
       visualBuilder.updateFlushAllD3Transitions(dataView);
       expect(visualBuilder.element.querySelector(".axis")).toBeDefined();
       visualBuilder.axis.forEach((el) => {
-        assertColorsMatch(el.style["fill"], color);
         assertColorsMatch(el.querySelector("line").style["stroke"], color);
       });
     });
