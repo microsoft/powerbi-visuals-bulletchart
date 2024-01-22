@@ -476,31 +476,14 @@ export class BulletChart implements IVisual {
         } else {
             minimum = BulletChart.GETRANGEVALUE(categoricalValues.Minimum ? categoricalValues.Minimum[idx] : undefined, visualSettings.values.minimumPercent.value, targetValue);
         }
-
-        let needsImprovement: number = BulletChart.GETRANGEVALUE(categoricalValues.NeedsImprovement ? categoricalValues.NeedsImprovement[idx] : undefined, visualSettings.values.needsImprovementPercent.value, targetValue, minimum);
-        let satisfactory: number = BulletChart.GETRANGEVALUE(categoricalValues.Satisfactory ? categoricalValues.Satisfactory[idx] : undefined, visualSettings.values.satisfactoryPercent.value, targetValue, minimum);
-        let good: number = BulletChart.GETRANGEVALUE(categoricalValues.Good ? categoricalValues.Good[idx] : undefined, visualSettings.values.goodPercent.value, targetValue, minimum);
-        let veryGood: number = BulletChart.GETRANGEVALUE(categoricalValues.VeryGood ? categoricalValues.VeryGood[idx] : undefined, visualSettings.values.veryGoodPercent.value, targetValue, minimum);
-        let maximum: number;
-        if (visualSettings.syncAxis.syncAxis.value) {
-            maximum = categoryMaxValue;
-        } else {
-            maximum = BulletChart.GETRANGEVALUE(categoricalValues.Maximum ? categoricalValues.Maximum[idx] : undefined, visualSettings.values.maximumPercent.value, targetValue, minimum);
-        }
-
-        const anyRangeIsDefined: boolean = [needsImprovement, satisfactory, good, veryGood].some(lodashIsnumber);
-
-        minimum = lodashIsnumber(minimum) ? minimum : BulletChart.zeroValue;
-        needsImprovement = lodashIsnumber(needsImprovement) ? Math.max(minimum, needsImprovement) : needsImprovement;
-        satisfactory = lodashIsnumber(satisfactory) ? Math.max(satisfactory, needsImprovement) : satisfactory;
-        good = lodashIsnumber(good) ? Math.max(good, satisfactory) : good;
-        veryGood = lodashIsnumber(veryGood) ? Math.max(veryGood, good) : veryGood;
-        const minMaxValue = lodashMax([minimum, needsImprovement, satisfactory, good, veryGood, categoryValue, targetValue, targetValue2].filter(lodashIsnumber));
-        maximum = lodashIsnumber(maximum) ? Math.max(maximum, minMaxValue) : minMaxValue;
-        veryGood = lodashIsnumber(veryGood) ? veryGood : maximum;
-        good = lodashIsnumber(good) ? good : veryGood;
-        satisfactory = lodashIsnumber(satisfactory) ? satisfactory : good;
-        needsImprovement = lodashIsnumber(needsImprovement) ? needsImprovement : satisfactory;
+        const categoryNumbers = this.computeCategoryNumbers(categoricalValues, idx, visualSettings, targetValue, minimum, categoryMaxValue, categoryValue, targetValue2);
+        minimum = categoryNumbers.minimum;
+        const needsImprovement = categoryNumbers.needsImprovement;
+        const satisfactory = categoryNumbers.satisfactory;
+        const good = categoryNumbers.good;
+        const veryGood = categoryNumbers.veryGood;
+        const maximum = categoryNumbers.maximum;
+        const anyRangeIsDefined = categoryNumbers.anyRangeIsDefined;
 
         const scale: ScaleLinear<number, number> = scaleLinear()
             .clamp(true)
@@ -571,6 +554,35 @@ export class BulletChart implements IVisual {
         };
 
         return barData;
+    }
+
+    private static computeCategoryNumbers(categoricalValues: BulletChartColumns<any[]>, idx: number, visualSettings: BulletChartSettingsModel, targetValue: number, minimum: number, categoryMaxValue: number, categoryValue: number, targetValue2: number) {
+        let needsImprovement: number = BulletChart.GETRANGEVALUE(categoricalValues.NeedsImprovement ? categoricalValues.NeedsImprovement[idx] : undefined, visualSettings.values.needsImprovementPercent.value, targetValue, minimum);
+        let satisfactory: number = BulletChart.GETRANGEVALUE(categoricalValues.Satisfactory ? categoricalValues.Satisfactory[idx] : undefined, visualSettings.values.satisfactoryPercent.value, targetValue, minimum);
+        let good: number = BulletChart.GETRANGEVALUE(categoricalValues.Good ? categoricalValues.Good[idx] : undefined, visualSettings.values.goodPercent.value, targetValue, minimum);
+        let veryGood: number = BulletChart.GETRANGEVALUE(categoricalValues.VeryGood ? categoricalValues.VeryGood[idx] : undefined, visualSettings.values.veryGoodPercent.value, targetValue, minimum);
+        let maximum: number;
+        if (visualSettings.syncAxis.syncAxis.value) {
+            maximum = categoryMaxValue;
+        } else {
+            maximum = BulletChart.GETRANGEVALUE(categoricalValues.Maximum ? categoricalValues.Maximum[idx] : undefined, visualSettings.values.maximumPercent.value, targetValue, minimum);
+        }
+
+        const anyRangeIsDefined: boolean = [needsImprovement, satisfactory, good, veryGood].some(lodashIsnumber);
+
+        minimum = lodashIsnumber(minimum) ? minimum : BulletChart.zeroValue;
+        needsImprovement = lodashIsnumber(needsImprovement) ? Math.max(minimum, needsImprovement) : needsImprovement;
+        satisfactory = lodashIsnumber(satisfactory) ? Math.max(satisfactory, needsImprovement) : satisfactory;
+        good = lodashIsnumber(good) ? Math.max(good, satisfactory) : good;
+        veryGood = lodashIsnumber(veryGood) ? Math.max(veryGood, good) : veryGood;
+        const minMaxValue = lodashMax([minimum, needsImprovement, satisfactory, good, veryGood, categoryValue, targetValue, targetValue2].filter(lodashIsnumber));
+        maximum = lodashIsnumber(maximum) ? Math.max(maximum, minMaxValue) : minMaxValue;
+        veryGood = lodashIsnumber(veryGood) ? veryGood : maximum;
+        good = lodashIsnumber(good) ? good : veryGood;
+        satisfactory = lodashIsnumber(satisfactory) ? satisfactory : good;
+        needsImprovement = lodashIsnumber(needsImprovement) ? needsImprovement : satisfactory;
+
+        return {minimum, needsImprovement, satisfactory, good, veryGood, maximum, anyRangeIsDefined};
     }
 
     public static GETRANGEVALUE(value: number, percent: number, targetValue: number, minimum?: number): number {
