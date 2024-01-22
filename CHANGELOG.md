@@ -1,5 +1,5 @@
 # 2.4.0
-* Update powerbi packages, API to 5.4.0
+* Update powerbi packages, API to 5.7.0
 * Migrate from tslint to eslint
 * Use new formatting model API
 * Split d3 into submodules to reduce dependencies size
