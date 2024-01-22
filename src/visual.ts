@@ -85,7 +85,6 @@ import IAxisProperties = axisInterfaces.IAxisProperties;
 
 // powerbi.extensibility.utils.tooltip
 import {
-    TooltipEventArgs,
     ITooltipServiceWrapper,
     createTooltipServiceWrapper,
     TooltipEnabledDataPoint
@@ -102,7 +101,6 @@ import {BulletChartOrientation} from "./BulletChartOrientation";
 import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
 import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
-import lodashKeys from "lodash.keys";
 
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;
@@ -780,12 +778,14 @@ export class BulletChart implements IVisual {
             .style("width", PixelConverter.toString(this.layout.viewportIn.width));
 
         if (this.vertical) {
-            this.scrollContainer.attr("width", PixelConverter.toString(this.data.bars.length * BulletChart.SpaceRequiredForBarVertically + BulletChart.XMarginVertical))
-                .style("height", PixelConverter.toString(this.viewportScroll.height));
+            this.scrollContainer
+                .attr("width", PixelConverter.toString(this.data.bars.length * BulletChart.SpaceRequiredForBarVertically + BulletChart.XMarginVertical))
+                .attr("height", PixelConverter.toString(this.viewportScroll.height));
         } else {
-            this.scrollContainer.attr("height", (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
+            this.scrollContainer
+                .attr("height", (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
                 + (this.data.settings.axis.axis.value ? 0 : BulletChart.YMarginHorizontal)) + "px")
-                .style("width", PixelConverter.toString(this.viewportScroll.width));
+                .attr("width", PixelConverter.toString(this.viewportScroll.width));
         }
 
         this.scrollContainer.attr("fill", "none");
