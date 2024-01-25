@@ -474,7 +474,7 @@ export class BulletChart implements IVisual {
         if (visualSettings.syncAxis.syncAxis.value) {
             minimum = categoryMinValue;
         } else {
-            minimum = BulletChart.GETRANGEVALUE(categoricalValues.Minimum ? categoricalValues.Minimum[idx] : undefined, visualSettings.values.minimumPercent.value, targetValue);
+            minimum = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], visualSettings.values.minimumPercent.value, targetValue);
         }
         const categoryNumbers = this.computeCategoryNumbers(categoricalValues, idx, visualSettings, targetValue, minimum, categoryMaxValue, categoryValue, targetValue2);
         minimum = categoryNumbers.minimum;
@@ -557,15 +557,15 @@ export class BulletChart implements IVisual {
     }
 
     private static computeCategoryNumbers(categoricalValues: BulletChartColumns<any[]>, idx: number, visualSettings: BulletChartSettingsModel, targetValue: number, minimum: number, categoryMaxValue: number, categoryValue: number, targetValue2: number) {
-        let needsImprovement: number = BulletChart.GETRANGEVALUE(categoricalValues.NeedsImprovement ? categoricalValues.NeedsImprovement[idx] : undefined, visualSettings.values.needsImprovementPercent.value, targetValue, minimum);
-        let satisfactory: number = BulletChart.GETRANGEVALUE(categoricalValues.Satisfactory ? categoricalValues.Satisfactory[idx] : undefined, visualSettings.values.satisfactoryPercent.value, targetValue, minimum);
-        let good: number = BulletChart.GETRANGEVALUE(categoricalValues.Good ? categoricalValues.Good[idx] : undefined, visualSettings.values.goodPercent.value, targetValue, minimum);
-        let veryGood: number = BulletChart.GETRANGEVALUE(categoricalValues.VeryGood ? categoricalValues.VeryGood[idx] : undefined, visualSettings.values.veryGoodPercent.value, targetValue, minimum);
+        let needsImprovement: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.NeedsImprovement?.[idx], visualSettings.values.needsImprovementPercent.value, targetValue, minimum);
+        let satisfactory: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Satisfactory?.[idx], visualSettings.values.satisfactoryPercent.value, targetValue, minimum);
+        let good: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Good?.[idx], visualSettings.values.goodPercent.value, targetValue, minimum);
+        let veryGood: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.VeryGood?.[idx], visualSettings.values.veryGoodPercent.value, targetValue, minimum);
         let maximum: number;
         if (visualSettings.syncAxis.syncAxis.value) {
             maximum = categoryMaxValue;
         } else {
-            maximum = BulletChart.GETRANGEVALUE(categoricalValues.Maximum ? categoricalValues.Maximum[idx] : undefined, visualSettings.values.maximumPercent.value, targetValue, minimum);
+            maximum = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Maximum?.[idx], visualSettings.values.maximumPercent.value, targetValue, minimum);
         }
 
         const anyRangeIsDefined: boolean = [needsImprovement, satisfactory, good, veryGood].some(lodashIsnumber);
@@ -585,17 +585,31 @@ export class BulletChart implements IVisual {
         return {minimum, needsImprovement, satisfactory, good, veryGood, maximum, anyRangeIsDefined};
     }
 
-    public static GETRANGEVALUE(value: number, percent: number, targetValue: number, minimum?: number): number {
-        let negativeMinimumCoef: number = 0;
-
-        if (minimum === undefined) {
-            negativeMinimumCoef = value ? value : BulletChart.zeroValue;
-        } else if (minimum < 0) {
-            negativeMinimumCoef = minimum;
+    /**
+     * Calculate the percentage of the value based on the target value.
+     * @param value either passed value or calculated depending on the percentage of the target value
+     * @param percent percent of the calculated value, should greater or equal to 0
+     * @param targetValue the target value the percent is based on
+     * @param minimum the range minimum, usually 0 but when it is less than 0, than the result is adjusted
+     */
+    public static CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(value: number, percent: number, targetValue: number, minimum?: number): number {
+        if (value !== null && isFinite(value)) {
+            return value;
         }
 
-        return isFinite(value) && value !== null ? value : (isFinite(targetValue) && targetValue !== null && isFinite(percent) && percent !== null ? (percent * (targetValue - negativeMinimumCoef) / 100) + negativeMinimumCoef : null);
+        let adjustedMinimum: number = BulletChart.zeroValue;
+
+        if (minimum !== undefined && minimum < 0) {
+            adjustedMinimum = minimum;
+        }
+
+        if (isFinite(targetValue) && targetValue !== null && isFinite(percent) && percent !== null && percent >= 0) {
+            return (percent * (targetValue - adjustedMinimum) / 100) + adjustedMinimum;
+        }
+
+        return null;
     }
+
     private static limitProperties(settings: BulletChartSettingsModel): void {
         if (settings.values.minimumPercent.value > settings.values.maximumPercent.value) {
             settings.values.maximumPercent.value = settings.values.minimumPercent.value;
@@ -1085,7 +1099,7 @@ export class BulletChart implements IVisual {
                     null,
                     reversed
                 );
-                return "translate(" + xLocation + "," + yLocation + ")";
+                return `translate(${xLocation},${yLocation})`;
             })
             .classed("axis", true)
             .call(bar.xAxisProperties.axis)
@@ -1110,7 +1124,7 @@ export class BulletChart implements IVisual {
                 );
                 const yLocation: number = bar.y + BulletChart.BulletSize;
 
-                return "translate(" + xLocation + "," + yLocation + ")";
+                return `translate(${xLocation},${yLocation})`;
             })
             .classed("axis", true)
             .call(bar.xAxisProperties.axis)
