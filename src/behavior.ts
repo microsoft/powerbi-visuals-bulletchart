@@ -1,5 +1,5 @@
 // d3
-import { Selection } from "d3-selection";
+import {BaseType, Selection} from "d3-selection";
 type d3Selection<T1, T2 = T1> = Selection<any, T1, any, T2>;
 
 // powerbi.extensibility.utils.interactivity
@@ -14,7 +14,8 @@ import { BarRect, BarValueRect } from "./dataInterfaces";
 import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
 
 export interface BulletBehaviorOptions extends IBehaviorOptions<BaseDataPoint> {
-    rects: d3Selection<any>;
+    rects: Selection<BaseType | SVGRectElement, BarRect, BaseType | SVGGElement, [number, BarRect[]]>;
+    groupedRects:  Selection<BaseType | SVGGElement, [number, BarRect[]], any, any>;
     valueRects: d3Selection<any>;
     clearCatcher: d3Selection<any>;
     interactivityService: IInteractivityService<BaseDataPoint>;
@@ -51,7 +52,17 @@ export class BulletWebBehavior implements IInteractiveBehavior {
                 return;
             }
 
-            selectionHandler.handleSelection(d, event.ctrlKey || event.metaKey);
+            selectionHandler.handleSelection(d, event.ctrlKey || event.shiftKey || event.metaKey);
+        });
+
+        options.groupedRects.on("keydown", (event: KeyboardEvent, d: [number, BarRect[]]) => {
+            if (event.code !== "Enter" && event.code !== "Space") {
+                return;
+            }
+
+            const groupedBars = d[1];
+            const firstBarRect = groupedBars[0];
+            selectionHandler.handleSelection(firstBarRect, event.ctrlKey || event.shiftKey || event.metaKey);
         });
 
         clearCatcher.on("click", () => {

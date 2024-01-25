@@ -35,6 +35,7 @@ import powerbiVisualsApi from "powerbi-visuals-api";
 // d3
 type BulletSelection<T1, T2 = T1> = Selection<any, T1, any, T2>;
 import {scaleLinear, ScaleLinear} from "d3-scale";
+import {group} from "d3-array"
 
 import IViewport = powerbiVisualsApi.IViewport;
 import DataView = powerbiVisualsApi.DataView;
@@ -114,7 +115,6 @@ export class BulletChart implements IVisual {
     private static DefaultSubtitleFontSizeInPt: number = 9;
     private static BarMargin: number = 10;
     private static MaxLabelWidth: number = 80;
-    private static MeasureUnitHeightHalf: number = 8;
     private static MaxMeasureUnitWidth: number = BulletChart.MaxLabelWidth - 20;
     private static SubtitleMargin: number = 10;
     private static AxisFontSizeInPt: number = 8;
@@ -782,7 +782,7 @@ export class BulletChart implements IVisual {
 
         const data: BulletChartModel = BulletChart.CONVERTER(dataView, options, this.hostService, this.colorHelper, this.visualSettings);
 
-        this.clearviewport();
+        this.clearViewport();
         if (!data) {
             return;
         }
@@ -806,23 +806,23 @@ export class BulletChart implements IVisual {
         } else {
             this.scrollContainer
                 .attr("height", (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
-                + (this.data.settings.axis.axis.value ? 0 : BulletChart.YMarginHorizontal)) + "px")
+                    + (this.data.settings.axis.axis.value ? 0 : BulletChart.YMarginHorizontal)) + "px")
                 .attr("width", PixelConverter.toString(this.viewportScroll.width));
         }
 
         this.scrollContainer.attr("fill", "none");
 
         if (this.vertical) {
-            this.setUpBulletsVertically(this.bulletBody, this.data, this.reverse);
+            this.setUpBulletsVertically(this.data, this.reverse);
         } else {
-            this.setUpBulletsHorizontally(this.bulletBody, this.data, this.reverse);
+            this.setUpBulletsHorizontally(this.data, this.reverse);
         }
 
         this.behavior.renderSelection(this.interactivityService.hasSelection());
         this.events.renderingFinished(options);
     }
 
-    private clearviewport() {
+    private clearViewport() {
         this.labelGraphicsContext.selectAll("text").remove();
         this.bulletGraphicsContext.selectAll("rect").remove();
         this.bulletGraphicsContext.selectAll("text").remove();
@@ -886,9 +886,7 @@ export class BulletChart implements IVisual {
         // Draw Labels
         if (model.settings.labels.show.value) {
             barSelection
-                .enter()
-                .append("text")
-                .merge(barSelection)
+                .join("text")
                 .classed("title", true)
                 .attr("x", (d: BarData) => {
                     if (reversed)
@@ -918,7 +916,6 @@ export class BulletChart implements IVisual {
     }
 
     private setUpBulletsHorizontally(
-        bulletBody: BulletSelection<any>,
         model: BulletChartModel,
         reversed: boolean,
     ): void {
@@ -927,17 +924,21 @@ export class BulletChart implements IVisual {
         const valueRects: BarValueRect[] = model.valueRects;
         const targetValues: TargetValue[] = model.targetValues;
         const barSelection: BulletSelection<any> = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
-        const rectSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.range").data(rects, (d: BarRect) => d.key);
 
-        // Draw bullets
-        const bullets: BulletSelection<any> = rectSelection
-            .enter()
-            .append("rect")
-            .merge(rectSelection);
-
-        bullets
+        const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
+        const groupedBulletsSelection = this.bulletGraphicsContext
+            .selectAll("g.rect-container")
+            .data(groupedBullets)
+            .join("g")
+            .classed("rect-container", true)
             .attr("focusable", true)
-            .attr("tabindex", (d) => Math.max(BulletChart.zeroValue, d.end - d.start) === BulletChart.zeroValue ? -1 : 0)
+            .attr("tabindex", 0);
+
+        const bullets = groupedBulletsSelection
+            .selectAll("rect.range")
+            .data(d => d[1])
+            .join("rect")
+            .classed("range", true)
             .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y)))
             .attr("width", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
@@ -947,16 +948,11 @@ export class BulletChart implements IVisual {
             .style("stroke", (d: BarRect) => d.strokeColor)
             .style("stroke-width", (d: BarRect) => d.strokeWidth);
 
-        rectSelection.exit();
-
         // Draw value rects
-        const valueSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
-        const valueSelectionMerged = valueSelection
-            .enter()
-            .append("rect")
-            .merge(valueSelection);
-
-        valueSelectionMerged
+        const valueSelection: BulletSelection<any> = this.bulletGraphicsContext
+            .selectAll("rect.value")
+            .data(valueRects, (d: BarValueRect) => d.key)
+            .join("rect")
             .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
             .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y + BulletChart.bulletMiddlePosition)))
             .attr("width", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
@@ -966,7 +962,6 @@ export class BulletChart implements IVisual {
             .style("stroke", (d: BarValueRect) => d.strokeColor)
             .style("stroke-width", (d: BarValueRect) => d.strokeWidth);
 
-        valueSelection.exit();
         // Draw markers
         this.drawFirstTargets(targetValues,
             (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value,
@@ -986,9 +981,7 @@ export class BulletChart implements IVisual {
         // Draw measure label
         if (model.settings.axis.measureUnits.value) {
             barSelection
-                .enter()
-                .append("text")
-                .merge(barSelection)
+                .join("text")
                 .attr("x", ((d: BarData) => {
                     if (reversed)
                         return BulletChart.XMarginHorizontalLeft + BulletChart.XMarginHorizontalRight + model.viewportLength + BulletChart.SubtitleMargin;
@@ -999,11 +992,13 @@ export class BulletChart implements IVisual {
                 .attr("font-size", PixelConverter.fromPoint(BulletChart.DefaultSubtitleFontSizeInPt))
                 .text(measureUnitsText);
         }
+
         if (this.interactivityService) {
             const targetCollection = this.data.barRects.concat(this.data.valueRects);
             const behaviorOptions: BulletBehaviorOptions = {
                 rects: bullets,
-                valueRects: valueSelectionMerged,
+                groupedRects: groupedBulletsSelection,
+                valueRects: valueSelection,
                 clearCatcher: this.clearCatcher,
                 interactivityService: this.interactivityService,
                 bulletChartSettings: this.data.settings,
@@ -1014,9 +1009,9 @@ export class BulletChart implements IVisual {
 
             this.interactivityService.bind(behaviorOptions);
         }
-        barSelection.exit();
+
         this.tooltipServiceWrapper.addTooltip(
-            valueSelectionMerged,
+            valueSelection,
             (data: TooltipEnabledDataPoint) => data.tooltipInfo);
         this.tooltipServiceWrapper.addTooltip(
             bullets,
@@ -1070,9 +1065,7 @@ export class BulletChart implements IVisual {
         // Draw Labels
         if (model.settings.labels.show.value) {
             barSelection
-                .enter()
-                .append("text")
-                .merge(barSelection)
+                .join("text")
                 .classed("title", true)
                 .attr("x", (d: BarData) => d.x)
                 .attr("y", () => {
@@ -1151,7 +1144,6 @@ export class BulletChart implements IVisual {
     }
 
     private setUpBulletsVertically(
-        bulletBody: BulletSelection<any>,
         model: BulletChartModel,
         reversed: boolean,
     ) {
@@ -1160,34 +1152,35 @@ export class BulletChart implements IVisual {
         const valueRects: BarValueRect[] = model.valueRects;
         const targetValues: TargetValue[] = model.targetValues;
         const barSelection: BulletSelection<any> = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
-        const rectSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.range").data(rects, (d: BarRect) => d.key);
 
-        // Draw bullets
-        const bullets: BulletSelection<any> = rectSelection
-            .enter()
-            .append("rect")
-            .merge(rectSelection);
-
-        bullets
+        const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
+        const groupedBulletsSelection = this.bulletGraphicsContext
+            .selectAll("g.rect-container")
+            .data(groupedBullets)
+            .join("g")
+            .classed("rect-container", true)
             .attr("focusable", true)
-            .attr("tabindex", (d) => Math.max(BulletChart.zeroValue, d.start - d.end) === BulletChart.zeroValue ? -1 : 0)
+            .attr("tabindex", 0);
+
+        const bullets = groupedBulletsSelection
+            .selectAll("rect.range")
+            .data(d => d[1])
+            .join("rect")
+            .classed("range", true)
             .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x)))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
             .attr("height", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
             .attr("width", BulletChart.BulletSize)
             .classed("range", true)
             .style("fill", (d: BarRect) => d.fillColor)
-            .attr("stroke", (d: BarRect) => d.strokeColor)
-            .attr("stroke-width", (d: BarRect) => d.strokeWidth);
-
-        rectSelection.exit();
+            .style("stroke", (d: BarRect) => d.strokeColor)
+            .style("stroke-width", (d: BarRect) => d.strokeWidth);
 
         // Draw value rects
         const valueSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
+
         const valueSelectionMerged = valueSelection
-            .enter()
-            .append("rect")
-            .merge(valueSelection)
+            .join("rect")
             .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + BulletChart.bulletMiddlePosition)))
             .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
             .attr("height", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
@@ -1197,7 +1190,6 @@ export class BulletChart implements IVisual {
             .attr("stroke", (d: BarRect) => d.strokeColor)
             .attr("stroke-width", (d: BarRect) => d.strokeWidth);
 
-        valueSelection.exit();
         // Draw markers
         this.drawFirstTargets(
             targetValues,
@@ -1219,9 +1211,7 @@ export class BulletChart implements IVisual {
         // Draw measure label
         if (model.settings.axis.measureUnits.value) {
             barSelection
-                .enter()
-                .append("text")
-                .merge(barSelection)
+                .join("text")
                 .attr("x", ((d: BarData) => d.x + BulletChart.BulletSize))
                 .attr("y", () => {
                     return labelsStartPos + BulletChart.SubtitleMargin + BulletChart.value12;
@@ -1234,6 +1224,7 @@ export class BulletChart implements IVisual {
             const targetCollection: BarRect[] = this.data.barRects.concat(this.data.valueRects);
             const behaviorOptions: BulletBehaviorOptions = {
                 rects: bullets,
+                groupedRects: groupedBulletsSelection,
                 valueRects: valueSelectionMerged,
                 clearCatcher: this.clearCatcher,
                 interactivityService: this.interactivityService,
@@ -1245,13 +1236,12 @@ export class BulletChart implements IVisual {
 
             this.interactivityService.bind(behaviorOptions);
         }
-        barSelection.exit();
         this.tooltipServiceWrapper.addTooltip(
             valueSelectionMerged,
             (data: TooltipEnabledDataPoint) => data.tooltipInfo);
         this.tooltipServiceWrapper.addTooltip(
             bullets,
-        (data: TooltipEnabledDataPoint) => data.tooltipInfo);
+            (data: TooltipEnabledDataPoint) => data.tooltipInfo);
     }
 
     private drawFirstTargets(
