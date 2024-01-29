@@ -34,7 +34,8 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 import { VisualBuilderBase } from "powerbi-visuals-utils-testutils";
 
 import { BulletChart as VisualClass } from "../src/visual";
-import { BulletchartSettings as VisualSettings, BulletChartOrientation } from "../src/settings";
+import {BulletChartOrientation} from "../src/BulletChartOrientation";
+import {BulletChartSettingsModel} from "../src/BulletChartSettingsModel";
 
 export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	constructor(width: number, height: number) {
@@ -45,8 +46,8 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 		return new VisualClass(options);
 	}
 
-	public getSettings(): VisualSettings {
-		return new VisualSettings();
+	public getSettings(): BulletChartSettingsModel {
+		return new BulletChartSettingsModel();
 	}
 	
 	public get mainElement(): SVGElement {
@@ -84,7 +85,7 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	}
 
 	public get orientation(): BulletChartOrientation {
-		return this.getSettings().orientation.orientation;
+		return this.getSettings().orientation.orientation.value.value as BulletChartOrientation;
 	}
 
 	public get isVertical(): boolean {

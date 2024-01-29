@@ -38,35 +38,34 @@ import DataViewCategoricalColumn = powerbiVisualsApi.DataViewCategoricalColumn;
 import DataViewMetadataColumn = powerbiVisualsApi.DataViewMetadataColumn;
 import DataViewTable = powerbiVisualsApi.DataViewTable;
 
-import { converterHelper as ch } from "powerbi-visuals-utils-dataviewutils";
-import converterHelper = ch.converterHelper;
+import { converterHelper } from "powerbi-visuals-utils-dataviewutils";
 
 export class BulletChartColumns<T> {
-    public static GETCOLUMNSOURCES(dataView: DataView) {
-        return this.getcolumnsourcesT<DataViewMetadataColumn>(dataView);
+    public static GET_COLUMN_SOURCES(dataView: DataView) {
+        return this.GET_COLUMN_SOURCES_T<DataViewMetadataColumn>(dataView);
     }
 
-    public static GETTABLEVALUES(dataView: DataView): BulletChartColumns<any[]> {
+    public static GET_TABLE_VALUES(dataView: DataView): BulletChartColumns<any[]> {
         const table: DataViewTable = dataView && dataView.table,
-            columns = this.getcolumnsourcesT<any[]>(dataView);
+            columns = this.GET_COLUMN_SOURCES_T<any[]>(dataView);
 
         return columns && table && lodashMapvalues(
-            columns, (n: DataViewMetadataColumn, i) => n && table.rows.map(row => row[n.index]));
+            columns, (n: DataViewMetadataColumn) => n && table.rows.map(row => row[n.index]));
     }
 
-    public static GETTABLEROWS(dataView: DataView): BulletChartColumns<any>[] {
+    public static GET_TABLE_ROWS(dataView: DataView): BulletChartColumns<any>[] {
         const table: DataViewTable = dataView && dataView.table,
-            columns = this.getcolumnsourcesT<any[]>(dataView);
+            columns = this.GET_COLUMN_SOURCES_T<any[]>(dataView);
 
         return columns && table && table.rows.map(row =>
-            lodashMapvalues(columns, (n: DataViewMetadataColumn, i) => n && row[n.index]));
+            lodashMapvalues(columns, (n: DataViewMetadataColumn) => n && row[n.index]));
     }
 
-    public static GETCATEGORICALVALUES(dataView: DataView): BulletChartColumns<any[]> {
+    public static GET_CATEGORICAL_VALUES(dataView: DataView): BulletChartColumns<any[]> {
         const categorical: DataViewCategorical = dataView && dataView.categorical,
             categories = categorical && categorical.categories || [],
             values = categorical && categorical.values || <DataViewValueColumns>[],
-            series = categorical && values.source && this.GETSERIESVALUES(dataView);
+            series = categorical && values.source && this.GET_SERIES_VALUES(dataView);
 
         return categorical && lodashMapvalues(new this<any[]>(), (n, i) =>
             (<DataViewCategoricalColumn[]>Array.from(categories)).concat(Array.from(values))
@@ -88,12 +87,12 @@ export class BulletChartColumns<T> {
             || values.source && values.source.roles && values.source.roles[i] && series);
     }
 
-    public static GETSERIESVALUES(dataView: DataView): any[] {
+    public static GET_SERIES_VALUES(dataView: DataView): any[] {
         return dataView && dataView.categorical && dataView.categorical.values
             && dataView.categorical.values.map(x => converterHelper.getSeriesName(x.source));
     }
 
-    public static GETCATEGORICALCOLUMNS(dataView: DataView): BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns> {
+    public static GET_CATEGORICAL_COLUMNS(dataView: DataView): BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns> {
         const categorical: DataViewCategorical = dataView && dataView.categorical,
             categories = categorical && categorical.categories || [],
             values = categorical && categorical.values || <DataViewValueColumns>[];
@@ -119,7 +118,7 @@ export class BulletChartColumns<T> {
             });
     }
 
-    public static GETGROUPEDVALUECOLUMNS(dataView: DataView): BulletChartColumns<DataViewValueColumn>[] {
+    public static GET_GROUPED_VALUE_COLUMNS(dataView: DataView): BulletChartColumns<DataViewValueColumn>[] {
         const categorical: DataViewCategorical = dataView && dataView.categorical,
             values = categorical && categorical.values,
             grouped = values && values.grouped();
@@ -129,7 +128,7 @@ export class BulletChartColumns<T> {
             (n, i) => g.values.filter(v => v.source.roles[i])[0]));
     }
 
-    private static getcolumnsourcesT<T>(dataView: DataView): BulletChartColumns<DataViewMetadataColumn> {
+    private static GET_COLUMN_SOURCES_T<T>(dataView: DataView): BulletChartColumns<DataViewMetadataColumn> {
         const columns: DataViewMetadataColumn[] = dataView && dataView.metadata && dataView.metadata.columns;
 
         return columns && lodashMapvalues(

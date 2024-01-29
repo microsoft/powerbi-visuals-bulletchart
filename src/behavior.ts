@@ -1,5 +1,5 @@
 // d3
-import { Selection } from "d3-selection";
+import {BaseType, Selection} from "d3-selection";
 type d3Selection<T1, T2 = T1> = Selection<any, T1, any, T2>;
 
 // powerbi.extensibility.utils.interactivity
@@ -10,15 +10,16 @@ import ISelectionHandler = interactivityService.ISelectionHandler;
 import IBehaviorOptions = interactivityService.IBehaviorOptions;
 import BaseDataPoint = interactivityService.BaseDataPoint;
 
-import { BulletchartSettings } from "./settings";
 import { BarRect, BarValueRect } from "./dataInterfaces";
+import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
 
 export interface BulletBehaviorOptions extends IBehaviorOptions<BaseDataPoint> {
-    rects: d3Selection<any>;
+    rects: Selection<BaseType | SVGRectElement, BarRect, BaseType | SVGGElement, [number, BarRect[]]>;
+    groupedRects:  Selection<BaseType | SVGGElement, [number, BarRect[]], any, any>;
     valueRects: d3Selection<any>;
     clearCatcher: d3Selection<any>;
     interactivityService: IInteractivityService<BaseDataPoint>;
-    bulletChartSettings: BulletchartSettings;
+    bulletChartSettings: BulletChartSettingsModel;
     hasHighlights: boolean;
 }
 
@@ -36,7 +37,7 @@ export class BulletWebBehavior implements IInteractiveBehavior {
 
     public bindEvents(options: BulletBehaviorOptions, selectionHandler: ISelectionHandler) {
         this.options = options;
-        let clearCatcher = options.clearCatcher;
+        const clearCatcher = options.clearCatcher;
 
         options.valueRects.on("click", (event: MouseEvent, d: BarValueRect) => {
             selectionHandler.handleSelection(d, event.ctrlKey || event.metaKey);
@@ -46,14 +47,32 @@ export class BulletWebBehavior implements IInteractiveBehavior {
             selectionHandler.handleSelection(d, event.ctrlKey || event.metaKey);
         });
 
+        options.rects.on("keydown", (event: KeyboardEvent, d: BarRect) => {
+            if (event.code !== "Enter" && event.code !== "Space") {
+                return;
+            }
+
+            selectionHandler.handleSelection(d, event.ctrlKey || event.shiftKey || event.metaKey);
+        });
+
+        options.groupedRects.on("keydown", (event: KeyboardEvent, d: [number, BarRect[]]) => {
+            if (event.code !== "Enter" && event.code !== "Space") {
+                return;
+            }
+
+            const groupedBars = d[1];
+            const firstBarRect = groupedBars[0];
+            selectionHandler.handleSelection(firstBarRect, event.ctrlKey || event.shiftKey || event.metaKey);
+        });
+
         clearCatcher.on("click", () => {
             selectionHandler.handleClearSelection();
         });
     }
 
     public renderSelection(hasSelection: boolean) {
-        let options = this.options;
-        let hasHighlights = options.hasHighlights;
+        const options = this.options;
+        const hasHighlights = options.hasHighlights;
 
         options.valueRects.style("opacity", (d: BarValueRect) =>
             BulletWebBehavior.getFillOpacity(d.selected, d.highlight, !d.highlight && hasSelection, !d.selected && hasHighlights));

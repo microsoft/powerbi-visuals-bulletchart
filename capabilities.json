@@ -340,6 +340,20 @@
                     "displayNameKey": "Visual_UnitsColor"
                 }
             }
+        },
+        "syncAxis": {
+            "properties": {
+                "syncAxis": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showMainAxis": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
         }
     },
     "dataViewMappings": [
@@ -439,7 +453,9 @@
             }
         }
     ],
+    "privileges": [],
     "supportsHighlight": true,
+    "supportsKeyboardFocus": true,
     "sorting": {
         "default": {}
     },
