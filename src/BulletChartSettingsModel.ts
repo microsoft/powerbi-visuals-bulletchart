@@ -7,6 +7,11 @@ import IEnumMember = powerbi.IEnumMember;
 import {BulletChartOrientation} from "./BulletChartOrientation";
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 
+export const BulletChartObjectNames = {
+    Labels: { name: "labels", displayName: "Category labels" },
+} as const;
+
+
 class TextSizeDefaults {
     public static readonly DefaultSize = 11;
     public static readonly MinSize = 7;
@@ -19,6 +24,41 @@ const orientationOptions: IEnumMember[] = [
     { value: BulletChartOrientation.VerticalTop, displayName: "Visual_Orientation_VerticalTop" },
     { value: BulletChartOrientation.VerticalBottom, displayName: "Visual_Orientation_VerticalBottom" },
 ];
+
+
+class BaseFontCardSettings extends Card {
+    font = new formattingSettings.FontControl({
+        name: "font",
+        displayName: "Font",
+        displayNameKey: "Visual_Font",
+        fontSize: new formattingSettings.NumUpDown({
+            name: "fontSize",
+            displayName: "Text Size",
+            displayNameKey: "Visual_TextSize",
+            value: TextSizeDefaults.DefaultSize,
+            options: {
+                minValue: { value: TextSizeDefaults.MinSize, type: powerbi.visuals.ValidatorType.Min },
+                maxValue: { value: TextSizeDefaults.MaxSize, type: powerbi.visuals.ValidatorType.Max },
+            }
+        }),
+        fontFamily: new formattingSettings.FontPicker({
+            name: "fontFamily",
+            value: "Arial, sans-serif",
+        }),
+        bold: new formattingSettings.ToggleSwitch({
+            name: "fontBold",
+            value: false,
+        }),
+        italic: new formattingSettings.ToggleSwitch({
+            name: "fontItalic",
+            value: false,
+        }),
+        underline: new formattingSettings.ToggleSwitch({
+            name: "fontUnderline",
+            value: false,
+        }),
+    });
+}
 
 class DataValuesCard extends Card {
     targetValue = new formattingSettings.NumUpDown({
@@ -124,7 +164,7 @@ class TooltipsCard extends Card {
     slices = [this.valueCustomName, this.targetCustomName, this.target2CustomName];
 }
 
-class LabelsCard extends Card {
+class LabelsCard extends BaseFontCardSettings {
     show: SimpleSlice<boolean> = new formattingSettings.ToggleSwitch({
         name: "show",
         displayName: "Show",
@@ -143,17 +183,6 @@ class LabelsCard extends Card {
         value: { value: "#000000" }
     });
 
-    fontSize = new formattingSettings.NumUpDown({
-        name: "fontSize",
-        displayName: "Text size",
-        displayNameKey: "Visual_TextSize",
-        value: TextSizeDefaults.DefaultSize,
-        options: {
-            minValue: { value: TextSizeDefaults.MinSize, type: powerbi.visuals.ValidatorType.Min },
-            maxValue: { value: TextSizeDefaults.MaxSize, type: powerbi.visuals.ValidatorType.Max },
-        }
-    });
-
     maxWidth = new formattingSettings.NumUpDown({
         name: "maxWidth",
         displayName: "Maximum width",
@@ -161,10 +190,10 @@ class LabelsCard extends Card {
         value: 80,
     });
 
-    name: string = "labels";
-    displayName: string = "Category labels";
+    name: string = BulletChartObjectNames.Labels.name;
+    displayName: string = BulletChartObjectNames.Labels.displayName
     displayNameKey: string = "Visual_CategoryLabels";
-    slices = [this.labelColor, this.fontSize, this.maxWidth];
+    slices = [this.font, this.labelColor, this.maxWidth];
 }
 
 class OrientationCard extends Card {

@@ -100,8 +100,89 @@ import {VisualLayout} from "./visualLayout";
 import {BulletBehaviorOptions, BulletWebBehavior} from "./behavior";
 import {BulletChartOrientation} from "./BulletChartOrientation";
 import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
-import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
+import {BulletChartSettingsModel, BulletChartObjectNames} from "./BulletChartSettingsModel";
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
+
+// OnObject
+import {
+    HtmlSubSelectionHelper,
+    HtmlSubSelectableClass,
+    SubSelectableDisplayNameAttribute,
+    SubSelectableObjectNameAttribute,
+    SubSelectableTypeAttribute,
+} from "powerbi-visuals-utils-onobjectformatting/src"
+import CustomVisualSubSelection = powerbi.visuals.CustomVisualSubSelection;
+import SubSelectionStyles = powerbi.visuals.SubSelectionStyles;
+import VisualShortcutType = powerbi.visuals.VisualShortcutType;
+import VisualSubSelectionShortcuts = powerbi.visuals.VisualSubSelectionShortcuts;
+import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
+import FormattingId = powerbi.visuals.FormattingId;
+
+
+interface ClassAndSelector {
+    className: string;
+    selectorName: string;
+}
+
+function CreateClassAndSelector(className: string) {
+    return {
+        className: className,
+        selectorName: "." + className,
+    };
+}
+
+
+interface Reference {
+    cardUid?: string;
+    groupUid?: string;
+    font?: FormattingId;
+    color?: FormattingId;
+    show?: FormattingId;
+    fontFamily?: FormattingId;
+    bold?: FormattingId;
+    italic?: FormattingId;
+    underline?: FormattingId;
+    fontSize?: FormattingId;
+    showTitle?: FormattingId;
+    position?: FormattingId;
+    titleText?: FormattingId;
+    fill?: FormattingId;
+    axisBeginning?: FormattingId;
+}
+
+
+const labelsReference: Reference = {
+    cardUid: "Visual-labels-card",
+    groupUid: "labels-group",
+    fontFamily: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontFamily"
+    },
+    bold: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontBold"
+    },
+    italic: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontItalic"
+    },
+    underline: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontUnderline"
+    },
+    fontSize: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontSize"
+    },
+    color: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "color"
+    },
+    show: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "show"
+    }
+}
 
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;
@@ -123,6 +204,10 @@ export class BulletChart implements IVisual {
     private static MarkerMarginHorizontalEnd: number = 5 * BulletChart.MarkerMarginHorizontal;
     private static MarkerMarginVertical: number = BulletChart.BulletSize / 4;
     private static FontFamily: string = "Segoe UI";
+
+    private static CategoryLabelsSelector: ClassAndSelector = CreateClassAndSelector("categoryLabel");
+    private static BulletContainerSelector: ClassAndSelector = CreateClassAndSelector("bulletContainer");
+
     private baselineDelta: number = 0;
     // Variables
     private clearCatcher: BulletSelection<any>;
@@ -134,6 +219,9 @@ export class BulletChart implements IVisual {
     private localizationManager: ILocalizationManager;
     private formattingSettingsService: FormattingSettingsService;
     private visualSettings: BulletChartSettingsModel;
+    private subSelectionHelper: HtmlSubSelectionHelper;
+    private formatMode: boolean = false;
+    public visualOnObjectFormatting?: powerbi.extensibility.visual.VisualOnObjectFormatting;
 
     private behavior: BulletWebBehavior;
     private interactivityService: IInteractivityService<BaseDataPoint>;
@@ -358,7 +446,7 @@ export class BulletChart implements IVisual {
             if (categorical.Category) {
                 category = valueFormatter.format(categoricalValues.Category[idx], categoryFormatString);
                 category = TextMeasurementService.getTailoredTextOrDefault(
-                    BulletChart.getTextProperties(category, visualSettings.labels.fontSize.value),
+                    BulletChart.getTextProperties(category, visualSettings.labels.font.fontSize.value),
                     isVerticalOrientation ? this.MaxLabelWidth : visualSettings.labels.maxWidth.value
                 );
             }
@@ -438,8 +526,8 @@ export class BulletChart implements IVisual {
             viewportLength: BulletChart.zeroValue
         };
 
-        bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.fontSize.value));
-        bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.fontSize.value)) / BulletChart.value1dot4;
+        bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.font.fontSize.value));
+        bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.font.fontSize.value)) / BulletChart.value1dot4;
         bulletModel.spaceRequiredForBarHorizontally = Math.max(visualSettings.axis.axis.value ? BulletChart.value60 : BulletChart.value28, bulletModel.labelHeight + BulletChart.value25);
         bulletModel.viewportLength = Math.max(0, (isVerticalOrientation
             ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value25 - BulletChart.YMarginVertical * BulletChart.value2)
@@ -735,6 +823,16 @@ export class BulletChart implements IVisual {
         this.selectionManager = options.host.createSelectionManager();
         this.localizationManager = options.host.createLocalizationManager();
         this.formattingSettingsService = new FormattingSettingsService(this.localizationManager);
+        this.subSelectionHelper = HtmlSubSelectionHelper.createHtmlSubselectionHelper({
+            hostElement: options.element,
+            subSelectionService: options.host.subSelectionService,
+        });
+
+        this.visualOnObjectFormatting = {
+            getSubSelectionStyles: (subSelections) => this.getSubSelectionStyles(subSelections),
+            getSubSelectionShortcuts: (subSelections) => this.getSubSelectionShortcuts(subSelections),
+            getSubSelectables: (filter) => this.getSubSelectables(filter),
+        };
 
         this.layout = new VisualLayout(null, {
             top: 0,
@@ -776,6 +874,7 @@ export class BulletChart implements IVisual {
         }
         const dataView: DataView = options.dataViews[0];
         this.layout.viewport = options.viewport;
+        this.formatMode = options.formatMode ?? false;
 
         this.visualSettings = this.formattingSettingsService.populateFormattingSettingsModel(BulletChartSettingsModel, dataView);
         this.visualSettings.setLocalizedOptions(this.localizationManager);
@@ -789,7 +888,7 @@ export class BulletChart implements IVisual {
 
         this.data = data;
 
-        this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.fontSize.value));
+        this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.font.fontSize.value));
 
         if (this.interactivityService) {
             this.interactivityService.applySelectionStateToData(this.data.barRects);
@@ -819,6 +918,15 @@ export class BulletChart implements IVisual {
         }
 
         this.behavior.renderSelection(this.interactivityService.hasSelection());
+
+        this.subSelectionHelper.setFormatMode(options.formatMode);
+        const shouldUpdateSubSelection = options.type & (powerbi.VisualUpdateType.Data
+            | powerbi.VisualUpdateType.Resize
+            | powerbi.VisualUpdateType.FormattingSubSelectionChange);
+        if (this.formatMode && shouldUpdateSubSelection) {
+            this.subSelectionHelper.updateOutlinesFromSubSelections(options.subSelections, true);
+        }
+
         this.events.renderingFinished(options);
     }
 
@@ -887,7 +995,11 @@ export class BulletChart implements IVisual {
         if (model.settings.labels.show.value) {
             barSelection
                 .join("text")
-                .classed("title", true)
+                .classed(BulletChart.CategoryLabelsSelector.className, true)
+                .classed(HtmlSubSelectableClass, this.formatMode)
+                .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Labels.name)
+                .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Labels.displayName)
+                .attr(SubSelectableTypeAttribute, SubSelectionStylesType.Text)
                 .attr("x", (d: BarData) => {
                     if (reversed)
                         return (
@@ -904,11 +1016,15 @@ export class BulletChart implements IVisual {
                         this.baselineDelta +
                         BulletChart.BulletSize / BulletChart.value2
                 )
-                .attr("fill", model.settings.labels.labelColor.value.value)
-                .attr(
+                .style("fill", model.settings.labels.labelColor.value.value)
+                .style(
                     "font-size",
-                    PixelConverter.fromPoint(model.settings.labels.fontSize.value)
+                    PixelConverter.fromPoint(model.settings.labels.font.fontSize.value)
                 )
+                .style("font-family", model.settings.labels.font.fontFamily.value)
+                .style("font-weight", model.settings.labels.font.bold.value ? "bold" : "normal")
+                .style("font-style", model.settings.labels.font.italic.value ? "italic" : "normal")
+                .style("text-decoration", model.settings.labels.font.underline.value ? "underline" : "none")
                 .text((d: BarData) => d.categoryLabel)
                 .append("title")
                 .text((d: BarData) => d.categoryLabel);
@@ -927,10 +1043,10 @@ export class BulletChart implements IVisual {
 
         const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
         const groupedBulletsSelection = this.bulletGraphicsContext
-            .selectAll("g.rect-container")
+            .selectAll(`g.${BulletChart.BulletContainerSelector.className}`)
             .data(groupedBullets)
             .join("g")
-            .classed("rect-container", true)
+            .classed(BulletChart.BulletContainerSelector.className, true)
             .attr("focusable", true)
             .attr("tabindex", 0);
 
@@ -1066,16 +1182,24 @@ export class BulletChart implements IVisual {
         if (model.settings.labels.show.value) {
             barSelection
                 .join("text")
-                .classed("title", true)
+                .classed(BulletChart.CategoryLabelsSelector.className, true)
+                .classed(HtmlSubSelectableClass, this.formatMode)
+                .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Labels.name)
+                .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Labels.displayName)
+                .attr(SubSelectableTypeAttribute, SubSelectionStylesType.Text)
                 .attr("x", (d: BarData) => d.x)
                 .attr("y", () => {
                     return labelsStartPosition;
                 })
-                .attr("fill", model.settings.labels.labelColor.value.value)
-                .attr(
+                .style("fill", model.settings.labels.labelColor.value.value)
+                .style(
                     "font-size",
-                    PixelConverter.fromPoint(model.settings.labels.fontSize.value)
+                    PixelConverter.fromPoint(model.settings.labels.font.fontSize.value)
                 )
+                .style("font-family", model.settings.labels.font.fontFamily.value)
+                .style("font-weight", model.settings.labels.font.bold.value ? "bold" : "normal")
+                .style("font-style", model.settings.labels.font.italic.value ? "italic" : "normal")
+                .style("text-decoration", model.settings.labels.font.underline.value ? "underline" : "none")
                 .text((d: BarData) => d.categoryLabel)
                 .append("title")
                 .text((d: BarData) => d.categoryLabel);
@@ -1155,10 +1279,10 @@ export class BulletChart implements IVisual {
 
         const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
         const groupedBulletsSelection = this.bulletGraphicsContext
-            .selectAll("g.rect-container")
+            .selectAll(`g.${BulletChart.BulletContainerSelector.className}`)
             .data(groupedBullets)
             .join("g")
-            .classed("rect-container", true)
+            .classed(BulletChart.BulletContainerSelector.className, true)
             .attr("focusable", true)
             .attr("tabindex", 0);
 
@@ -1338,6 +1462,111 @@ export class BulletChart implements IVisual {
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
         return this.formattingSettingsService.buildFormattingModel(this.visualSettings);
+    }
+
+    private getSubSelectionStyles(subSelections: CustomVisualSubSelection[]) {
+        const visualObject = subSelections[0]?.customVisualObjects[0];
+        if (!visualObject) {
+            return undefined;
+        }
+
+        switch (visualObject.objectName) {
+            case BulletChartObjectNames.Labels.name:
+                return this.getLabelsSelectionStyles();
+            default:
+                return undefined;
+        }
+    }
+
+    private getSubSelectionShortcuts(subSelections: powerbi.visuals.CustomVisualSubSelection[]) {
+        const visualObject = subSelections[0]?.customVisualObjects[0];
+        if (!visualObject) {
+            return undefined;
+        }
+
+        switch (visualObject.objectName) {
+            case BulletChartObjectNames.Labels.name:
+                return this.getLabelsSelectionShortcuts();
+            default:
+                return undefined;
+        }
+    }
+
+    private getSubSelectables(filter?: powerbi.visuals.SubSelectionStylesType): CustomVisualSubSelection[] | undefined {
+        return this.subSelectionHelper.getAllSubSelectables(filter);
+    }
+
+    private getLabelsSelectionStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Text,
+            fontFamily: {
+                reference: {
+                    ...labelsReference.fontFamily
+                },
+                label: labelsReference.fontFamily.propertyName
+            },
+            bold: {
+                reference: {
+                    ...labelsReference.bold
+                },
+                label: labelsReference.bold.propertyName
+            },
+            italic: {
+                reference: {
+                    ...labelsReference.italic
+                },
+                label: labelsReference.italic.propertyName
+            },
+            underline: {
+                reference: {
+                    ...labelsReference.underline
+                },
+                label: labelsReference.underline.propertyName
+            },
+            fontSize: {
+                reference: {
+                    ...labelsReference.fontSize
+                },
+                label: labelsReference.fontSize.propertyName
+            },
+            fontColor: {
+                reference: {
+                    ...labelsReference.color
+                },
+                label: labelsReference.color.propertyName
+            }
+        };
+    }
+
+
+    private getLabelsSelectionShortcuts(): VisualSubSelectionShortcuts {
+        return [
+            {
+                type: VisualShortcutType.Reset,
+                relatedResetFormattingIds: [
+                    labelsReference.bold,
+                    labelsReference.fontFamily,
+                    labelsReference.fontSize,
+                    labelsReference.italic,
+                    labelsReference.underline,
+                    labelsReference.color
+                ]
+            },
+            {
+                type: VisualShortcutType.Toggle,
+                ...labelsReference.show,
+                disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_DeleteLabels"),
+                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_AddLabels")
+            },
+            {
+                type: VisualShortcutType.Divider,
+            },
+            {
+                type: VisualShortcutType.Navigate,
+                destinationInfo: { cardUid: labelsReference.cardUid },
+                label: this.localizationManager.getDisplayName("Visual_OnObject_FormatLabels")
+            }
+        ];
     }
 }
 

@@ -175,20 +175,40 @@
                         }
                     }
                 },
+                "maxWidth": {
+                    "displayName": "Maximum width",
+                    "displayNameKey": "Visual_MaxWidth",
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "fontSize": {
-                    "displayName": "Text Size",
-                    "displayNameKey": "Visual_TextSize",
                     "type": {
                         "formatting": {
                             "fontSize": true
                         }
                     }
                 },
-                "maxWidth": {
-                    "displayName": "Maximum width",
-                    "displayNameKey": "Visual_MaxWidth",
+                "fontFamily": {
                     "type": {
-                        "numeric": true
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "fontBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontUnderline": {
+                    "type": {
+                        "bool": true
                     }
                 }
             }
@@ -456,6 +476,8 @@
     "privileges": [],
     "supportsHighlight": true,
     "supportsKeyboardFocus": true,
+    "supportsOnObjectFormatting": true,
+    "enablePointerEventsFormatMode": true,
     "sorting": {
         "default": {}
     },
