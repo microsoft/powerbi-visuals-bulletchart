@@ -9,6 +9,9 @@ import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 
 export const BulletChartObjectNames = {
     Labels: { name: "labels", displayName: "Category labels" },
+    Axis: { name: "axis", displayName: "Axis" },
+    SyncAxis: { name: "syncAxis", displayName: "Sync axis" },
+    Orientation: { name: "orientation", displayName: "Orientation" },
 } as const;
 
 
@@ -205,8 +208,8 @@ class OrientationCard extends Card {
         value: orientationOptions[0],
     });
 
-    name: string = "orientation";
-    displayName: string = "Orientation";
+    name: string = BulletChartObjectNames.Orientation.name;
+    displayName: string = BulletChartObjectNames.Orientation.displayName;
     displayNameKey: string = "Visual_Orientation";
     slices = [this.orientation];
 }
@@ -299,8 +302,8 @@ class AxisCard extends Card {
         value: { value: "#808080" },
     });
 
-    name: string = "axis";
-    displayName: string = "Axis";
+    name: string = BulletChartObjectNames.Axis.name;
+    displayName: string = BulletChartObjectNames.Axis.displayName;
     displayNameKey: string =  "Visual_Axis";
     slices = [this.axisColor, this.measureUnits, this.unitsColor];
 }
@@ -322,8 +325,8 @@ class SyncAxis extends Card {
         value: false,
     });
 
-    name: string = "syncAxis";
-    displayName: string = "Sync axis";
+    name: string = BulletChartObjectNames.SyncAxis.name;
+    displayName: string = BulletChartObjectNames.SyncAxis.displayName;
     displayNameKey: string = "Visual_AxisSync";
     slices = [this.showMainAxis];
 }

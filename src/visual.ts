@@ -31,12 +31,59 @@ import {select, Selection} from 'd3-selection';
 import lodashIsnumber from "lodash.isnumber";
 import lodashMax from "lodash.max";
 import powerbiVisualsApi from "powerbi-visuals-api";
-
-// d3
-type BulletSelection<T1, T2 = T1> = Selection<any, T1, any, T2>;
 import {scaleLinear, ScaleLinear} from "d3-scale";
 import {group} from "d3-array"
 
+// powerbi.extensibility.utils.type
+import {pixelConverter as PixelConverter} from "powerbi-visuals-utils-typeutils";
+
+// powerbi.extensibility.utils.interactivity
+import {
+    interactivityBaseService as interactivityService,
+    interactivityBaseService,
+    interactivitySelectionService
+} from "powerbi-visuals-utils-interactivityutils";
+
+// powerbi.extensibility.utils.formatting
+// import { textMeasurementService as tms, valueFormatter } from "powerbi-visuals-utils-formattingutils";
+// import TextProperties = tms.TextProperties;
+// import TextMeasurementService = tms.textMeasurementService;
+import {textMeasurementService as TextMeasurementService} from "powerbi-visuals-utils-formattingutils";
+import * as valueFormatter from "powerbi-visuals-utils-formattingutils/lib/src/valueFormatter";
+import {TextProperties} from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
+
+// powerbi.extensibility.utils.chart
+import {axis as AxisHelper, axisInterfaces, axisScale} from "powerbi-visuals-utils-chartutils";
+
+// powerbi.extensibility.utils.tooltip
+import {
+    createTooltipServiceWrapper,
+    ITooltipServiceWrapper,
+    TooltipEnabledDataPoint
+} from "powerbi-visuals-utils-tooltiputils";
+
+// powerbi.extensibility.utils.color
+import {ColorHelper} from "powerbi-visuals-utils-colorutils";
+
+import {BulletChartColumns} from "./BulletChartColumns";
+import {BarData, BarRect, BarValueRect, BulletChartModel, BulletChartTooltipItem, TargetValue} from "./dataInterfaces";
+import {VisualLayout} from "./visualLayout";
+import {BulletBehaviorOptions, BulletWebBehavior} from "./behavior";
+import {BulletChartOrientation} from "./BulletChartOrientation";
+import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
+import {BulletChartObjectNames, BulletChartSettingsModel} from "./BulletChartSettingsModel";
+
+// OnObject
+import {
+    HtmlSubSelectableClass,
+    HtmlSubSelectionHelper,
+    SubSelectableDisplayNameAttribute,
+    SubSelectableObjectNameAttribute,
+    SubSelectableTypeAttribute,
+} from "powerbi-visuals-utils-onobjectformatting/src"
+
+// d3
+type BulletSelection<T1, T2 = T1> = Selection<any, T1, any, T2>;
 import IViewport = powerbiVisualsApi.IViewport;
 import DataView = powerbiVisualsApi.DataView;
 import DataViewCategoryColumn = powerbiVisualsApi.DataViewCategoryColumn;
@@ -52,71 +99,22 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 import VisualTooltipDataItem = powerbiVisualsApi.extensibility.VisualTooltipDataItem;
 import ISelectionManager = powerbiVisualsApi.extensibility.ISelectionManager;
 import IVisualEventService = powerbiVisualsApi.extensibility.IVisualEventService;
-
 // powerbi.visuals
 import ISelectionId = powerbiVisualsApi.visuals.ISelectionId;
 import ISelectionIdBuilder = powerbiVisualsApi.visuals.ISelectionIdBuilder;
-
-// powerbi.extensibility.utils.type
-import {pixelConverter as PixelConverter} from "powerbi-visuals-utils-typeutils";
-
-// powerbi.extensibility.utils.interactivity
-import {
-    interactivityBaseService as interactivityService,
-    interactivitySelectionService,
-    interactivityBaseService
-} from "powerbi-visuals-utils-interactivityutils";
 import appendClearCatcher = interactivityService.appendClearCatcher;
 import IInteractivityService = interactivityService.IInteractivityService;
 import createInteractivitySelectionService = interactivitySelectionService.createInteractivitySelectionService;
 import BaseDataPoint = interactivityBaseService.BaseDataPoint;
-
-// powerbi.extensibility.utils.formatting
-// import { textMeasurementService as tms, valueFormatter } from "powerbi-visuals-utils-formattingutils";
-// import TextProperties = tms.TextProperties;
-// import TextMeasurementService = tms.textMeasurementService;
-
-import {textMeasurementService as TextMeasurementService} from "powerbi-visuals-utils-formattingutils";
-import * as valueFormatter from "powerbi-visuals-utils-formattingutils/lib/src/valueFormatter";
-import {TextProperties} from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
-
-// powerbi.extensibility.utils.chart
-import {axisInterfaces, axisScale, axis as AxisHelper} from "powerbi-visuals-utils-chartutils";
 import IAxisProperties = axisInterfaces.IAxisProperties;
-
-// powerbi.extensibility.utils.tooltip
-import {
-    ITooltipServiceWrapper,
-    createTooltipServiceWrapper,
-    TooltipEnabledDataPoint
-} from "powerbi-visuals-utils-tooltiputils";
-
-// powerbi.extensibility.utils.color
-import {ColorHelper} from "powerbi-visuals-utils-colorutils";
-
-import {BulletChartColumns} from "./BulletChartColumns";
-import {BulletChartModel, BulletChartTooltipItem, BarValueRect, BarData, BarRect, TargetValue} from "./dataInterfaces";
-import {VisualLayout} from "./visualLayout";
-import {BulletBehaviorOptions, BulletWebBehavior} from "./behavior";
-import {BulletChartOrientation} from "./BulletChartOrientation";
-import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
-import {BulletChartSettingsModel, BulletChartObjectNames} from "./BulletChartSettingsModel";
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
-
-// OnObject
-import {
-    HtmlSubSelectionHelper,
-    HtmlSubSelectableClass,
-    SubSelectableDisplayNameAttribute,
-    SubSelectableObjectNameAttribute,
-    SubSelectableTypeAttribute,
-} from "powerbi-visuals-utils-onobjectformatting/src"
 import CustomVisualSubSelection = powerbi.visuals.CustomVisualSubSelection;
 import SubSelectionStyles = powerbi.visuals.SubSelectionStyles;
-import VisualShortcutType = powerbi.visuals.VisualShortcutType;
 import VisualSubSelectionShortcuts = powerbi.visuals.VisualSubSelectionShortcuts;
-import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 import FormattingId = powerbi.visuals.FormattingId;
+import VisualShortcutType = powerbi.visuals.VisualShortcutType;
+import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
+import CustomVisualObject = powerbi.visuals.CustomVisualObject;
 
 
 interface ClassAndSelector {
@@ -184,6 +182,31 @@ const labelsReference: Reference = {
     }
 }
 
+const axisReference = {
+    cardUid: "Visual-axis-card",
+    groupUid: "axis-group",
+    axis: {
+        objectName: BulletChartObjectNames.Axis.name,
+        propertyName: "axis"
+    },
+    axisColor: {
+        objectName: BulletChartObjectNames.Axis.name,
+        propertyName: "axisColor"
+    },
+    syncAxis: {
+        objectName: BulletChartObjectNames.SyncAxis.name,
+        propertyName: "syncAxis"
+    },
+    showMainAxis: {
+        objectName: BulletChartObjectNames.SyncAxis.name,
+        propertyName: "showMainAxis"
+    },
+    orientation: {
+        objectName: BulletChartObjectNames.Orientation.name,
+        propertyName: "orientation"
+    },
+} as const;
+
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;
     private static SpaceRequiredForBarVertically: number = 100;
@@ -206,6 +229,7 @@ export class BulletChart implements IVisual {
     private static FontFamily: string = "Segoe UI";
 
     private static CategoryLabelsSelector: ClassAndSelector = CreateClassAndSelector("categoryLabel");
+    private static AxisSelector: ClassAndSelector = CreateClassAndSelector("axis");
     private static BulletContainerSelector: ClassAndSelector = CreateClassAndSelector("bulletContainer");
 
     private baselineDelta: number = 0;
@@ -934,7 +958,7 @@ export class BulletChart implements IVisual {
         this.labelGraphicsContext.selectAll("text").remove();
         this.bulletGraphicsContext.selectAll("rect").remove();
         this.bulletGraphicsContext.selectAll("text").remove();
-        this.bulletGraphicsContext.selectAll("axis").remove();
+        this.bulletGraphicsContext.selectAll(BulletChart.AxisSelector.className).remove();
         this.bulletGraphicsContext.selectAll("path").remove();
         this.bulletGraphicsContext.selectAll("line").remove();
         this.bulletGraphicsContext.selectAll("tick").remove();
@@ -1218,7 +1242,10 @@ export class BulletChart implements IVisual {
                 );
                 return `translate(${xLocation},${yLocation})`;
             })
-            .classed("axis", true)
+            .classed(BulletChart.AxisSelector.className, true)
+            .classed(HtmlSubSelectableClass, this.formatMode && this.visualSettings.axis.axis.value)
+            .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Axis.name)
+            .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Axis.displayName)
             .call(bar.xAxisProperties.axis)
             .style(
                 "font-size",
@@ -1243,7 +1270,10 @@ export class BulletChart implements IVisual {
 
                 return `translate(${xLocation},${yLocation})`;
             })
-            .classed("axis", true)
+            .classed(BulletChart.AxisSelector.className, true)
+            .classed(HtmlSubSelectableClass, this.formatMode && this.visualSettings.axis.axis.value)
+            .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Axis.name)
+            .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Axis.displayName)
             .call(bar.xAxisProperties.axis)
             .style(
                 "font-size",
@@ -1465,28 +1495,46 @@ export class BulletChart implements IVisual {
     }
 
     private getSubSelectionStyles(subSelections: CustomVisualSubSelection[]) {
-        const visualObject = subSelections[0]?.customVisualObjects[0];
-        if (!visualObject) {
+        const visualObjects = subSelections[0]?.customVisualObjects;
+        if (!visualObjects) {
+            return undefined;
+        }
+
+        let visualObject: CustomVisualObject;
+        if (visualObjects.length > 0 && visualObjects[0] != null) {
+            visualObject = visualObjects[0];
+        } else {
             return undefined;
         }
 
         switch (visualObject.objectName) {
             case BulletChartObjectNames.Labels.name:
-                return this.getLabelsSelectionStyles();
+                return this.getLabelsStyles();
+            case BulletChartObjectNames.Axis.name:
+                return this.getAxisStyles();
             default:
                 return undefined;
         }
     }
 
     private getSubSelectionShortcuts(subSelections: powerbi.visuals.CustomVisualSubSelection[]) {
-        const visualObject = subSelections[0]?.customVisualObjects[0];
-        if (!visualObject) {
+        const visualObjects = subSelections[0]?.customVisualObjects;
+        if (!visualObjects) {
+            return undefined;
+        }
+
+        let visualObject: CustomVisualObject;
+        if (visualObjects.length > 0 && visualObjects[0] != null) {
+            visualObject = visualObjects[0];
+        } else {
             return undefined;
         }
 
         switch (visualObject.objectName) {
             case BulletChartObjectNames.Labels.name:
-                return this.getLabelsSelectionShortcuts();
+                return this.getLabelsShortcuts();
+            case BulletChartObjectNames.Axis.name:
+                return this.getAxisShortcuts();
             default:
                 return undefined;
         }
@@ -1496,50 +1544,50 @@ export class BulletChart implements IVisual {
         return this.subSelectionHelper.getAllSubSelectables(filter);
     }
 
-    private getLabelsSelectionStyles(): SubSelectionStyles {
+    private getLabelsStyles(): SubSelectionStyles {
         return {
             type: SubSelectionStylesType.Text,
             fontFamily: {
-                reference: {
-                    ...labelsReference.fontFamily
-                },
+                reference: { ...labelsReference.fontFamily },
                 label: labelsReference.fontFamily.propertyName
             },
             bold: {
-                reference: {
-                    ...labelsReference.bold
-                },
+                reference: { ...labelsReference.bold },
                 label: labelsReference.bold.propertyName
             },
             italic: {
-                reference: {
-                    ...labelsReference.italic
-                },
+                reference: { ...labelsReference.italic },
                 label: labelsReference.italic.propertyName
             },
             underline: {
-                reference: {
-                    ...labelsReference.underline
-                },
+                reference: { ...labelsReference.underline },
                 label: labelsReference.underline.propertyName
             },
             fontSize: {
-                reference: {
-                    ...labelsReference.fontSize
-                },
+                reference: { ...labelsReference.fontSize },
                 label: labelsReference.fontSize.propertyName
             },
             fontColor: {
-                reference: {
-                    ...labelsReference.color
-                },
+                reference: { ...labelsReference.color },
                 label: labelsReference.color.propertyName
             }
         };
     }
 
+    private getAxisStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...axisReference.axisColor,
+                },
+                label: "Axis color",
+            },
+        }
+    }
 
-    private getLabelsSelectionShortcuts(): VisualSubSelectionShortcuts {
+
+    private getLabelsShortcuts(): VisualSubSelectionShortcuts {
         return [
             {
                 type: VisualShortcutType.Reset,
@@ -1556,7 +1604,7 @@ export class BulletChart implements IVisual {
                 type: VisualShortcutType.Toggle,
                 ...labelsReference.show,
                 disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_DeleteLabels"),
-                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_AddLabels")
+                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_AddLabels"),
             },
             {
                 type: VisualShortcutType.Divider,
@@ -1565,6 +1613,46 @@ export class BulletChart implements IVisual {
                 type: VisualShortcutType.Navigate,
                 destinationInfo: { cardUid: labelsReference.cardUid },
                 label: this.localizationManager.getDisplayName("Visual_OnObject_FormatLabels")
+            }
+        ];
+    }
+
+    private getAxisShortcuts(): VisualSubSelectionShortcuts {
+        return [
+            {
+                type: VisualShortcutType.Reset,
+                relatedResetFormattingIds: [axisReference.axis, axisReference.axisColor, axisReference.syncAxis, axisReference.showMainAxis, axisReference.orientation],
+            },
+            {
+                type: VisualShortcutType.Toggle,
+                ...axisReference.axis,
+                disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_HideAxis"),
+                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowAxis"),
+            },
+            {
+                type: VisualShortcutType.Toggle,
+                ...axisReference.syncAxis,
+                disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_DoNotSyncAxis"),
+                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_SyncAxis"),
+            },
+            {
+                type: VisualShortcutType.Toggle,
+                ...axisReference.showMainAxis,
+                disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_HideMainAxis"),
+                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowMainAxis"),
+            },
+            {
+                type: VisualShortcutType.Picker,
+                ...axisReference.orientation,
+                label: this.localizationManager.getDisplayName("Visual_Orientation"),
+            },
+            {
+                type: VisualShortcutType.Divider,
+            },
+            {
+                type: VisualShortcutType.Navigate,
+                destinationInfo: { cardUid: axisReference.cardUid },
+                label: this.localizationManager.getDisplayName("Visual_OnObject_FormatAxis"),
             }
         ];
     }
