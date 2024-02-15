@@ -60,6 +60,16 @@ export interface BarData {
     key: string;
 }
 
+export enum BarRectType {
+    Minimum = "Minimum",
+    NeedsImprovement = "NeedsImprovement",
+    Satisfactory = "Satisfactory",
+    Good = "Good",
+    VeryGood = "VeryGood",
+    Bullet = "Bullet",
+}
+
+
 export interface BarRect extends SelectableDataPoint {
     barIndex: number;
     start: number;
@@ -70,6 +80,7 @@ export interface BarRect extends SelectableDataPoint {
     tooltipInfo?: VisualTooltipDataItem[];
     key: string;
     highlight?: boolean;
+    type: BarRectType;
 }
 
 export interface TargetValue {

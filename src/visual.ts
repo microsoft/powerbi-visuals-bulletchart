@@ -66,7 +66,15 @@ import {
 import {ColorHelper} from "powerbi-visuals-utils-colorutils";
 
 import {BulletChartColumns} from "./BulletChartColumns";
-import {BarData, BarRect, BarValueRect, BulletChartModel, BulletChartTooltipItem, TargetValue} from "./dataInterfaces";
+import {
+    BarData,
+    BarRect,
+    BarRectType,
+    BarValueRect,
+    BulletChartModel,
+    BulletChartTooltipItem,
+    TargetValue
+} from "./dataInterfaces";
 import {VisualLayout} from "./visualLayout";
 import {BulletBehaviorOptions, BulletWebBehavior} from "./behavior";
 import {BulletChartOrientation} from "./BulletChartOrientation";
@@ -113,8 +121,8 @@ import SubSelectionStyles = powerbi.visuals.SubSelectionStyles;
 import VisualSubSelectionShortcuts = powerbi.visuals.VisualSubSelectionShortcuts;
 import FormattingId = powerbi.visuals.FormattingId;
 import VisualShortcutType = powerbi.visuals.VisualShortcutType;
-import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 import CustomVisualObject = powerbi.visuals.CustomVisualObject;
+import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 
 
 interface ClassAndSelector {
@@ -130,26 +138,17 @@ function CreateClassAndSelector(className: string) {
 }
 
 
-interface Reference {
-    cardUid?: string;
-    groupUid?: string;
-    font?: FormattingId;
-    color?: FormattingId;
-    show?: FormattingId;
-    fontFamily?: FormattingId;
-    bold?: FormattingId;
-    italic?: FormattingId;
-    underline?: FormattingId;
-    fontSize?: FormattingId;
-    showTitle?: FormattingId;
-    position?: FormattingId;
-    titleText?: FormattingId;
-    fill?: FormattingId;
-    axisBeginning?: FormattingId;
-}
-
-
-const labelsReference: Reference = {
+const labelsReference: {
+    cardUid: string;
+    groupUid: string;
+    fontFamily: FormattingId;
+    bold: FormattingId;
+    italic: FormattingId;
+    underline: FormattingId;
+    fontSize: FormattingId;
+    color: FormattingId;
+    show: FormattingId;
+} = {
     cardUid: "Visual-labels-card",
     groupUid: "labels-group",
     fontFamily: {
@@ -180,9 +179,17 @@ const labelsReference: Reference = {
         objectName: BulletChartObjectNames.Labels.name,
         propertyName: "show"
     }
-}
+} as const;
 
-const axisReference = {
+const axisReference: {
+    cardUid: string;
+    groupUid: string;
+    axis: FormattingId;
+    axisColor: FormattingId,
+    syncAxis: FormattingId,
+    showMainAxis: FormattingId,
+    orientation: FormattingId,
+} = {
     cardUid: "Visual-axis-card",
     groupUid: "axis-group",
     axis: {
@@ -206,6 +213,46 @@ const axisReference = {
         propertyName: "orientation"
     },
 } as const;
+
+
+const colorsReference: {
+    cardUid: string;
+    groupUid: string;
+    minColor: FormattingId;
+    needsImprovementColor: FormattingId;
+    satisfactoryColor: FormattingId;
+    goodColor: FormattingId;
+    veryGoodColor: FormattingId;
+    bulletColor: FormattingId;
+} = {
+    cardUid: "Visual-colors-card",
+    groupUid: "colors-group",
+    minColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: "minColor"
+    },
+    needsImprovementColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: "needsImprovementColor"
+    },
+    satisfactoryColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: "satisfactoryColor"
+    },
+    goodColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: "goodColor"
+    },
+    veryGoodColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: "veryGoodColor"
+    },
+    bulletColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: "bulletColor"
+    },
+} as const;
+
 
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;
@@ -308,87 +355,82 @@ export class BulletChart implements IVisual {
         highlight: any,
         toolTipItems: BulletChartTooltipItem[],
         selectionIdBuilder: () => powerbi.visuals.ISelectionIdBuilder,
-        firstScale: number,
-        firstFillColor: string,
-        firstColor: string,
-        secondScale: number,
-        secondFillColor: string,
-        secondColor: string,
-        thirdScale: number,
-        thirdFillColor: string,
-        thirdColor: string,
-        fourthScale: number,
-        fourthFillColor: string,
-        fourthColor: string,
-        fifthScale: number,
-        lastScale: number,
-        lastFillColor: string,
-        lastColor: string,
+        minimumScale: number, minFillColor: string, minColor: string,
+        needsImprovementScale: number, needsImprovementFillColor: string, needsImprovementColor: string,
+        satisfactoryScale: number, satisfactoryFillColor: string, satisfactoryColor: string,
+        goodScale: number, goodFillColor: string, goodColor: string,
+        veryGoodScale: number, veryGoodFillColor: string, veryGoodColor: string,
+        maximumScale: number,
     ) {
         if (anyRangeIsDefined) {
             BulletChart.addItemToBarArray(
                 bulletModel.barRects,
                 idx,
-                firstScale,
-                secondScale,
-                firstFillColor,
-                firstColor,
+                minimumScale,
+                needsImprovementScale,
+                minFillColor,
+                minColor,
                 maxStrokeWidthBars,
                 toolTipItems,
                 selectionIdBuilder(),
-                highlight
+                highlight,
+                BarRectType.Minimum,
             );
 
             BulletChart.addItemToBarArray(
                 bulletModel.barRects,
                 idx,
-                secondScale,
-                thirdScale,
-                secondFillColor,
-                secondColor,
+                needsImprovementScale,
+                satisfactoryScale,
+                needsImprovementFillColor,
+                needsImprovementColor,
                 maxStrokeWidthBars,
                 toolTipItems,
                 selectionIdBuilder(),
-                highlight
+                highlight,
+                BarRectType.NeedsImprovement,
             );
 
             BulletChart.addItemToBarArray(
                 bulletModel.barRects,
                 idx,
-                thirdScale,
-                fourthScale,
-                thirdFillColor,
-                thirdColor,
+                satisfactoryScale,
+                goodScale,
+                satisfactoryFillColor,
+                satisfactoryColor,
                 maxStrokeWidthBars,
                 toolTipItems,
                 selectionIdBuilder(),
-                highlight
+                highlight,
+                BarRectType.Satisfactory,
             );
 
             BulletChart.addItemToBarArray(
                 bulletModel.barRects,
                 idx,
-                fourthScale,
-                fifthScale,
-                fourthFillColor,
-                fourthColor,
+                goodScale,
+                veryGoodScale,
+                goodFillColor,
+                goodColor,
                 maxStrokeWidthBars,
                 toolTipItems,
                 selectionIdBuilder(),
-                highlight
+                highlight,
+                BarRectType.Good,
             );
 
             BulletChart.addItemToBarArray(
                 bulletModel.barRects,
                 idx,
-                fifthScale,
-                lastScale,
-                lastFillColor,
-                lastColor,
+                veryGoodScale,
+                maximumScale,
+                veryGoodFillColor,
+                veryGoodColor,
                 maxStrokeWidthBars,
                 toolTipItems,
                 selectionIdBuilder(),
-                highlight
+                highlight,
+                BarRectType.VeryGood,
             );
         }
     }
@@ -602,23 +644,23 @@ export class BulletChart implements IVisual {
             .domain([minimum, maximum])
             .range(isVerticalOrientation ? [bulletModel.viewportLength, 0] : [0, bulletModel.viewportLength]);
 
-        const firstScale: number = scale(minimum);
-        const secondScale: number = scale(needsImprovement);
-        const thirdScale: number = scale(satisfactory);
-        const fourthScale: number = scale(good);
-        const fifthScale: number = scale(veryGood);
-        const lastScale: number = scale(maximum);
+        const minimumScale: number = scale(minimum);
+        const needsImprovementScale: number = scale(needsImprovement);
+        const satisfactoryScale: number = scale(satisfactory);
+        const goodScale: number = scale(good);
+        const veryGoodScale: number = scale(veryGood);
+        const maximumScale: number = scale(maximum);
         const valueScale: number = scale(categoryValue);
-        const firstColor: string = visualSettings.colors.minColor.value.value,
-            secondColor: string = visualSettings.colors.needsImprovementColor.value.value,
-            thirdColor: string = visualSettings.colors.satisfactoryColor.value.value,
-            fourthColor: string = visualSettings.colors.goodColor.value.value,
-            lastColor: string = visualSettings.colors.veryGoodColor.value.value,
-            firstFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : firstColor,
-            secondFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : secondColor,
-            thirdFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : thirdColor,
-            fourthFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : fourthColor,
-            lastFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : lastColor;
+        const minColor: string = visualSettings.colors.minColor.value.value,
+            needsImprovementColor: string = visualSettings.colors.needsImprovementColor.value.value,
+            satisfactoryColor: string = visualSettings.colors.satisfactoryColor.value.value,
+            goodColor: string = visualSettings.colors.goodColor.value.value,
+            veryGoodColor: string = visualSettings.colors.veryGoodColor.value.value,
+            minFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : minColor,
+            needsImprovementFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : needsImprovementColor,
+            satisfactoryFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : satisfactoryColor,
+            goodFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : goodColor,
+            veryGoodFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : veryGoodColor;
 
         const selectionIdBuilder = () => categorical.Category
             ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx)
@@ -627,19 +669,25 @@ export class BulletChart implements IVisual {
         const maxStrokeWidthBars: number = 0.5, maxStrokeWidthValues: number = 1.5;
 
         BulletChart.addItems(
-            anyRangeIsDefined, bulletModel, idx, maxStrokeWidthBars, highlight, toolTipItems, selectionIdBuilder,
-            firstScale, firstFillColor, firstColor,
-            secondScale, secondFillColor, secondColor,
-            thirdScale, thirdFillColor, thirdColor,
-            fourthScale, fourthFillColor, fourthColor,
-            fifthScale,
-            lastScale, lastFillColor, lastColor,
+            anyRangeIsDefined,
+            bulletModel,
+            idx,
+            maxStrokeWidthBars,
+            highlight,
+            toolTipItems,
+            selectionIdBuilder,
+            minimumScale, minFillColor, minColor,
+            needsImprovementScale, needsImprovementFillColor, needsImprovementColor,
+            satisfactoryScale, satisfactoryFillColor, satisfactoryColor,
+            goodScale, goodFillColor, goodColor,
+            veryGoodScale, veryGoodFillColor, veryGoodColor,
+            maximumScale
         );
 
         const bulletFillColor = colorHelper.isHighContrast ? colorHelper.getThemeColor() : visualSettings.colors.bulletColor.value.value;
 
-        BulletChart.addItemToBarArray(bulletModel.valueRects, idx, firstScale, valueScale, bulletFillColor, visualSettings.colors.bulletColor.value.value,
-            maxStrokeWidthValues, toolTipItems, selectionIdBuilder(), highlight);
+        BulletChart.addItemToBarArray(bulletModel.valueRects, idx, minimumScale, valueScale, bulletFillColor, visualSettings.colors.bulletColor.value.value,
+            maxStrokeWidthValues, toolTipItems, selectionIdBuilder(), highlight, BarRectType.Bullet);
 
         const scaledTarget: number = scale(targetValue || BulletChart.zeroValue);
 
@@ -774,7 +822,9 @@ export class BulletChart implements IVisual {
         strokeWidth: number,
         tooltipInfo: BulletChartTooltipItem[],
         selectionIdBuilder: ISelectionIdBuilder,
-        highlight: boolean): void {
+        highlight: boolean,
+        barRectType: BarRectType,
+    ): void {
 
         if (!isNaN(start) && !isNaN(end))
             collection.push({
@@ -793,6 +843,7 @@ export class BulletChart implements IVisual {
                         .createSelectionId()
                 )).getKey(),
                 highlight: highlight,
+                type: barRectType,
             });
     }
 
@@ -1084,6 +1135,9 @@ export class BulletChart implements IVisual {
             .attr("width", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
             .attr("height", BulletChart.BulletSize)
             .classed("range", true)
+            .classed(HtmlSubSelectableClass, this.formatMode)
+            .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
+            .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
             .style("fill", (d: BarRect) => d.fillColor)
             .style("stroke", (d: BarRect) => d.strokeColor)
             .style("stroke-width", (d: BarRect) => d.strokeWidth);
@@ -1327,6 +1381,9 @@ export class BulletChart implements IVisual {
             .attr("width", BulletChart.BulletSize)
             .classed("range", true)
             .style("fill", (d: BarRect) => d.fillColor)
+            .classed(HtmlSubSelectableClass, this.formatMode)
+            .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
+            .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
             .style("stroke", (d: BarRect) => d.strokeColor)
             .style("stroke-width", (d: BarRect) => d.strokeWidth);
 
@@ -1512,6 +1569,19 @@ export class BulletChart implements IVisual {
                 return this.getLabelsStyles();
             case BulletChartObjectNames.Axis.name:
                 return this.getAxisStyles();
+                // colors
+            case BulletChartObjectNames.Minimum.name:
+                return this.getMinimumStyles();
+            case BulletChartObjectNames.NeedsImprovement.name:
+                return this.getNeedsImprovementStyles();
+            case BulletChartObjectNames.Satisfactory.name:
+                return this.getSatisfactoryStyles();
+            case BulletChartObjectNames.Good.name:
+                return this.getGoodStyles();
+            case BulletChartObjectNames.VeryGood.name:
+                return this.getVeryGoodStyles();
+            case BulletChartObjectNames.Bullet.name:
+                return this.getBulletStyles();
             default:
                 return undefined;
         }
@@ -1535,6 +1605,13 @@ export class BulletChart implements IVisual {
                 return this.getLabelsShortcuts();
             case BulletChartObjectNames.Axis.name:
                 return this.getAxisShortcuts();
+            case BulletChartObjectNames.Minimum.name:
+            case BulletChartObjectNames.NeedsImprovement.name:
+            case BulletChartObjectNames.Satisfactory.name:
+            case BulletChartObjectNames.Good.name:
+            case BulletChartObjectNames.VeryGood.name:
+            case BulletChartObjectNames.Bullet.name:
+                return this.getColorsShortcuts();
             default:
                 return undefined;
         }
@@ -1581,7 +1658,79 @@ export class BulletChart implements IVisual {
                 reference: {
                     ...axisReference.axisColor,
                 },
-                label: "Axis color",
+                label: this.localizationManager.getDisplayName("Visual_AxisColor"),
+            },
+        }
+    }
+
+    private getMinimumStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...colorsReference.minColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_MinimumColor"),
+            }
+        }
+    }
+
+    private getNeedsImprovementStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...colorsReference.needsImprovementColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_NeedsImprovementColor"),
+            }
+        }
+    }
+
+    private getSatisfactoryStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...colorsReference.satisfactoryColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_SatisfactoryColor"),
+            },
+        }
+    }
+
+    private getGoodStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                  ...colorsReference.goodColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_GoodColor")
+            },
+        }
+    }
+
+    private getVeryGoodStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...colorsReference.veryGoodColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_VeryGoodColor"),
+            },
+        }
+    }
+
+    private getBulletStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...colorsReference.bulletColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_BulletColor"),
             },
         }
     }
@@ -1655,6 +1804,30 @@ export class BulletChart implements IVisual {
                 label: this.localizationManager.getDisplayName("Visual_OnObject_FormatAxis"),
             }
         ];
+    }
+
+    private getColorsShortcuts(): VisualSubSelectionShortcuts {
+        return [
+            {
+                type: VisualShortcutType.Reset,
+                relatedResetFormattingIds: [
+                    colorsReference.minColor,
+                    colorsReference.needsImprovementColor,
+                    colorsReference.satisfactoryColor,
+                    colorsReference.goodColor,
+                    colorsReference.veryGoodColor,
+                    colorsReference.bulletColor
+                ]
+            },
+            {
+                type: VisualShortcutType.Divider,
+            },
+            {
+                type: VisualShortcutType.Navigate,
+                destinationInfo: { cardUid: colorsReference.cardUid },
+                label: this.localizationManager.getDisplayName("Visual_OnObject_FormatColors")
+            },
+        ]
     }
 }
 

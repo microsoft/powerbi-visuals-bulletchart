@@ -6,12 +6,21 @@ import {SimpleSlice} from "powerbi-visuals-utils-formattingmodel/lib/FormattingS
 import IEnumMember = powerbi.IEnumMember;
 import {BulletChartOrientation} from "./BulletChartOrientation";
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
+import {BarRectType} from "./dataInterfaces";
 
 export const BulletChartObjectNames = {
     Labels: { name: "labels", displayName: "Category labels" },
     Axis: { name: "axis", displayName: "Axis" },
     SyncAxis: { name: "syncAxis", displayName: "Sync axis" },
     Orientation: { name: "orientation", displayName: "Orientation" },
+    Colors: { name: "colors", displayName: "Colors" },
+    // used for subselection
+    Minimum: { name: BarRectType.Minimum, displayName: "Minimum" },
+    NeedsImprovement: { name: BarRectType.NeedsImprovement, displayName: "Needs Improvement" },
+    Satisfactory: { name: BarRectType.Satisfactory, displayName: "Satisfactory" },
+    Good: { name: BarRectType.Good, displayName: "Good" },
+    VeryGood: { name: BarRectType.VeryGood, displayName: "Very good" },
+    Bullet: { name: BarRectType.Bullet, displayName: "Bullet" },
 } as const;
 
 
@@ -257,8 +266,8 @@ class ColorsCard extends Card {
         value: { value: "#000000" }
     });
 
-    name: string = "colors";
-    displayName: string = "Colors";
+    name: string = BulletChartObjectNames.Colors.name;
+    displayName: string = BulletChartObjectNames.Colors.displayName;
     displayNameKey: string = "Visual_Colors";
     slices = [
         this.minColor,
