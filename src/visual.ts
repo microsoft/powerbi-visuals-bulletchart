@@ -1152,6 +1152,9 @@ export class BulletChart implements IVisual {
             .attr("width", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
             .attr("height", BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4)
             .classed("value", true)
+            .classed(HtmlSubSelectableClass, this.formatMode)
+            .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Bullet.name)
+            .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Bullet.displayName)
             .style("fill", (d: BarValueRect) => d.fillColor)
             .style("stroke", (d: BarValueRect) => d.strokeColor)
             .style("stroke-width", (d: BarValueRect) => d.strokeWidth);
@@ -1397,6 +1400,9 @@ export class BulletChart implements IVisual {
             .attr("height", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
             .attr("width", BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4)
             .classed("value", true)
+            .classed(HtmlSubSelectableClass, this.formatMode)
+            .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Bullet.name)
+            .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Bullet.displayName)
             .style("fill", (d: BarValueRect) => d.fillColor)
             .attr("stroke", (d: BarRect) => d.strokeColor)
             .attr("stroke-width", (d: BarRect) => d.strokeWidth);
