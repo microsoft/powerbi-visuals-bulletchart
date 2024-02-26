@@ -160,6 +160,7 @@ export class BulletChart implements IVisual {
     private static FontFamily: string = "Segoe UI";
 
     private static CategoryLabelsSelector: ClassAndSelector = CreateClassAndSelector("categoryLabel");
+    public static MeasureUnitsSelector: ClassAndSelector = CreateClassAndSelector("measureUnits");
     private static AxisSelector: ClassAndSelector = CreateClassAndSelector("axis");
     private static BulletContainerSelector: ClassAndSelector = CreateClassAndSelector("bulletContainer");
 
@@ -1063,6 +1064,7 @@ export class BulletChart implements IVisual {
         if (model.settings.axis.measureUnits.value) {
             barSelection
                 .join("text")
+                .classed(BulletChart.MeasureUnitsSelector.className, true)
                 .attr("x", ((d: BarData) => {
                     if (reversed)
                         return BulletChart.XMarginHorizontalLeft + BulletChart.XMarginHorizontalRight + model.viewportLength + BulletChart.SubtitleMargin;
@@ -1091,13 +1093,8 @@ export class BulletChart implements IVisual {
             this.interactivityService.bind(behaviorOptions);
         }
 
-        this.tooltipServiceWrapper.addTooltip(
-            valueSelection,
-            (data: TooltipEnabledDataPoint) => data.tooltipInfo);
-        this.tooltipServiceWrapper.addTooltip(
-            bullets,
-            (data: TooltipEnabledDataPoint) => data.tooltipInfo
-        );
+        this.tooltipServiceWrapper.addTooltip(valueSelection, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(bullets, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
     }
 
     private static value3: number = 3;
@@ -1313,6 +1310,7 @@ export class BulletChart implements IVisual {
         if (model.settings.axis.measureUnits.value) {
             barSelection
                 .join("text")
+                .classed(BulletChart.MeasureUnitsSelector.className, true)
                 .attr("x", ((d: BarData) => d.x + BulletChart.BulletSize))
                 .attr("y", () => {
                     return labelsStartPos + BulletChart.SubtitleMargin + BulletChart.value12;
@@ -1337,12 +1335,8 @@ export class BulletChart implements IVisual {
 
             this.interactivityService.bind(behaviorOptions);
         }
-        this.tooltipServiceWrapper.addTooltip(
-            valueSelectionMerged,
-            (data: TooltipEnabledDataPoint) => data.tooltipInfo);
-        this.tooltipServiceWrapper.addTooltip(
-            bullets,
-            (data: TooltipEnabledDataPoint) => data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(valueSelectionMerged, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(bullets, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
     }
 
     private drawFirstTargets(

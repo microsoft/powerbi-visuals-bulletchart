@@ -537,15 +537,15 @@ describe("BulletChart", () => {
 
             visualBuilder.updateFlushAllD3Transitions(dataView);
 
-            expect(visualBuilder.measureUnits).toBeInDOM;
+            expect(visualBuilder.measureUnits.length).toBeGreaterThan(0);
             visualBuilder.measureUnits.forEach((e) =>
-                expect(e.innerHTML).toBe(measureUnits)
+                expect(e.textContent).toBe(measureUnits)
             );
         });
 
         it("units color", () => {
             let color = "#333333";
-            dataView.metadata.objects.axis.measureUnits = "someUnit";
+            dataView.metadata.objects.axis.measureUnits = "someUnits";
             dataView.metadata.objects.axis.unitsColor =
                 getSolidColorStructuralObject(color);
 

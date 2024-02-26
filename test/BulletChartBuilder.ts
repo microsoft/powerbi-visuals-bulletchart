@@ -33,7 +33,7 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 // powerbi.extensibility.utils.test
 import { VisualBuilderBase } from "powerbi-visuals-utils-testutils";
 
-import { BulletChart as VisualClass } from "../src/visual";
+import {BulletChart, BulletChart as VisualClass} from "../src/visual";
 import {BulletChartOrientation} from "../src/BulletChartOrientation";
 import {BulletChartSettingsModel} from "../src/BulletChartSettingsModel";
 
@@ -73,7 +73,7 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	public get measureUnits(): NodeListOf<SVGElement> {
 		return this.mainElement
 		.querySelector("g")
-		.querySelectorAll("text:not(.title)");
+		.querySelectorAll(BulletChart.MeasureUnitsSelector.selectorName);
 	}
 
 	public get rangeRectsGrouped(): SVGElement[][] {
