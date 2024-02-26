@@ -7,6 +7,9 @@ import IEnumMember = powerbi.IEnumMember;
 import {BulletChartOrientation} from "./BulletChartOrientation";
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import {BarRectType} from "./dataInterfaces";
+import FormattingId = powerbi.visuals.FormattingId;
+
+const nameof = <T>(name: Extract<keyof T, string>): string => name;
 
 export const BulletChartObjectNames = {
     Labels: { name: "labels", displayName: "Category labels" },
@@ -21,6 +24,121 @@ export const BulletChartObjectNames = {
     Good: { name: BarRectType.Good, displayName: "Good" },
     VeryGood: { name: BarRectType.VeryGood, displayName: "Very good" },
     Bullet: { name: BarRectType.Bullet, displayName: "Bullet" },
+} as const;
+
+export const labelsReference: {
+    cardUid: string;
+    groupUid: string;
+    fontFamily: FormattingId;
+    bold: FormattingId;
+    italic: FormattingId;
+    underline: FormattingId;
+    fontSize: FormattingId;
+    labelColor: FormattingId;
+    show: FormattingId;
+} = {
+    cardUid: "Visual-labels-card",
+    groupUid: "labels-group",
+    fontFamily: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontFamily"
+    },
+    bold: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontBold"
+    },
+    italic: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontItalic"
+    },
+    underline: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontUnderline"
+    },
+    fontSize: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontSize"
+    },
+    labelColor: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: nameof<LabelsCard>("labelColor")
+    },
+    show: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: nameof<LabelsCard>("show")
+    }
+} as const;
+
+export const axisReference: {
+    cardUid: string;
+    groupUid: string;
+    axis: FormattingId;
+    axisColor: FormattingId,
+    syncAxis: FormattingId,
+    showMainAxis: FormattingId,
+    orientation: FormattingId,
+} = {
+    cardUid: "Visual-axis-card",
+    groupUid: "axis-group",
+    axis: {
+        objectName: BulletChartObjectNames.Axis.name,
+        propertyName: nameof<AxisCard>("axis")
+    },
+    axisColor: {
+        objectName: BulletChartObjectNames.Axis.name,
+        propertyName: nameof<AxisCard>("axisColor")
+    },
+    syncAxis: {
+        objectName: BulletChartObjectNames.SyncAxis.name,
+        propertyName: nameof<SyncAxis>("syncAxis")
+    },
+    showMainAxis: {
+        objectName: BulletChartObjectNames.SyncAxis.name,
+        propertyName: nameof<SyncAxis>("showMainAxis")
+    },
+    orientation: {
+        objectName: BulletChartObjectNames.Orientation.name,
+        propertyName: nameof<OrientationCard>("orientation")
+    },
+} as const;
+
+
+export const colorsReference: {
+    cardUid: string;
+    groupUid: string;
+    minColor: FormattingId;
+    needsImprovementColor: FormattingId;
+    satisfactoryColor: FormattingId;
+    goodColor: FormattingId;
+    veryGoodColor: FormattingId;
+    bulletColor: FormattingId;
+} = {
+    cardUid: "Visual-colors-card",
+    groupUid: "colors-group",
+    minColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("minColor")
+    },
+    needsImprovementColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("needsImprovementColor")
+    },
+    satisfactoryColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("satisfactoryColor")
+    },
+    goodColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("goodColor")
+    },
+    veryGoodColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("veryGoodColor")
+    },
+    bulletColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("bulletColor")
+    },
 } as const;
 
 

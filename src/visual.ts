@@ -88,7 +88,7 @@ import {
     SubSelectableDisplayNameAttribute,
     SubSelectableObjectNameAttribute,
     SubSelectableTypeAttribute,
-} from "powerbi-visuals-utils-onobjectformatting/src"
+} from "powerbi-visuals-utils-onobjectutils"
 
 // d3
 type BulletSelection<T1, T2 = T1> = Selection<any, T1, any, T2>;
@@ -119,11 +119,11 @@ import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import CustomVisualSubSelection = powerbi.visuals.CustomVisualSubSelection;
 import SubSelectionStyles = powerbi.visuals.SubSelectionStyles;
 import VisualSubSelectionShortcuts = powerbi.visuals.VisualSubSelectionShortcuts;
-import FormattingId = powerbi.visuals.FormattingId;
 import VisualShortcutType = powerbi.visuals.VisualShortcutType;
 import CustomVisualObject = powerbi.visuals.CustomVisualObject;
 import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 
+import { labelsReference, axisReference, colorsReference } from "./BulletChartSettingsModel";
 
 interface ClassAndSelector {
     className: string;
@@ -136,122 +136,6 @@ function CreateClassAndSelector(className: string) {
         selectorName: "." + className,
     };
 }
-
-
-const labelsReference: {
-    cardUid: string;
-    groupUid: string;
-    fontFamily: FormattingId;
-    bold: FormattingId;
-    italic: FormattingId;
-    underline: FormattingId;
-    fontSize: FormattingId;
-    color: FormattingId;
-    show: FormattingId;
-} = {
-    cardUid: "Visual-labels-card",
-    groupUid: "labels-group",
-    fontFamily: {
-        objectName: BulletChartObjectNames.Labels.name,
-        propertyName: "fontFamily"
-    },
-    bold: {
-        objectName: BulletChartObjectNames.Labels.name,
-        propertyName: "fontBold"
-    },
-    italic: {
-        objectName: BulletChartObjectNames.Labels.name,
-        propertyName: "fontItalic"
-    },
-    underline: {
-        objectName: BulletChartObjectNames.Labels.name,
-        propertyName: "fontUnderline"
-    },
-    fontSize: {
-        objectName: BulletChartObjectNames.Labels.name,
-        propertyName: "fontSize"
-    },
-    color: {
-        objectName: BulletChartObjectNames.Labels.name,
-        propertyName: "color"
-    },
-    show: {
-        objectName: BulletChartObjectNames.Labels.name,
-        propertyName: "show"
-    }
-} as const;
-
-const axisReference: {
-    cardUid: string;
-    groupUid: string;
-    axis: FormattingId;
-    axisColor: FormattingId,
-    syncAxis: FormattingId,
-    showMainAxis: FormattingId,
-    orientation: FormattingId,
-} = {
-    cardUid: "Visual-axis-card",
-    groupUid: "axis-group",
-    axis: {
-        objectName: BulletChartObjectNames.Axis.name,
-        propertyName: "axis"
-    },
-    axisColor: {
-        objectName: BulletChartObjectNames.Axis.name,
-        propertyName: "axisColor"
-    },
-    syncAxis: {
-        objectName: BulletChartObjectNames.SyncAxis.name,
-        propertyName: "syncAxis"
-    },
-    showMainAxis: {
-        objectName: BulletChartObjectNames.SyncAxis.name,
-        propertyName: "showMainAxis"
-    },
-    orientation: {
-        objectName: BulletChartObjectNames.Orientation.name,
-        propertyName: "orientation"
-    },
-} as const;
-
-
-const colorsReference: {
-    cardUid: string;
-    groupUid: string;
-    minColor: FormattingId;
-    needsImprovementColor: FormattingId;
-    satisfactoryColor: FormattingId;
-    goodColor: FormattingId;
-    veryGoodColor: FormattingId;
-    bulletColor: FormattingId;
-} = {
-    cardUid: "Visual-colors-card",
-    groupUid: "colors-group",
-    minColor: {
-        objectName: BulletChartObjectNames.Colors.name,
-        propertyName: "minColor"
-    },
-    needsImprovementColor: {
-        objectName: BulletChartObjectNames.Colors.name,
-        propertyName: "needsImprovementColor"
-    },
-    satisfactoryColor: {
-        objectName: BulletChartObjectNames.Colors.name,
-        propertyName: "satisfactoryColor"
-    },
-    goodColor: {
-        objectName: BulletChartObjectNames.Colors.name,
-        propertyName: "goodColor"
-    },
-    veryGoodColor: {
-        objectName: BulletChartObjectNames.Colors.name,
-        propertyName: "veryGoodColor"
-    },
-    bulletColor: {
-        objectName: BulletChartObjectNames.Colors.name,
-        propertyName: "bulletColor"
-    },
-} as const;
 
 
 export class BulletChart implements IVisual {
@@ -1651,8 +1535,8 @@ export class BulletChart implements IVisual {
                 label: labelsReference.fontSize.propertyName
             },
             fontColor: {
-                reference: { ...labelsReference.color },
-                label: labelsReference.color.propertyName
+                reference: { ...labelsReference.labelColor },
+                label: labelsReference.labelColor.propertyName
             }
         };
     }
@@ -1752,7 +1636,7 @@ export class BulletChart implements IVisual {
                     labelsReference.fontSize,
                     labelsReference.italic,
                     labelsReference.underline,
-                    labelsReference.color
+                    labelsReference.labelColor
                 ]
             },
             {

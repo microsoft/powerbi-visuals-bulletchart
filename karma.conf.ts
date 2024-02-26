@@ -40,7 +40,13 @@ module.exports = (config) => {
 	config.set({
 		mode: "development",
 		browserNoActivityTimeout: 10000,
-		browsers: ["ChromeHeadless"],
+		browsers: ["ChromeDebugging"],
+		customLaunchers: {
+			ChromeDebugging: {
+				base: "ChromeHeadless",
+				flags: ["--remote-debugging-port=9333"]
+			}
+		},
 		colors: true,
 		frameworks: ["jasmine"],
 		reporters: ["progress", "junit"],
