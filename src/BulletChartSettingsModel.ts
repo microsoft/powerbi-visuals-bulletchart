@@ -6,6 +6,141 @@ import {SimpleSlice} from "powerbi-visuals-utils-formattingmodel/lib/FormattingS
 import IEnumMember = powerbi.IEnumMember;
 import {BulletChartOrientation} from "./BulletChartOrientation";
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
+import {BarRectType} from "./dataInterfaces";
+import FormattingId = powerbi.visuals.FormattingId;
+
+const nameof = <T>(name: Extract<keyof T, string>): string => name;
+
+export const BulletChartObjectNames = {
+    Labels: { name: "labels", displayName: "Category labels" },
+    Axis: { name: "axis", displayName: "Axis" },
+    SyncAxis: { name: "syncAxis", displayName: "Sync axis" },
+    Orientation: { name: "orientation", displayName: "Orientation" },
+    Colors: { name: "colors", displayName: "Colors" },
+    // used for subselection
+    Minimum: { name: BarRectType.Minimum, displayName: "Minimum" },
+    NeedsImprovement: { name: BarRectType.NeedsImprovement, displayName: "Needs Improvement" },
+    Satisfactory: { name: BarRectType.Satisfactory, displayName: "Satisfactory" },
+    Good: { name: BarRectType.Good, displayName: "Good" },
+    VeryGood: { name: BarRectType.VeryGood, displayName: "Very good" },
+    Bullet: { name: BarRectType.Bullet, displayName: "Bullet" },
+} as const;
+
+export const labelsReference: {
+    cardUid: string;
+    groupUid: string;
+    fontFamily: FormattingId;
+    bold: FormattingId;
+    italic: FormattingId;
+    underline: FormattingId;
+    fontSize: FormattingId;
+    labelColor: FormattingId;
+    show: FormattingId;
+} = {
+    cardUid: "Visual-labels-card",
+    groupUid: "labels-group",
+    fontFamily: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontFamily"
+    },
+    bold: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontBold"
+    },
+    italic: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontItalic"
+    },
+    underline: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontUnderline"
+    },
+    fontSize: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: "fontSize"
+    },
+    labelColor: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: nameof<LabelsCard>("labelColor")
+    },
+    show: {
+        objectName: BulletChartObjectNames.Labels.name,
+        propertyName: nameof<LabelsCard>("show")
+    }
+} as const;
+
+export const axisReference: {
+    cardUid: string;
+    groupUid: string;
+    axis: FormattingId;
+    axisColor: FormattingId,
+    syncAxis: FormattingId,
+    showMainAxis: FormattingId,
+    orientation: FormattingId,
+} = {
+    cardUid: "Visual-axis-card",
+    groupUid: "axis-group",
+    axis: {
+        objectName: BulletChartObjectNames.Axis.name,
+        propertyName: nameof<AxisCard>("axis")
+    },
+    axisColor: {
+        objectName: BulletChartObjectNames.Axis.name,
+        propertyName: nameof<AxisCard>("axisColor")
+    },
+    syncAxis: {
+        objectName: BulletChartObjectNames.SyncAxis.name,
+        propertyName: nameof<SyncAxis>("syncAxis")
+    },
+    showMainAxis: {
+        objectName: BulletChartObjectNames.SyncAxis.name,
+        propertyName: nameof<SyncAxis>("showMainAxis")
+    },
+    orientation: {
+        objectName: BulletChartObjectNames.Orientation.name,
+        propertyName: nameof<OrientationCard>("orientation")
+    },
+} as const;
+
+
+export const colorsReference: {
+    cardUid: string;
+    groupUid: string;
+    minColor: FormattingId;
+    needsImprovementColor: FormattingId;
+    satisfactoryColor: FormattingId;
+    goodColor: FormattingId;
+    veryGoodColor: FormattingId;
+    bulletColor: FormattingId;
+} = {
+    cardUid: "Visual-colors-card",
+    groupUid: "colors-group",
+    minColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("minColor")
+    },
+    needsImprovementColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("needsImprovementColor")
+    },
+    satisfactoryColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("satisfactoryColor")
+    },
+    goodColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("goodColor")
+    },
+    veryGoodColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("veryGoodColor")
+    },
+    bulletColor: {
+        objectName: BulletChartObjectNames.Colors.name,
+        propertyName: nameof<ColorsCard>("bulletColor")
+    },
+} as const;
+
 
 class TextSizeDefaults {
     public static readonly DefaultSize = 11;
@@ -19,6 +154,41 @@ const orientationOptions: IEnumMember[] = [
     { value: BulletChartOrientation.VerticalTop, displayName: "Visual_Orientation_VerticalTop" },
     { value: BulletChartOrientation.VerticalBottom, displayName: "Visual_Orientation_VerticalBottom" },
 ];
+
+
+class BaseFontCardSettings extends Card {
+    font = new formattingSettings.FontControl({
+        name: "font",
+        displayName: "Font",
+        displayNameKey: "Visual_Font",
+        fontSize: new formattingSettings.NumUpDown({
+            name: "fontSize",
+            displayName: "Text Size",
+            displayNameKey: "Visual_TextSize",
+            value: TextSizeDefaults.DefaultSize,
+            options: {
+                minValue: { value: TextSizeDefaults.MinSize, type: powerbi.visuals.ValidatorType.Min },
+                maxValue: { value: TextSizeDefaults.MaxSize, type: powerbi.visuals.ValidatorType.Max },
+            }
+        }),
+        fontFamily: new formattingSettings.FontPicker({
+            name: "fontFamily",
+            value: "Arial, sans-serif",
+        }),
+        bold: new formattingSettings.ToggleSwitch({
+            name: "fontBold",
+            value: false,
+        }),
+        italic: new formattingSettings.ToggleSwitch({
+            name: "fontItalic",
+            value: false,
+        }),
+        underline: new formattingSettings.ToggleSwitch({
+            name: "fontUnderline",
+            value: false,
+        }),
+    });
+}
 
 class DataValuesCard extends Card {
     targetValue = new formattingSettings.NumUpDown({
@@ -124,7 +294,7 @@ class TooltipsCard extends Card {
     slices = [this.valueCustomName, this.targetCustomName, this.target2CustomName];
 }
 
-class LabelsCard extends Card {
+class LabelsCard extends BaseFontCardSettings {
     show: SimpleSlice<boolean> = new formattingSettings.ToggleSwitch({
         name: "show",
         displayName: "Show",
@@ -143,17 +313,6 @@ class LabelsCard extends Card {
         value: { value: "#000000" }
     });
 
-    fontSize = new formattingSettings.NumUpDown({
-        name: "fontSize",
-        displayName: "Text size",
-        displayNameKey: "Visual_TextSize",
-        value: TextSizeDefaults.DefaultSize,
-        options: {
-            minValue: { value: TextSizeDefaults.MinSize, type: powerbi.visuals.ValidatorType.Min },
-            maxValue: { value: TextSizeDefaults.MaxSize, type: powerbi.visuals.ValidatorType.Max },
-        }
-    });
-
     maxWidth = new formattingSettings.NumUpDown({
         name: "maxWidth",
         displayName: "Maximum width",
@@ -161,10 +320,10 @@ class LabelsCard extends Card {
         value: 80,
     });
 
-    name: string = "labels";
-    displayName: string = "Category labels";
+    name: string = BulletChartObjectNames.Labels.name;
+    displayName: string = BulletChartObjectNames.Labels.displayName
     displayNameKey: string = "Visual_CategoryLabels";
-    slices = [this.labelColor, this.fontSize, this.maxWidth];
+    slices = [this.font, this.labelColor, this.maxWidth];
 }
 
 class OrientationCard extends Card {
@@ -176,8 +335,8 @@ class OrientationCard extends Card {
         value: orientationOptions[0],
     });
 
-    name: string = "orientation";
-    displayName: string = "Orientation";
+    name: string = BulletChartObjectNames.Orientation.name;
+    displayName: string = BulletChartObjectNames.Orientation.displayName;
     displayNameKey: string = "Visual_Orientation";
     slices = [this.orientation];
 }
@@ -225,8 +384,8 @@ class ColorsCard extends Card {
         value: { value: "#000000" }
     });
 
-    name: string = "colors";
-    displayName: string = "Colors";
+    name: string = BulletChartObjectNames.Colors.name;
+    displayName: string = BulletChartObjectNames.Colors.displayName;
     displayNameKey: string = "Visual_Colors";
     slices = [
         this.minColor,
@@ -270,8 +429,8 @@ class AxisCard extends Card {
         value: { value: "#808080" },
     });
 
-    name: string = "axis";
-    displayName: string = "Axis";
+    name: string = BulletChartObjectNames.Axis.name;
+    displayName: string = BulletChartObjectNames.Axis.displayName;
     displayNameKey: string =  "Visual_Axis";
     slices = [this.axisColor, this.measureUnits, this.unitsColor];
 }
@@ -293,8 +452,8 @@ class SyncAxis extends Card {
         value: false,
     });
 
-    name: string = "syncAxis";
-    displayName: string = "Sync axis";
+    name: string = BulletChartObjectNames.SyncAxis.name;
+    displayName: string = BulletChartObjectNames.SyncAxis.displayName;
     displayNameKey: string = "Visual_AxisSync";
     slices = [this.showMainAxis];
 }

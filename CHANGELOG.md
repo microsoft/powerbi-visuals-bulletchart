@@ -1,3 +1,8 @@
+# 2.4.1
+* Packages update
+* Fixed tests with measureUnits
+* Fixed eslint errors
+
 # 2.4.0
 * Update powerbi packages, API to 5.7.0
 * Migrate from tslint to eslint
