@@ -40,7 +40,7 @@ module.exports = (config) => {
 	config.set({
 		mode: "development",
 		browserNoActivityTimeout: 10000,
-		browsers: ["ChromeDebugging"],
+		browsers: ["ChromeHeadless"],
 		customLaunchers: {
 			ChromeDebugging: {
 				base: "ChromeHeadless",
