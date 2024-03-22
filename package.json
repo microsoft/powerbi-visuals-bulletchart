@@ -76,7 +76,7 @@
     "moment": "2.29.1",
     "powerbi-models": "1.9.3",
     "powerbi-visuals-api": "^3.8.4",
-    "powerbi-visuals-tools": "^3.3.1",
+    "powerbi-visuals-tools": "^3.4.3",
     "powerbi-visuals-utils-testutils": "^2.4.1",
     "puppeteer": "10.2.0",
     "style-loader": "3.2.1",
