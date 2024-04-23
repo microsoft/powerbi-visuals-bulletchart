@@ -364,6 +364,7 @@ export class BulletChart implements IVisual {
         const categoricalValues: BulletChartColumns<any[]> =
             BulletChartColumns.GET_CATEGORICAL_VALUES(dataView);
 
+        BulletChart.updateOrientation(visualSettings, dataView);
         BulletChart.limitProperties(visualSettings);
         visualSettings = this.SetHighContrastColors(visualSettings, colorHelper);
 
@@ -653,6 +654,26 @@ export class BulletChart implements IVisual {
         }
 
         return null;
+    }
+
+    // Implemented for old enums using space containing keys for example "Horizontal Left" which doesn't exist in current version
+    private static updateOrientation(settings: BulletChartSettingsModel, dataView: DataView): void {
+        let orientationValue: string = "";
+
+        if (settings?.orientation?.orientation.value?.value) {
+            orientationValue = settings.orientation.orientation.value.value.toString();
+        }
+        else if (dataView?.metadata?.objects?.orientation?.orientation) {
+            orientationValue = dataView.metadata.objects?.orientation?.orientation as string;
+        }
+
+        const noSpaceOrientation: string = orientationValue.toString().replace(" ", "");
+
+        if (Object.values(BulletChartOrientation).includes(noSpaceOrientation as BulletChartOrientation)) {
+            settings.orientation.orientation.value = settings.orientation.orientation.items.find(option => option.value.toString() === noSpaceOrientation);
+        } else {
+            settings.orientation.orientation.value = settings.orientation.orientation.items.find(option => option.value.toString() === BulletChartOrientation.HorizontalLeft);
+        }
     }
 
     private static limitProperties(settings: BulletChartSettingsModel): void {

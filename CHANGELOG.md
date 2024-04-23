@@ -1,9 +1,12 @@
-# 2.4.1
+## 2.4.2
+* Check old enums with space like "Horizontal left" to maintain backward compatibility
+
+## 2.4.1
 * Packages update
 * Fixed tests with measureUnits
 * Fixed eslint errors
 
-# 2.4.0
+## 2.4.0
 * Update powerbi packages, API to 5.7.0
 * Migrate from tslint to eslint
 * Use new formatting model API
