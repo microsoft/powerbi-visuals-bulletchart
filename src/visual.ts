@@ -27,21 +27,74 @@
 import "regenerator-runtime/runtime.js";
 import "./../style/bulletChart.less";
 
-import { select, Selection } from 'd3-selection';
+import {select, Selection} from 'd3-selection';
 import lodashIsnumber from "lodash.isnumber";
 import lodashMax from "lodash.max";
 import powerbiVisualsApi from "powerbi-visuals-api";
+import {scaleLinear, ScaleLinear} from "d3-scale";
+import {group} from "d3-array"
+
+// powerbi.extensibility.utils.type
+import {pixelConverter as PixelConverter} from "powerbi-visuals-utils-typeutils";
+
+// powerbi.extensibility.utils.interactivity
+import {
+    interactivityBaseService as interactivityService,
+    interactivityBaseService,
+    interactivitySelectionService
+} from "powerbi-visuals-utils-interactivityutils";
+
+// powerbi.extensibility.utils.formatting
+// import { textMeasurementService as tms, valueFormatter } from "powerbi-visuals-utils-formattingutils";
+// import TextProperties = tms.TextProperties;
+// import TextMeasurementService = tms.textMeasurementService;
+import {textMeasurementService as TextMeasurementService} from "powerbi-visuals-utils-formattingutils";
+import * as valueFormatter from "powerbi-visuals-utils-formattingutils/lib/src/valueFormatter";
+import {TextProperties} from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
+
+// powerbi.extensibility.utils.chart
+import {axis as AxisHelper, axisInterfaces, axisScale} from "powerbi-visuals-utils-chartutils";
+
+// powerbi.extensibility.utils.tooltip
+import {
+    createTooltipServiceWrapper,
+    ITooltipServiceWrapper,
+    TooltipEnabledDataPoint
+} from "powerbi-visuals-utils-tooltiputils";
+
+// powerbi.extensibility.utils.color
+import {ColorHelper} from "powerbi-visuals-utils-colorutils";
+
+import {BulletChartColumns} from "./BulletChartColumns";
+import {
+    BarData,
+    BarRect,
+    BarRectType,
+    BarValueRect,
+    BulletChartModel,
+    BulletChartTooltipItem,
+    TargetValue
+} from "./dataInterfaces";
+import {VisualLayout} from "./visualLayout";
+import {BulletBehaviorOptions, BulletWebBehavior} from "./behavior";
+import {BulletChartOrientation} from "./BulletChartOrientation";
+import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
+import {BulletChartObjectNames, BulletChartSettingsModel} from "./BulletChartSettingsModel";
+
+// OnObject
+import {
+    HtmlSubSelectableClass,
+    HtmlSubSelectionHelper,
+    SubSelectableDisplayNameAttribute,
+    SubSelectableObjectNameAttribute,
+    SubSelectableTypeAttribute,
+} from "powerbi-visuals-utils-onobjectutils"
 
 // d3
 type BulletSelection<T1, T2 = T1> = Selection<any, T1, any, T2>;
-import { scaleLinear, ScaleLinear } from "d3-scale";
-
 import IViewport = powerbiVisualsApi.IViewport;
 import DataView = powerbiVisualsApi.DataView;
 import DataViewCategoryColumn = powerbiVisualsApi.DataViewCategoryColumn;
-import EnumerateVisualObjectInstancesOptions = powerbiVisualsApi.EnumerateVisualObjectInstancesOptions;
-import DataViewObjectPropertyIdentifier = powerbiVisualsApi.DataViewObjectPropertyIdentifier;
-import VisualObjectInstanceEnumeration = powerbiVisualsApi.VisualObjectInstanceEnumeration;
 import DataViewMetadataColumn = powerbiVisualsApi.DataViewMetadataColumn;
 import DataViewValueColumns = powerbiVisualsApi.DataViewValueColumns;
 import DataViewValueColumn = powerbiVisualsApi.DataViewValueColumn;
@@ -54,45 +107,36 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 import VisualTooltipDataItem = powerbiVisualsApi.extensibility.VisualTooltipDataItem;
 import ISelectionManager = powerbiVisualsApi.extensibility.ISelectionManager;
 import IVisualEventService = powerbiVisualsApi.extensibility.IVisualEventService;
-
 // powerbi.visuals
 import ISelectionId = powerbiVisualsApi.visuals.ISelectionId;
 import ISelectionIdBuilder = powerbiVisualsApi.visuals.ISelectionIdBuilder;
-
-// powerbi.extensibility.utils.type
-import { pixelConverter as PixelConverter } from "powerbi-visuals-utils-typeutils";
-
-// powerbi.extensibility.utils.interactivity
-import { interactivityBaseService as interactivityService, interactivitySelectionService, interactivityBaseService } from "powerbi-visuals-utils-interactivityutils";
 import appendClearCatcher = interactivityService.appendClearCatcher;
 import IInteractivityService = interactivityService.IInteractivityService;
 import createInteractivitySelectionService = interactivitySelectionService.createInteractivitySelectionService;
 import BaseDataPoint = interactivityBaseService.BaseDataPoint;
-
-// powerbi.extensibility.utils.formatting
-// import { textMeasurementService as tms, valueFormatter } from "powerbi-visuals-utils-formattingutils";
-// import TextProperties = tms.TextProperties;
-// import TextMeasurementService = tms.textMeasurementService;
-
-import { textMeasurementService as TextMeasurementService } from "powerbi-visuals-utils-formattingutils/lib/src/textMeasurementService";
-import * as valueFormatter from "powerbi-visuals-utils-formattingutils/lib/src/valueFormatter";
-import { TextProperties } from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
-
-// powerbi.extensibility.utils.chart
-import { axisInterfaces, axisScale, axis as AxisHelper } from "powerbi-visuals-utils-chartutils";
 import IAxisProperties = axisInterfaces.IAxisProperties;
+import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
+import CustomVisualSubSelection = powerbi.visuals.CustomVisualSubSelection;
+import SubSelectionStyles = powerbi.visuals.SubSelectionStyles;
+import VisualSubSelectionShortcuts = powerbi.visuals.VisualSubSelectionShortcuts;
+import VisualShortcutType = powerbi.visuals.VisualShortcutType;
+import CustomVisualObject = powerbi.visuals.CustomVisualObject;
+import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 
-// powerbi.extensibility.utils.tooltip
-import { TooltipEventArgs, ITooltipServiceWrapper, createTooltipServiceWrapper, TooltipEnabledDataPoint } from "powerbi-visuals-utils-tooltiputils";
+import { labelsReference, axisReference, colorsReference } from "./BulletChartSettingsModel";
 
-// powerbi.extensibility.utils.color
-import { ColorHelper } from "powerbi-visuals-utils-colorutils";
+interface ClassAndSelector {
+    className: string;
+    selectorName: string;
+}
 
-import { BulletChartColumns } from "./BulletChartColumns";
-import { BulletChartModel, BulletChartTooltipItem, BarValueRect, BarData, BarRect, TargetValue } from "./dataInterfaces";
-import { VisualLayout } from "./visualLayout";
-import { BulletchartSettings, BulletChartOrientation } from "./settings";
-import { BulletBehaviorOptions, BulletWebBehavior } from "./behavior";
+function CreateClassAndSelector(className: string) {
+    return {
+        className: className,
+        selectorName: "." + className,
+    };
+}
+
 
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;
@@ -106,7 +150,6 @@ export class BulletChart implements IVisual {
     private static DefaultSubtitleFontSizeInPt: number = 9;
     private static BarMargin: number = 10;
     private static MaxLabelWidth: number = 80;
-    private static MeasureUnitHeightHalf: number = 8;
     private static MaxMeasureUnitWidth: number = BulletChart.MaxLabelWidth - 20;
     private static SubtitleMargin: number = 10;
     private static AxisFontSizeInPt: number = 8;
@@ -115,6 +158,12 @@ export class BulletChart implements IVisual {
     private static MarkerMarginHorizontalEnd: number = 5 * BulletChart.MarkerMarginHorizontal;
     private static MarkerMarginVertical: number = BulletChart.BulletSize / 4;
     private static FontFamily: string = "Segoe UI";
+
+    private static CategoryLabelsSelector: ClassAndSelector = CreateClassAndSelector("categoryLabel");
+    public static MeasureUnitsSelector: ClassAndSelector = CreateClassAndSelector("measureUnits");
+    private static AxisSelector: ClassAndSelector = CreateClassAndSelector("axis");
+    private static BulletContainerSelector: ClassAndSelector = CreateClassAndSelector("bulletContainer");
+
     private baselineDelta: number = 0;
     // Variables
     private clearCatcher: BulletSelection<any>;
@@ -123,6 +172,13 @@ export class BulletChart implements IVisual {
     private labelGraphicsContext: BulletSelection<any>;
     private bulletGraphicsContext: BulletSelection<any>;
     private data: BulletChartModel;
+    private localizationManager: ILocalizationManager;
+    private formattingSettingsService: FormattingSettingsService;
+    private visualSettings: BulletChartSettingsModel;
+    private subSelectionHelper: HtmlSubSelectionHelper;
+    private formatMode: boolean = false;
+    public visualOnObjectFormatting?: powerbi.extensibility.visual.VisualOnObjectFormatting;
+
     private behavior: BulletWebBehavior;
     private interactivityService: IInteractivityService<BaseDataPoint>;
     private hostService: IVisualHost;
@@ -134,7 +190,7 @@ export class BulletChart implements IVisual {
     private selectionManager: ISelectionManager;
 
     private get reverse(): boolean {
-        switch (this.settings && this.settings.orientation.orientation) {
+        switch (this.settings && this.settings.orientation.orientation.value.value) {
             case BulletChartOrientation.HorizontalRight:
             case BulletChartOrientation.VerticalBottom:
                 return true;
@@ -143,14 +199,16 @@ export class BulletChart implements IVisual {
     }
 
     private get vertical(): boolean {
-        switch (this.settings && this.settings.orientation.orientation) {
+        switch (this.settings && this.settings.orientation.orientation.value.value) {
             case BulletChartOrientation.VerticalTop:
             case BulletChartOrientation.VerticalBottom:
                 return true;
         }
         return false;
     }
+
     private static zeroValue: number = 0;
+
     private get viewportScroll(): IViewport {
         return <IViewport>{
             width: Math.max(BulletChart.zeroValue, this.layout.viewportIn.width - BulletChart.ScrollBarSize),
@@ -165,6 +223,7 @@ export class BulletChart implements IVisual {
             text: text,
         };
     }
+
     private static value1dot4: number = 1.4;
     private static value2: number = 2;
     private static value12: number = 12;
@@ -173,106 +232,108 @@ export class BulletChart implements IVisual {
     private static value60: number = 60;
     private static emptyString: string = "";
 
-    private static additems(anyRangeIsDefined,
-        bulletModel,
-        idx,
-        firstScale,
-        secondScale,
-        firstFillColor,
-        firstColor,
-        thirdScale,
-        secondFillColor,
-        secondColor,
-        fourthScale,
-        thirdFillColor,
-        thirdColor,
-        fifthScale,
-        fourthFillColor,
-        fourthColor,
-        lastScale,
-        lastFillColor,
-        lastColor,
-        maxStrokeWidthBars,
-        toolTipItems,
-        highlight,
-        selectionIdBuilder) {
+    private addItems(
+        anyRangeIsDefined: boolean,
+        bulletModel: BulletChartModel,
+        idx: number,
+        maxStrokeWidthBars: number,
+        highlight: any,
+        toolTipItems: BulletChartTooltipItem[],
+        selectionIdBuilder: () => powerbi.visuals.ISelectionIdBuilder,
+        minimumScale: number, minFillColor: string, minColor: string,
+        needsImprovementScale: number, needsImprovementFillColor: string, needsImprovementColor: string,
+        satisfactoryScale: number, satisfactoryFillColor: string, satisfactoryColor: string,
+        goodScale: number, goodFillColor: string, goodColor: string,
+        veryGoodScale: number, veryGoodFillColor: string, veryGoodColor: string,
+        maximumScale: number,
+    ) {
         if (anyRangeIsDefined) {
-          BulletChart.addItemToBarArray(
-            bulletModel.barRects,
-            idx,
-            firstScale,
-            secondScale,
-            firstFillColor,
-            firstColor,
-            maxStrokeWidthBars,
-            null,
-            toolTipItems,
-            selectionIdBuilder(),
-            highlight
-          );
+            this.addItemToBarArray(
+                bulletModel.barRects,
+                idx,
+                minimumScale,
+                needsImprovementScale,
+                minFillColor,
+                minColor,
+                maxStrokeWidthBars,
+                toolTipItems,
+                selectionIdBuilder(),
+                highlight,
+                BarRectType.Minimum,
+            );
 
-          BulletChart.addItemToBarArray(
-            bulletModel.barRects,
-            idx,
-            secondScale,
-            thirdScale,
-            secondFillColor,
-            secondColor,
-            maxStrokeWidthBars,
-            null,
-            toolTipItems,
-            selectionIdBuilder(),
-            highlight
-          );
+            this.addItemToBarArray(
+                bulletModel.barRects,
+                idx,
+                needsImprovementScale,
+                satisfactoryScale,
+                needsImprovementFillColor,
+                needsImprovementColor,
+                maxStrokeWidthBars,
+                toolTipItems,
+                selectionIdBuilder(),
+                highlight,
+                BarRectType.NeedsImprovement,
+            );
 
-          BulletChart.addItemToBarArray(
-            bulletModel.barRects,
-            idx,
-            thirdScale,
-            fourthScale,
-            thirdFillColor,
-            thirdColor,
-            maxStrokeWidthBars,
-            null,
-            toolTipItems,
-            selectionIdBuilder(),
-            highlight
-          );
+            this.addItemToBarArray(
+                bulletModel.barRects,
+                idx,
+                satisfactoryScale,
+                goodScale,
+                satisfactoryFillColor,
+                satisfactoryColor,
+                maxStrokeWidthBars,
+                toolTipItems,
+                selectionIdBuilder(),
+                highlight,
+                BarRectType.Satisfactory,
+            );
 
-          BulletChart.addItemToBarArray(
-            bulletModel.barRects,
-            idx,
-            fourthScale,
-            fifthScale,
-            fourthFillColor,
-            fourthColor,
-            maxStrokeWidthBars,
-            null,
-            toolTipItems,
-            selectionIdBuilder(),
-            highlight
-          );
+            this.addItemToBarArray(
+                bulletModel.barRects,
+                idx,
+                goodScale,
+                veryGoodScale,
+                goodFillColor,
+                goodColor,
+                maxStrokeWidthBars,
+                toolTipItems,
+                selectionIdBuilder(),
+                highlight,
+                BarRectType.Good,
+            );
 
-          BulletChart.addItemToBarArray(
-            bulletModel.barRects,
-            idx,
-            fifthScale,
-            lastScale,
-            lastFillColor,
-            lastColor,
-            maxStrokeWidthBars,
-            null,
-            toolTipItems,
-            selectionIdBuilder(),
-            highlight
-          );
+            this.addItemToBarArray(
+                bulletModel.barRects,
+                idx,
+                veryGoodScale,
+                maximumScale,
+                veryGoodFillColor,
+                veryGoodColor,
+                maxStrokeWidthBars,
+                toolTipItems,
+                selectionIdBuilder(),
+                highlight,
+                BarRectType.VeryGood,
+            );
         }
     }
 
-    private static getxaxisproperties(settings, bulletModel, scale, categorical, valueFormatString, verticalOrientation) {
+    private static getXAxisProperties(
+        settings: BulletChartSettingsModel,
+        bulletModel: BulletChartModel,
+        scale: ScaleLinear<number, number>,
+        categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
+        valueFormatString: string,
+        verticalOrientation: boolean,
+    ) {
         let xAxisProperties: IAxisProperties = null;
-        if (settings.axis.axis) {
-            return xAxisProperties = AxisHelper.createAxis({
+        if (!settings.axis.axis.value) {
+            return xAxisProperties;
+        }
+
+        xAxisProperties = AxisHelper.createAxis({
             pixelSpan: bulletModel.viewportLength,
             dataDomain: scale.domain(),
             metaDataColumn: categorical.Value[0].source,
@@ -286,171 +347,360 @@ export class BulletChart implements IVisual {
                 bulletModel.viewportLength
             ),
             disableNiceOnlyForScale: true,
-            });
-        } else return xAxisProperties;
+        });
+
+        return xAxisProperties;
     }
 
     // Convert a DataView into a view model
-    public static CONVERTER(dataView: DataView, options: VisualUpdateOptions, visualHost: IVisualHost, colorHelper: ColorHelper): BulletChartModel {
-        let categorical: BulletChartColumns<
-          DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns
-        > = BulletChartColumns.GETCATEGORICALCOLUMNS(dataView);
-        if (!categorical || !categorical.Value || !categorical.Value[0]) {return null;}
-        let categoricalValues: BulletChartColumns<any[]> =
-          BulletChartColumns.GETCATEGORICALVALUES(dataView);
-        let settings: BulletchartSettings = BulletChart.parseSettings(dataView, colorHelper);
-        BulletChart.updateOrientation(settings);
-        BulletChart.limitProperties(settings);
-        let bulletModel: BulletChartModel = <BulletChartModel>{settings: settings, bars: [], barRects: [], valueRects: [], targetValues: [], viewportLength: BulletChart.zeroValue};
-        let verticalOrientation: boolean = settings.orientation.orientation === BulletChartOrientation.VerticalBottom
-            || settings.orientation.orientation === BulletChartOrientation.VerticalTop;
-        let reversedOrientation: boolean = settings.orientation.orientation === BulletChartOrientation.HorizontalRight
-            || settings.orientation.orientation === BulletChartOrientation.VerticalBottom;
-        bulletModel.labelHeight = (settings.labels.show || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(settings.labels.fontSize));
-        bulletModel.labelHeightTop = (settings.labels.show || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(settings.labels.fontSize)) / BulletChart.value1dot4;
-        bulletModel.spaceRequiredForBarHorizontally = Math.max(settings.axis.axis ? BulletChart.value60 : BulletChart.value28, bulletModel.labelHeight + BulletChart.value25);
-        bulletModel.viewportLength = Math.max(0, (verticalOrientation
-            ? (options.viewport.height - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value25 - BulletChart.YMarginVertical * BulletChart.value2)
-            : (options.viewport.width - (settings.labels.show ? settings.labels.maxWidth : 0) - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
-        bulletModel.hasHighlights = !!(categorical.Value[0].values.length > BulletChart.zeroValue && categorical.Value[0].highlights);
-        let valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
-        let categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
-        let length: number = categoricalValues.Value.length;
+    public CONVERTER(dataView: DataView, options: VisualUpdateOptions): BulletChartModel {
+        const categorical: BulletChartColumns<
+            DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns
+        > = BulletChartColumns.GET_CATEGORICAL_COLUMNS(dataView);
+        if (!categorical || !categorical.Value || !categorical.Value[0]) {
+            return null;
+        }
+
+        const categoricalValues: BulletChartColumns<any[]> =
+            BulletChartColumns.GET_CATEGORICAL_VALUES(dataView);
+
+        this.updateOrientation(dataView);
+        this.limitProperties();
+        this.setHighContrastColors();
+
+        const isVerticalOrientation: boolean =
+            this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.VerticalBottom ||
+            this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.VerticalTop;
+        const isReversedOrientation: boolean =
+            this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.HorizontalRight ||
+            this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.VerticalBottom;
+
+        const bulletModel: BulletChartModel = BulletChart.BuildBulletModel(
+            this.visualSettings,
+            categorical,
+            options.viewport.height,
+            options.viewport.width,
+            isVerticalOrientation,
+        );
+
+        const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
+        const categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
+        const length: number = categoricalValues.Value.length;
+
+
+        const categoryMinValue: number = categoricalValues.Minimum ? Math.min(...categoricalValues.Minimum) : undefined;
+        const categoryMaxValue: number = categoricalValues.Maximum ? Math.max(...categoricalValues.Maximum) : undefined;
+
         for (let idx = 0; idx < length; idx++) {
+            const toolTipItems: BulletChartTooltipItem[] = [];
+
             let category: string = BulletChart.emptyString;
             if (categorical.Category) {
                 category = valueFormatter.format(categoricalValues.Category[idx], categoryFormatString);
-                category = TextMeasurementService.getTailoredTextOrDefault( BulletChart.getTextProperties(category, settings.labels.fontSize), verticalOrientation ? this.MaxLabelWidth : settings.labels.maxWidth); }
-            let toolTipItems: BulletChartTooltipItem[] = [],
-                value = categoricalValues.Value[idx] || BulletChart.zeroValue;
-            toolTipItems.push({ value: value, metadata: categorical.Value[0], customName: settings.tooltips.valueCustomName });
-            let targetValue: number = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : settings.values.targetValue;
+                category = TextMeasurementService.getTailoredTextOrDefault(
+                    BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value),
+                    isVerticalOrientation ? BulletChart.MaxLabelWidth : this.visualSettings.labels.maxWidth.value
+                );
+            }
+
+            const categoryValue = categoricalValues.Value[idx] || BulletChart.zeroValue;
+
+            toolTipItems.push({
+                value: categoryValue,
+                metadata: categorical.Value[0],
+                customName: this.visualSettings.tooltips.valueCustomName.value
+            });
+
+            const targetValue: number = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : this.visualSettings.values.targetValue.value;
+
             if (lodashIsnumber(targetValue)) {
-                toolTipItems.push({ value: targetValue, metadata: categorical.TargetValue && categorical.TargetValue[0], customName: settings.tooltips.targetCustomName });}
-            let targetValue2: number = categoricalValues.TargetValue2 ? categoricalValues.TargetValue2[idx] : settings.values.targetValue2;
-            if (lodashIsnumber(targetValue2)) { toolTipItems.push({ value: targetValue2, metadata: categorical.TargetValue2 && categorical.TargetValue2[0], customName: settings.tooltips.target2CustomName });}
-            let minimum: number = BulletChart.GETRANGEVALUE(categoricalValues.Minimum ? categoricalValues.Minimum[idx] : undefined, settings.values.minimumPercent, targetValue);
-            let needsImprovement: number = BulletChart.GETRANGEVALUE(categoricalValues.NeedsImprovement ? categoricalValues.NeedsImprovement[idx] : undefined, settings.values.needsImprovementPercent, targetValue, minimum);
-            let satisfactory: number = BulletChart.GETRANGEVALUE(categoricalValues.Satisfactory ? categoricalValues.Satisfactory[idx] : undefined, settings.values.satisfactoryPercent, targetValue, minimum);
-            let good: number = BulletChart.GETRANGEVALUE(categoricalValues.Good ? categoricalValues.Good[idx] : undefined, settings.values.goodPercent, targetValue, minimum);
-            let veryGood: number = BulletChart.GETRANGEVALUE(categoricalValues.VeryGood ? categoricalValues.VeryGood[idx] : undefined, settings.values.veryGoodPercent, targetValue, minimum);
-            let maximum: number = BulletChart.GETRANGEVALUE(categoricalValues.Maximum ? categoricalValues.Maximum[idx] : undefined, settings.values.maximumPercent, targetValue, minimum);
-            let anyRangeIsDefined: boolean = [needsImprovement, satisfactory, good, veryGood].some(lodashIsnumber);
-            minimum = lodashIsnumber(minimum) ? minimum : BulletChart.zeroValue;
-            needsImprovement = lodashIsnumber(needsImprovement) ? Math.max(minimum, needsImprovement) : needsImprovement;
-            satisfactory = lodashIsnumber(satisfactory) ? Math.max(satisfactory, needsImprovement) : satisfactory;
-            good = lodashIsnumber(good) ? Math.max(good, satisfactory) : good;
-            veryGood = lodashIsnumber(veryGood) ? Math.max(veryGood, good) : veryGood;
-            let minMaxValue = lodashMax([minimum, needsImprovement, satisfactory, good, veryGood, value, targetValue, targetValue2].filter(lodashIsnumber));
-            maximum = lodashIsnumber(maximum) ? Math.max(maximum, minMaxValue) : minMaxValue;
-            veryGood = lodashIsnumber(veryGood) ? veryGood : maximum;
-            good = lodashIsnumber(good) ? good : veryGood;
-            satisfactory = lodashIsnumber(satisfactory) ? satisfactory : good;
-            needsImprovement = lodashIsnumber(needsImprovement) ? needsImprovement : satisfactory;
-            let scale: ScaleLinear<number, number> = (scaleLinear().clamp(true).domain([minimum, maximum]).range(verticalOrientation ? [bulletModel.viewportLength, 0] : [0, bulletModel.viewportLength]));
-            let firstScale: number = scale(minimum);
-            let secondScale: number = scale(needsImprovement);
-            let thirdScale: number = scale(satisfactory);
-            let fourthScale: number = scale(good);
-            let fifthScale: number = scale(veryGood);
-            let lastScale: number = scale(maximum);
-            let valueScale: number = scale(value);
-            let firstColor: string = settings.colors.minColor,
-                secondColor: string = settings.colors.needsImprovementColor,
-                thirdColor: string = settings.colors.satisfactoryColor,
-                fourthColor: string = settings.colors.goodColor,
-                lastColor: string = settings.colors.veryGoodColor,
-                firstFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : firstColor,
-                secondFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : secondColor,
-                thirdFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : thirdColor,
-                fourthFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : fourthColor,
-                lastFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : lastColor;
-            let highlight: any = categorical.Value[0].highlights && categorical.Value[0].highlights[idx] !== null;
-            let selectionIdBuilder = () => categorical.Category
-                ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx)
-                : visualHost.createSelectionIdBuilder();
-            const minStrokeWidth: number = 0, maxStrokeWidthBars: number = 0.5, maxStrokeWidthValues: number = 1.5;
-            let barRectsStrokeWidth: number = colorHelper.isHighContrast ? maxStrokeWidthBars : minStrokeWidth,
-                valueRectsStrokeWidth: number = colorHelper.isHighContrast ? maxStrokeWidthValues : minStrokeWidth;
-            BulletChart.additems(anyRangeIsDefined, bulletModel, idx, firstScale, secondScale, firstFillColor, firstColor, thirdScale,
-              secondFillColor, secondColor, fourthScale, thirdFillColor, thirdColor, fifthScale, fourthFillColor,
-              fourthColor, lastScale, lastFillColor, lastColor, maxStrokeWidthBars, toolTipItems, highlight, selectionIdBuilder);
-            let bulletFillColor = colorHelper.isHighContrast ? colorHelper.getThemeColor() : settings.colors.bulletColor;
-            BulletChart.addItemToBarArray(bulletModel.valueRects, idx, firstScale, valueScale, bulletFillColor, settings.colors.bulletColor,
-                maxStrokeWidthValues, null, toolTipItems, selectionIdBuilder(), highlight);
-            let scaledTarget: number = scale(targetValue || BulletChart.zeroValue);
-            if (lodashIsnumber(scaledTarget)) {
-                bulletModel.targetValues.push({barIndex: idx, value: targetValue && scale(targetValue), fill: bulletFillColor, stroke: settings.colors.bulletColor, strokeWidth: maxStrokeWidthValues,
-                    key: selectionIdBuilder().withMeasure(scaledTarget.toString()).createSelectionId().getKey(),
-                    value2: targetValue2 && scale(targetValue2),
-                });} let xAxisProperties: IAxisProperties = BulletChart.getxaxisproperties(settings, bulletModel, scale, categorical, valueFormatString, verticalOrientation);
-            let bar1: BarData = { scale: scale, barIndex: idx, categoryLabel: category,
-                x: verticalOrientation ? (BulletChart.XMarginVertical + BulletChart.SpaceRequiredForBarVertically * idx) : (reversedOrientation ? BulletChart.XMarginHorizontalRight : BulletChart.XMarginHorizontalLeft),
-                y: verticalOrientation ? (BulletChart.YMarginVertical) : (BulletChart.YMarginHorizontal + bulletModel.spaceRequiredForBarHorizontally * idx),
-                xAxisProperties: xAxisProperties,
-                key: selectionIdBuilder().createSelectionId().getKey(),
-            }; bulletModel.bars.push(bar1);
-        } return bulletModel;}
+                toolTipItems.push({
+                    value: targetValue,
+                    metadata: categorical.TargetValue && categorical.TargetValue[0],
+                    customName: this.visualSettings.tooltips.targetCustomName.value,
+                });
+            }
 
-    public static GETRANGEVALUE(value: number, percent: number, targetValue: number, minimum?: number): number {
-        let negativeMinimumCoef: number = 0;
+            const targetValue2: number = categoricalValues.TargetValue2 ? categoricalValues.TargetValue2[idx] : this.visualSettings.values.targetValue2.value;
 
-        if (minimum === undefined) {
-            negativeMinimumCoef = value ? value : BulletChart.zeroValue;
-        } else if (minimum < 0) {
-            negativeMinimumCoef = minimum;
+            if (lodashIsnumber(targetValue2)) {
+                toolTipItems.push({
+                    value: targetValue2,
+                    metadata: categorical.TargetValue2 && categorical.TargetValue2[0],
+                    customName: this.visualSettings.tooltips.target2CustomName.value,
+                });
+            }
+
+            const highlight: any = categorical.Value[0].highlights && categorical.Value[0].highlights[idx] !== null;
+
+            const barData: BarData = this.BuildBulletChartItem(
+                idx,
+                category,
+                categoryValue,
+                targetValue,
+                targetValue2,
+                highlight,
+                valueFormatString,
+                isVerticalOrientation,
+                isReversedOrientation,
+                this.visualSettings,
+                toolTipItems,
+                categorical,
+                categoricalValues,
+                categoryMinValue,
+                categoryMaxValue,
+                this.colorHelper,
+                bulletModel,
+                this.hostService,
+            );
+
+            bulletModel.bars.push(barData);
         }
 
-        return isFinite(value) && value !== null ? value : (isFinite(targetValue) && targetValue !== null && isFinite(percent) && percent !== null ? (percent * (targetValue - negativeMinimumCoef) / 100) + negativeMinimumCoef : null);
+        return bulletModel;
+    }
+
+
+    private static BuildBulletModel(
+        visualSettings: BulletChartSettingsModel,
+        categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
+        viewPortHeight: number,
+        viewPortWidth: number,
+        isVerticalOrientation: boolean,
+    ): BulletChartModel {
+
+        const bulletModel: BulletChartModel = <BulletChartModel>{
+            settings: visualSettings,
+            bars: [],
+            barRects: [],
+            valueRects: [],
+            targetValues: [],
+            viewportLength: BulletChart.zeroValue
+        };
+
+        bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.font.fontSize.value));
+        bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.font.fontSize.value)) / BulletChart.value1dot4;
+        bulletModel.spaceRequiredForBarHorizontally = Math.max(visualSettings.axis.axis.value ? BulletChart.value60 : BulletChart.value28, bulletModel.labelHeight + BulletChart.value25);
+        bulletModel.viewportLength = Math.max(0, (isVerticalOrientation
+            ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value25 - BulletChart.YMarginVertical * BulletChart.value2)
+            : (viewPortWidth - (visualSettings.labels.show.value ? visualSettings.labels.maxWidth.value : 0) - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
+        bulletModel.hasHighlights = !!(categorical.Value[0].values.length > BulletChart.zeroValue && categorical.Value[0].highlights);
+
+        return bulletModel;
+    }
+
+    private BuildBulletChartItem(
+        idx: number,
+        category: string,
+        categoryValue: number,
+        targetValue: number,
+        targetValue2: number,
+        highlight: any,
+        valueFormatString: string,
+        isVerticalOrientation: boolean,
+        isReversedOrientation: boolean,
+        visualSettings: BulletChartSettingsModel,
+        toolTipItems: BulletChartTooltipItem[],
+        categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
+        categoricalValues: BulletChartColumns<any[]>,
+        categoryMinValue: number,
+        categoryMaxValue: number,
+        colorHelper: ColorHelper,
+        bulletModel: BulletChartModel,
+        visualHost: IVisualHost,
+    ): BarData {
+
+        let minimum: number;
+        if (visualSettings.syncAxis.syncAxis.value) {
+            minimum = categoryMinValue;
+        } else {
+            minimum = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], visualSettings.values.minimumPercent.value, targetValue);
+        }
+        const categoryNumbers = BulletChart.computeCategoryNumbers(categoricalValues, idx, visualSettings, targetValue, minimum, categoryMaxValue, categoryValue, targetValue2);
+        minimum = categoryNumbers.minimum;
+        const needsImprovement = categoryNumbers.needsImprovement;
+        const satisfactory = categoryNumbers.satisfactory;
+        const good = categoryNumbers.good;
+        const veryGood = categoryNumbers.veryGood;
+        const maximum = categoryNumbers.maximum;
+        const anyRangeIsDefined = categoryNumbers.anyRangeIsDefined;
+
+        const scale: ScaleLinear<number, number> = scaleLinear()
+            .clamp(true)
+            .domain([minimum, maximum])
+            .range(isVerticalOrientation ? [bulletModel.viewportLength, 0] : [0, bulletModel.viewportLength]);
+
+        const minimumScale: number = scale(minimum);
+        const needsImprovementScale: number = scale(needsImprovement);
+        const satisfactoryScale: number = scale(satisfactory);
+        const goodScale: number = scale(good);
+        const veryGoodScale: number = scale(veryGood);
+        const maximumScale: number = scale(maximum);
+        const valueScale: number = scale(categoryValue);
+        const minColor: string = visualSettings.colors.minColor.value.value,
+            needsImprovementColor: string = visualSettings.colors.needsImprovementColor.value.value,
+            satisfactoryColor: string = visualSettings.colors.satisfactoryColor.value.value,
+            goodColor: string = visualSettings.colors.goodColor.value.value,
+            veryGoodColor: string = visualSettings.colors.veryGoodColor.value.value,
+            minFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : minColor,
+            needsImprovementFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : needsImprovementColor,
+            satisfactoryFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : satisfactoryColor,
+            goodFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : goodColor,
+            veryGoodFillColor: string = colorHelper.isHighContrast ? colorHelper.getThemeColor() : veryGoodColor;
+
+        const selectionIdBuilder = () => categorical.Category
+            ? visualHost.createSelectionIdBuilder().withCategory(categorical.Category, idx)
+            : visualHost.createSelectionIdBuilder();
+
+        const maxStrokeWidthBars: number = 0.5, maxStrokeWidthValues: number = 1.5;
+
+        this.addItems(
+            anyRangeIsDefined,
+            bulletModel,
+            idx,
+            maxStrokeWidthBars,
+            highlight,
+            toolTipItems,
+            selectionIdBuilder,
+            minimumScale, minFillColor, minColor,
+            needsImprovementScale, needsImprovementFillColor, needsImprovementColor,
+            satisfactoryScale, satisfactoryFillColor, satisfactoryColor,
+            goodScale, goodFillColor, goodColor,
+            veryGoodScale, veryGoodFillColor, veryGoodColor,
+            maximumScale
+        );
+
+        const bulletFillColor = colorHelper.isHighContrast ? colorHelper.getThemeColor() : visualSettings.colors.bulletColor.value.value;
+
+        this.addItemToBarArray(bulletModel.valueRects, idx, minimumScale, valueScale, bulletFillColor, visualSettings.colors.bulletColor.value.value,
+            maxStrokeWidthValues, toolTipItems, selectionIdBuilder(), highlight, BarRectType.Bullet);
+
+        const scaledTarget: number = scale(targetValue || BulletChart.zeroValue);
+
+        if (lodashIsnumber(scaledTarget)) {
+            bulletModel.targetValues.push({
+                barIndex: idx,
+                value: targetValue && scale(targetValue),
+                fill: bulletFillColor,
+                stroke: visualSettings.colors.bulletColor.value.value,
+                strokeWidth: maxStrokeWidthValues,
+                key: selectionIdBuilder().withMeasure(scaledTarget.toString()).createSelectionId().getKey(),
+                value2: targetValue2 && scale(targetValue2),
+            });
+        }
+
+        const xAxisProperties: IAxisProperties = BulletChart.getXAxisProperties(visualSettings, bulletModel, scale, categorical, valueFormatString, isVerticalOrientation);
+
+        const barData: BarData = {
+            scale: scale, barIndex: idx, categoryLabel: category,
+            x: isVerticalOrientation ? (BulletChart.XMarginVertical + BulletChart.SpaceRequiredForBarVertically * idx) : (isReversedOrientation ? BulletChart.XMarginHorizontalRight : BulletChart.XMarginHorizontalLeft),
+            y: isVerticalOrientation ? (BulletChart.YMarginVertical) : (BulletChart.YMarginHorizontal + bulletModel.spaceRequiredForBarHorizontally * idx),
+            xAxisProperties: xAxisProperties,
+            key: selectionIdBuilder().createSelectionId().getKey(),
+        };
+
+        return barData;
+    }
+
+    private static computeCategoryNumbers(categoricalValues: BulletChartColumns<any[]>, idx: number, visualSettings: BulletChartSettingsModel, targetValue: number, minimum: number, categoryMaxValue: number, categoryValue: number, targetValue2: number) {
+        let needsImprovement: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.NeedsImprovement?.[idx], visualSettings.values.needsImprovementPercent.value, targetValue, minimum);
+        let satisfactory: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Satisfactory?.[idx], visualSettings.values.satisfactoryPercent.value, targetValue, minimum);
+        let good: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Good?.[idx], visualSettings.values.goodPercent.value, targetValue, minimum);
+        let veryGood: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.VeryGood?.[idx], visualSettings.values.veryGoodPercent.value, targetValue, minimum);
+        let maximum: number;
+        if (visualSettings.syncAxis.syncAxis.value) {
+            maximum = categoryMaxValue;
+        } else {
+            maximum = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Maximum?.[idx], visualSettings.values.maximumPercent.value, targetValue, minimum);
+        }
+
+        const anyRangeIsDefined: boolean = [needsImprovement, satisfactory, good, veryGood].some(lodashIsnumber);
+
+        minimum = lodashIsnumber(minimum) ? minimum : BulletChart.zeroValue;
+        needsImprovement = lodashIsnumber(needsImprovement) ? Math.max(minimum, needsImprovement) : needsImprovement;
+        satisfactory = lodashIsnumber(satisfactory) ? Math.max(satisfactory, needsImprovement) : satisfactory;
+        good = lodashIsnumber(good) ? Math.max(good, satisfactory) : good;
+        veryGood = lodashIsnumber(veryGood) ? Math.max(veryGood, good) : veryGood;
+        const minMaxValue = lodashMax([minimum, needsImprovement, satisfactory, good, veryGood, categoryValue, targetValue, targetValue2].filter(lodashIsnumber));
+        maximum = lodashIsnumber(maximum) ? Math.max(maximum, minMaxValue) : minMaxValue;
+        veryGood = lodashIsnumber(veryGood) ? veryGood : maximum;
+        good = lodashIsnumber(good) ? good : veryGood;
+        satisfactory = lodashIsnumber(satisfactory) ? satisfactory : good;
+        needsImprovement = lodashIsnumber(needsImprovement) ? needsImprovement : satisfactory;
+
+        return {minimum, needsImprovement, satisfactory, good, veryGood, maximum, anyRangeIsDefined};
+    }
+
+    /**
+     * Calculate the percentage of the value based on the target value.
+     * @param value either passed value or calculated depending on the percentage of the target value
+     * @param percent percent of the calculated value, should greater or equal to 0
+     * @param targetValue the target value the percent is based on
+     * @param minimum the range minimum, usually 0 but when it is less than 0, than the result is adjusted
+     */
+    public static CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(value: number, percent: number, targetValue: number, minimum?: number): number {
+        if (value !== null && isFinite(value)) {
+            return value;
+        }
+
+        let adjustedMinimum: number = BulletChart.zeroValue;
+
+        if (minimum !== undefined && minimum < 0) {
+            adjustedMinimum = minimum;
+        }
+
+        if (isFinite(targetValue) && targetValue !== null && isFinite(percent) && percent !== null && percent >= 0) {
+            return (percent * (targetValue - adjustedMinimum) / 100) + adjustedMinimum;
+        }
+
+        return null;
     }
 
     // Implemented for old enums using space containing keys for example "Horizontal Left" which doesn't exist in current version
-    private static updateOrientation(settings: BulletchartSettings): void {
-        if (settings && settings.orientation && settings.orientation.orientation) {
-            const noSpaceOrientation: string = settings.orientation.orientation.toString().replace(" ", "");
+    private updateOrientation(dataView: DataView): void {
+        let orientationValue: string = "";
 
-            if (BulletChartOrientation[noSpaceOrientation]) {
-                settings.orientation.orientation = BulletChartOrientation[noSpaceOrientation];
-            }
+        if (this.visualSettings?.orientation?.orientation.value?.value) {
+            orientationValue = this.visualSettings.orientation.orientation.value.value.toString();
+        }
+        else if (dataView?.metadata?.objects?.orientation?.orientation) {
+            orientationValue = dataView.metadata.objects?.orientation?.orientation as string;
+        }
+
+        const noSpaceOrientation: string = orientationValue.toString().replace(" ", "");
+
+        if (Object.values(BulletChartOrientation).includes(noSpaceOrientation as BulletChartOrientation)) {
+            this.visualSettings.orientation.orientation.value = this.visualSettings.orientation.orientation.items.find(option => option.value.toString() === noSpaceOrientation);
+        } else {
+            this.visualSettings.orientation.orientation.value = this.visualSettings.orientation.orientation.items.find(option => option.value.toString() === BulletChartOrientation.HorizontalLeft);
         }
     }
 
-    private static limitProperties(settings: BulletchartSettings): void {
-        if (settings.values.minimumPercent > settings.values.maximumPercent) {
-            settings.values.maximumPercent = settings.values.minimumPercent;
+    private limitProperties(): void {
+        if (this.visualSettings.values.minimumPercent.value > this.visualSettings.values.maximumPercent.value) {
+            this.visualSettings.values.maximumPercent.value = this.visualSettings.values.minimumPercent.value;
         }
 
-        if (settings.labels.maxWidth <= 0) {
-            settings.labels.maxWidth = this.MaxLabelWidth;
+        if (this.visualSettings.labels.maxWidth.value <= 0) {
+            this.visualSettings.labels.maxWidth.value = BulletChart.MaxLabelWidth;
         }
     }
 
-    private get settings(): BulletchartSettings {
+    private get settings(): BulletChartSettingsModel {
         return this.data && this.data.settings;
     }
 
-    private static parseSettings(dataView: DataView, colorHelper: ColorHelper): BulletchartSettings {
-        let settings: BulletchartSettings = BulletchartSettings.parse<BulletchartSettings>(dataView);
+    private setHighContrastColors(): void {
+        this.visualSettings.axis.axisColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.axis.axisColor.value.value);
+        this.visualSettings.axis.unitsColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.axis.unitsColor.value.value);
+        this.visualSettings.labels.labelColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.labels.labelColor.value.value);
 
-        // change colors for high contrast mode
-        settings.axis.axisColor = colorHelper.getHighContrastColor("foreground", settings.axis.axisColor);
-        settings.axis.unitsColor = colorHelper.getHighContrastColor("foreground", settings.axis.unitsColor);
-        settings.labels.labelColor = colorHelper.getHighContrastColor("foreground", settings.labels.labelColor);
-
-        settings.colors.bulletColor = colorHelper.getHighContrastColor("foreground", settings.colors.bulletColor);
-        settings.colors.goodColor = colorHelper.getHighContrastColor("foreground", settings.colors.goodColor);
-        settings.colors.minColor = colorHelper.getHighContrastColor("foreground", settings.colors.minColor);
-        settings.colors.needsImprovementColor = colorHelper.getHighContrastColor("foreground", settings.colors.needsImprovementColor);
-        settings.colors.satisfactoryColor = colorHelper.getHighContrastColor("foreground", settings.colors.satisfactoryColor);
-        settings.colors.veryGoodColor = colorHelper.getHighContrastColor("foreground", settings.colors.veryGoodColor);
-
-        return settings;
-    }
-
-    public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstanceEnumeration {
-        return BulletchartSettings.enumerateObjectInstances(
-            this.settings || BulletchartSettings.getDefault(),
-            options);
+        this.visualSettings.colors.bulletColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.colors.bulletColor.value.value);
+        this.visualSettings.colors.goodColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.colors.goodColor.value.value);
+        this.visualSettings.colors.minColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.colors.minColor.value.value);
+        this.visualSettings.colors.needsImprovementColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.colors.needsImprovementColor.value.value);
+        this.visualSettings.colors.satisfactoryColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.colors.satisfactoryColor.value.value);
+        this.visualSettings.colors.veryGoodColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.colors.veryGoodColor.value.value);
     }
 
     public static GETFITTICKSCOUNT(viewportLength: number): number {
@@ -465,7 +715,7 @@ export class BulletChart implements IVisual {
         return 12;
     }
 
-    private static addItemToBarArray(
+    private addItemToBarArray(
         collection: BarRect[],
         barIndex: number,
         start: number,
@@ -473,28 +723,30 @@ export class BulletChart implements IVisual {
         fillColor: string,
         strokeColor: string,
         strokeWidth: number,
-        formatString: DataViewObjectPropertyIdentifier,
         tooltipInfo: BulletChartTooltipItem[],
         selectionIdBuilder: ISelectionIdBuilder,
-        highlight: boolean): void {
+        highlight: boolean,
+        barRectType: BarRectType,
+    ): void {
 
         if (!isNaN(start) && !isNaN(end))
             collection.push({
-              barIndex,
-              start,
-              end,
-              fillColor,
-              strokeColor,
-              strokeWidth,
-              tooltipInfo: BulletChart.CREATETOOLTIPINFO(tooltipInfo),
-              selected: false,
-              identity: selectionIdBuilder.createSelectionId(),
-              key: (<ISelectionId>(
-                selectionIdBuilder
-                  .withMeasure(start + " " + end)
-                  .createSelectionId()
-              )).getKey(),
-              highlight: highlight,
+                barIndex,
+                start,
+                end,
+                fillColor,
+                strokeColor,
+                strokeWidth,
+                tooltipInfo: BulletChart.CREATETOOLTIPINFO(tooltipInfo),
+                selected: false,
+                identity: selectionIdBuilder.createSelectionId(),
+                key: (<ISelectionId>(
+                    selectionIdBuilder
+                        .withMeasure(start + " " + end)
+                        .createSelectionId()
+                )).getKey(),
+                highlight: highlight,
+                type: barRectType,
             });
     }
 
@@ -503,9 +755,9 @@ export class BulletChart implements IVisual {
 
         tooltipItems.forEach((tooltipItem: BulletChartTooltipItem) => {
             if (tooltipItem && tooltipItem.metadata) {
-                let displayName: string,
-                    metadata: DataViewMetadataColumn = tooltipItem.metadata.source,
-                    formatString: string = valueFormatter.getFormatStringByColumn(metadata);
+                let displayName: string;
+                const metadata: DataViewMetadataColumn = tooltipItem.metadata.source;
+                const formatString: string = valueFormatter.getFormatStringByColumn(metadata);
 
                 if (tooltipItem.customName) {
                     displayName = tooltipItem.customName;
@@ -529,28 +781,36 @@ export class BulletChart implements IVisual {
 
     public handleContextMenu() {
         this.bulletBody.on("contextmenu", (event) => {
-        let dataPoint: BarRect = <BarRect>select(event.target).datum();
-        this.selectionManager.showContextMenu(
-            dataPoint?.identity || {},
-            {
-            x: event.clientX,
-            y: event.clientY,
-            }
-        );
-        event.preventDefault();
+            const dataPoint: BarRect = <BarRect>select(event.target).datum();
+            this.selectionManager.showContextMenu(
+                dataPoint?.identity || {},
+                {
+                    x: event.clientX,
+                    y: event.clientY,
+                }
+            );
+            event.preventDefault();
         });
     }
 
     constructor(options: VisualConstructorOptions) {
-        if (window.location !== window.parent.location) {
-            require("core-js/stable");
-        }
-
         this.tooltipServiceWrapper = createTooltipServiceWrapper(
             options.host.tooltipService,
             options.element);
 
         this.selectionManager = options.host.createSelectionManager();
+        this.localizationManager = options.host.createLocalizationManager();
+        this.formattingSettingsService = new FormattingSettingsService(this.localizationManager);
+        this.subSelectionHelper = HtmlSubSelectionHelper.createHtmlSubselectionHelper({
+            hostElement: options.element,
+            subSelectionService: options.host.subSelectionService,
+        });
+
+        this.visualOnObjectFormatting = {
+            getSubSelectionStyles: (subSelections) => this.getSubSelectionStyles(subSelections),
+            getSubSelectionShortcuts: (subSelections) => this.getSubSelectionShortcuts(subSelections),
+            getSubSelectables: (filter) => this.getSubSelectables(filter),
+        };
 
         this.layout = new VisualLayout(null, {
             top: 0,
@@ -559,7 +819,7 @@ export class BulletChart implements IVisual {
             left: 0
         });
 
-        let body: BulletSelection<any> = select(options.element);
+        const body: BulletSelection<any> = select(options.element);
         this.hostService = options.host;
         this.colorPalette = this.hostService.colorPalette;
         this.colorHelper = new ColorHelper(this.colorPalette);
@@ -582,24 +842,31 @@ export class BulletChart implements IVisual {
         this.interactivityService = createInteractivitySelectionService(options.host);
         this.handleContextMenu();
     }
+
     public static oneString: string = "1";
+
     public update(options: VisualUpdateOptions) {
         this.events.renderingStarted(options);
         if (!options.dataViews || !options.dataViews[0]) {
             return;
         }
-        let dataView: DataView = options.dataViews[0];
+        const dataView: DataView = options.dataViews[0];
         this.layout.viewport = options.viewport;
-        let data: BulletChartModel = BulletChart.CONVERTER(dataView, options, this.hostService, this.colorHelper);
+        this.formatMode = options.formatMode ?? false;
 
-        this.clearviewport();
+        this.visualSettings = this.formattingSettingsService.populateFormattingSettingsModel(BulletChartSettingsModel, dataView);
+        this.visualSettings.setLocalizedOptions(this.localizationManager);
+
+        const data: BulletChartModel = this.CONVERTER(dataView, options);
+
+        this.clearViewport();
         if (!data) {
             return;
         }
 
         this.data = data;
 
-        this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.fontSize));
+        this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.font.fontSize.value));
 
         if (this.interactivityService) {
             this.interactivityService.applySelectionStateToData(this.data.barRects);
@@ -610,32 +877,42 @@ export class BulletChart implements IVisual {
             .style("width", PixelConverter.toString(this.layout.viewportIn.width));
 
         if (this.vertical) {
-            this.scrollContainer.attr("width", PixelConverter.toString(this.data.bars.length * BulletChart.SpaceRequiredForBarVertically + BulletChart.XMarginVertical))
-                .style("height", PixelConverter.toString(this.viewportScroll.height));
-        }
-        else {
-            this.scrollContainer.attr("height", (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
-                + (this.data.settings.axis.axis ? 0 : BulletChart.YMarginHorizontal)) + "px")
-                .style("width", PixelConverter.toString(this.viewportScroll.width));
+            this.scrollContainer
+                .attr("width", PixelConverter.toString(this.data.bars.length * BulletChart.SpaceRequiredForBarVertically + BulletChart.XMarginVertical))
+                .attr("height", PixelConverter.toString(this.viewportScroll.height));
+        } else {
+            this.scrollContainer
+                .attr("height", (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
+                    + (this.data.settings.axis.axis.value ? 0 : BulletChart.YMarginHorizontal)) + "px")
+                .attr("width", PixelConverter.toString(this.viewportScroll.width));
         }
 
         this.scrollContainer.attr("fill", "none");
 
         if (this.vertical) {
-            this.setUpBulletsVertically(this.bulletBody, this.data, this.reverse);
+            this.setUpBulletsVertically(this.data, this.reverse);
         } else {
-            this.setUpBulletsHorizontally(this.bulletBody, this.data, this.reverse);
+            this.setUpBulletsHorizontally(this.data, this.reverse);
         }
 
         this.behavior.renderSelection(this.interactivityService.hasSelection());
+
+        this.subSelectionHelper.setFormatMode(options.formatMode);
+        const shouldUpdateSubSelection = options.type & (powerbi.VisualUpdateType.Data
+            | powerbi.VisualUpdateType.Resize
+            | powerbi.VisualUpdateType.FormattingSubSelectionChange);
+        if (this.formatMode && shouldUpdateSubSelection) {
+            this.subSelectionHelper.updateOutlinesFromSubSelections(options.subSelections, true);
+        }
+
         this.events.renderingFinished(options);
     }
 
-    private clearviewport() {
+    private clearViewport() {
         this.labelGraphicsContext.selectAll("text").remove();
         this.bulletGraphicsContext.selectAll("rect").remove();
         this.bulletGraphicsContext.selectAll("text").remove();
-        this.bulletGraphicsContext.selectAll("axis").remove();
+        this.bulletGraphicsContext.selectAll(BulletChart.AxisSelector.className).remove();
         this.bulletGraphicsContext.selectAll("path").remove();
         this.bulletGraphicsContext.selectAll("line").remove();
         this.bulletGraphicsContext.selectAll("tick").remove();
@@ -653,187 +930,176 @@ export class BulletChart implements IVisual {
 
     private calculateLabelWidth(barData: BarData, bar?: BarRect, reversed?: boolean) {
         return (reversed
-            ? BulletChart.XMarginHorizontalRight
-            : barData.x + (this.settings.labels.show ? this.settings.labels.maxWidth : 0) + BulletChart.XMarginHorizontalLeft)
+                ? BulletChart.XMarginHorizontalRight
+                : barData.x + (this.settings.labels.show.value ? this.settings.labels.maxWidth.value : 0) + BulletChart.XMarginHorizontalLeft)
             + (bar ? bar.start : BulletChart.zeroValue);
     }
+
     private static value5: number = 5;
+
     private calculateLabelHeight(barData: BarData, bar?: BarRect, reversed?: boolean) {
         return BulletChart.YMarginVertical + (reversed ? BulletChart.value5 :
-            barData.y + this.data.labelHeightTop + BulletChart.BarMargin + BulletChart.SubtitleMargin)
+                barData.y + this.data.labelHeightTop + BulletChart.BarMargin + BulletChart.SubtitleMargin)
             + (bar ? bar.end : BulletChart.zeroValue);
     }
+
     private static value8: number = 8;
     private static value1: number = 1;
     private static value4: number = 4;
     private static value14: number = 14;
     private static bulletMiddlePosition: number = (1 / BulletChart.value8 + 1 / BulletChart.value4) * BulletChart.BulletSize;
 
-    private drawAxesLabels(model: BulletChartModel, reversed: boolean) {
-      let bars: BarData[] = model.bars;
-      let barSelection: BulletSelection<any> = this.labelGraphicsContext
-        .selectAll("text")
-        .data(bars, (d: BarData) => d.key);
-      // Draw axes
-      if (model.settings.axis.axis) {
-        // Using var instead of let since you can"t pass let parameters to functions inside loops.
-        // needs to be changed to let when typescript 1.8 comes out.
-        for (let idx: number = 0; idx < bars.length; idx++) {
-          const axisColor = model.settings.axis.axisColor;
-          let bar: BarData = bars[idx],
-            barGroup = this.bulletGraphicsContext.append("g");
+    private drawAxisAndLabelsForHorizontalOrientation(model: BulletChartModel, reversed: boolean) {
+        const bars: BarData[] = model.bars;
+        const barSelection: BulletSelection<any> = this.labelGraphicsContext
+            .selectAll("text")
+            .data(bars, (d: BarData) => d.key);
 
-          barGroup
-            .append("g")
-            .attr("transform", () => {
-              let xLocation: number = this.calculateLabelWidth(
-                bar,
-                null,
-                reversed
-              );
-              let yLocation: number = bar.y + BulletChart.BulletSize;
+        if (model.settings.axis.axis.value) {
+            const axisColor = model.settings.axis.axisColor.value.value;
 
-              return "translate(" + xLocation + "," + yLocation + ")";
-            })
-            .classed("axis", true)
-            .call(bar.xAxisProperties.axis)
-            .style("fill", axisColor)
-            .style(
-              "font-size",
-              PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
-            )
-            .selectAll("line")
-            .style("stroke", axisColor);
-
-          barGroup.selectAll("path.bullet").style("stroke", axisColor);
-
-          barGroup.selectAll(".tick line").style("stroke", axisColor);
-
-          barGroup.selectAll(".tick text").style("fill", axisColor);
-
-          barGroup
-            .selectAll(".tick text")
-            .call(
-              AxisHelper.LabelLayoutStrategy.clip,
-              bar.xAxisProperties.xLabelMaxWidth,
-              TextMeasurementService.svgEllipsis
-            );
+            if (model.settings.syncAxis.showMainAxis.value) {
+                // main axis should be last/at the bottom
+                const mainBar = bars[bars.length - 1];
+                this.renderAxisHorizontally(mainBar, reversed, axisColor);
+            } else {
+                for (let idx: number = 0; idx < bars.length; idx++) {
+                    this.renderAxisHorizontally(bars[idx], reversed, axisColor);
+                }
+            }
         }
-      }
-      // Draw Labels
-      if (model.settings.labels.show) {
-        barSelection
-          .enter()
-          .append("text")
-          .merge(barSelection)
-          .classed("title", true)
-          .attr("x", (d: BarData) => {
-            if (reversed)
-              return (
-                BulletChart.XMarginHorizontalLeft +
-                BulletChart.XMarginHorizontalRight +
-                model.viewportLength
-              );
-            return d.x;
-          })
-          .attr(
-            "y",
-            (d: BarData) =>
-              d.y +
-              this.baselineDelta +
-              BulletChart.BulletSize / BulletChart.value2
-          )
-          .attr("fill", model.settings.labels.labelColor)
-          .attr(
-            "font-size",
-            PixelConverter.fromPoint(model.settings.labels.fontSize)
-          )
-          .text((d: BarData) => d.categoryLabel)
-          .append("title")
-          .text((d: BarData) => d.categoryLabel);
-      }
+
+        // Draw Labels
+        if (model.settings.labels.show.value) {
+            barSelection
+                .join("text")
+                .classed(BulletChart.CategoryLabelsSelector.className, true)
+                .classed(HtmlSubSelectableClass, this.formatMode)
+                .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Labels.name)
+                .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Labels.displayName)
+                .attr(SubSelectableTypeAttribute, SubSelectionStylesType.Text)
+                .attr("x", (d: BarData) => {
+                    if (reversed)
+                        return (
+                            BulletChart.XMarginHorizontalLeft +
+                            BulletChart.XMarginHorizontalRight +
+                            model.viewportLength
+                        );
+                    return d.x;
+                })
+                .attr(
+                    "y",
+                    (d: BarData) =>
+                        d.y +
+                        this.baselineDelta +
+                        BulletChart.BulletSize / BulletChart.value2
+                )
+                .style("fill", model.settings.labels.labelColor.value.value)
+                .style(
+                    "font-size",
+                    PixelConverter.fromPoint(model.settings.labels.font.fontSize.value)
+                )
+                .style("font-family", model.settings.labels.font.fontFamily.value)
+                .style("font-weight", model.settings.labels.font.bold.value ? "bold" : "normal")
+                .style("font-style", model.settings.labels.font.italic.value ? "italic" : "normal")
+                .style("text-decoration", model.settings.labels.font.underline.value ? "underline" : "none")
+                .text((d: BarData) => d.categoryLabel)
+                .append("title")
+                .text((d: BarData) => d.categoryLabel);
+        }
     }
 
-    private setUpBulletsHorizontally(bulletBody: BulletSelection<any>, model: BulletChartModel, reveresed: boolean): void {
-        let bars: BarData[] = model.bars;
-        let rects: BarRect[] = model.barRects;
-        let valueRects: BarValueRect[] = model.valueRects;
-        let targetValues: TargetValue[] = model.targetValues;
-        let barSelection: BulletSelection<any> = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
-        let rectSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.range").data(rects, (d: BarRect) => d.key);
-        // Draw bullets
-        let bullets: BulletSelection<any> = rectSelection
-            .enter()
-            .append("rect")
-            .merge(rectSelection);
+    private setUpBulletsHorizontally(
+        model: BulletChartModel,
+        reversed: boolean,
+    ): void {
+        const bars: BarData[] = model.bars;
+        const rects: BarRect[] = model.barRects;
+        const valueRects: BarValueRect[] = model.valueRects;
+        const targetValues: TargetValue[] = model.targetValues;
+        const barSelection: BulletSelection<any> = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
 
-        bullets
-            .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))))
+        const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
+        const groupedBulletsSelection = this.bulletGraphicsContext
+            .selectAll(`g.${BulletChart.BulletContainerSelector.className}`)
+            .data(groupedBullets)
+            .join("g")
+            .classed(BulletChart.BulletContainerSelector.className, true)
+            .attr("focusable", true)
+            .attr("tabindex", 0);
+
+        const bullets = groupedBulletsSelection
+            .selectAll("rect.range")
+            .data(d => d[1])
+            .join("rect")
+            .classed("range", true)
+            .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y)))
             .attr("width", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
             .attr("height", BulletChart.BulletSize)
             .classed("range", true)
+            .classed(HtmlSubSelectableClass, this.formatMode)
+            .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
+            .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
             .style("fill", (d: BarRect) => d.fillColor)
             .style("stroke", (d: BarRect) => d.strokeColor)
             .style("stroke-width", (d: BarRect) => d.strokeWidth);
 
-        rectSelection.exit();
-
         // Draw value rects
-        let valueSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
-        let valueSelectionMerged = valueSelection
-            .enter()
-            .append("rect")
-            .merge(valueSelection);
-
-        valueSelectionMerged
-            .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reveresed))))
+        const valueSelection: BulletSelection<any> = this.bulletGraphicsContext
+            .selectAll("rect.value")
+            .data(valueRects, (d: BarValueRect) => d.key)
+            .join("rect")
+            .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
             .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y + BulletChart.bulletMiddlePosition)))
             .attr("width", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
             .attr("height", BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4)
             .classed("value", true)
+            .classed(HtmlSubSelectableClass, this.formatMode)
+            .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Bullet.name)
+            .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Bullet.displayName)
             .style("fill", (d: BarValueRect) => d.fillColor)
             .style("stroke", (d: BarValueRect) => d.strokeColor)
             .style("stroke-width", (d: BarValueRect) => d.strokeWidth);
 
-        valueSelection.exit();
         // Draw markers
         this.drawFirstTargets(targetValues,
-            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reveresed) + d.value,
-            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reveresed) + d.value,
+            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value,
+            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value,
             (d: TargetValue) => bars[d.barIndex].y + BulletChart.MarkerMarginHorizontal,
             (d: TargetValue) => bars[d.barIndex].y + BulletChart.MarkerMarginHorizontalEnd);
 
         this.drawSecondTargets(
             targetValues,
-            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reveresed) + d.value2,
+            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value2,
             (d: TargetValue) => bars[d.barIndex].y + BulletChart.BulletSize / BulletChart.value2);
 
-        this.drawAxesLabels(model, reveresed);
-        let measureUnitsText = TextMeasurementService.getTailoredTextOrDefault(
-            BulletChart.getTextProperties(model.settings.axis.measureUnits, BulletChart.DefaultSubtitleFontSizeInPt),
+        this.drawAxisAndLabelsForHorizontalOrientation(model, reversed);
+        const measureUnitsText = TextMeasurementService.getTailoredTextOrDefault(
+            BulletChart.getTextProperties(model.settings.axis.measureUnits.value, BulletChart.DefaultSubtitleFontSizeInPt),
             BulletChart.MaxMeasureUnitWidth);
         // Draw measure label
-        if (model.settings.axis.measureUnits) {
+        if (model.settings.axis.measureUnits.value) {
             barSelection
-                .enter()
-                .append("text")
-                .merge(barSelection)
+                .join("text")
+                .classed(BulletChart.MeasureUnitsSelector.className, true)
                 .attr("x", ((d: BarData) => {
-                    if (reveresed)
+                    if (reversed)
                         return BulletChart.XMarginHorizontalLeft + BulletChart.XMarginHorizontalRight + model.viewportLength + BulletChart.SubtitleMargin;
                     return d.x - BulletChart.SubtitleMargin;
                 }))
                 .attr("y", ((d: BarData) => d.y + this.data.labelHeight / BulletChart.value2 + BulletChart.value12 + BulletChart.BulletSize / 2))
-                .attr("fill", model.settings.axis.unitsColor)
+                .attr("fill", model.settings.axis.unitsColor.value.value)
                 .attr("font-size", PixelConverter.fromPoint(BulletChart.DefaultSubtitleFontSizeInPt))
                 .text(measureUnitsText);
         }
+
         if (this.interactivityService) {
-            let targetCollection = this.data.barRects.concat(this.data.valueRects);
-            let behaviorOptions: BulletBehaviorOptions = {
+            const targetCollection = this.data.barRects.concat(this.data.valueRects);
+            const behaviorOptions: BulletBehaviorOptions = {
                 rects: bullets,
-                valueRects: valueSelectionMerged,
+                groupedRects: groupedBulletsSelection,
+                valueRects: valueSelection,
                 clearCatcher: this.clearCatcher,
                 interactivityService: this.interactivityService,
                 bulletChartSettings: this.data.settings,
@@ -844,173 +1110,238 @@ export class BulletChart implements IVisual {
 
             this.interactivityService.bind(behaviorOptions);
         }
-        barSelection.exit();
-        this.tooltipServiceWrapper.addTooltip(
-            valueSelectionMerged,
-            (data: TooltipEnabledDataPoint) => data.tooltipInfo);
-        this.tooltipServiceWrapper.addTooltip(
-          bullets,
-          (data: TooltipEnabledDataPoint) => data.tooltipInfo
-        );
+
+        this.tooltipServiceWrapper.addTooltip(valueSelection, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(bullets, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
     }
+
     private static value3: number = 3;
     private static value10: number = 10;
 
-    private drawAxes(model: BulletChartModel, reveresed: boolean, labelsStartPos) {
-      let bars: BarData[] = model.bars;
-      let barSelection: BulletSelection<any> = this.labelGraphicsContext
-        .selectAll("text")
-        .data(bars, (d: BarData) => d.key);
-      if (model.settings.axis.axis) {
-        const axisColor = model.settings.axis.axisColor;
+    private drawAxisAndLabelsForVerticalOrientation(model: BulletChartModel, reversed: boolean, labelsStartPosition: number) {
+        const bars: BarData[] = model.bars;
+        const barSelection: BulletSelection<any> = this.labelGraphicsContext
+            .selectAll("text")
+            .data(bars, (d: BarData) => d.key);
 
-        // Using var instead of let since you can't pass let parameters to functions inside loops.
-        // needs to be changed to let when typescript 1.8 comes out.
-        for (let idx = 0; idx < bars.length; idx++) {
-          let bar = bars[idx];
-          this.bulletGraphicsContext
+        if (model.settings.axis.axis.value) {
+            const axisColor = model.settings.axis.axisColor.value.value;
+
+            if (model.settings.syncAxis.showMainAxis.value) {
+                const mainBar = bars[0];
+                this.renderAxisVertically(mainBar, reversed, axisColor);
+            } else {
+                for (let idx = 0; idx < bars.length; idx++) {
+                    const bar = bars[idx];
+                    this.renderAxisVertically(bar, reversed, axisColor);
+                }
+            }
+
+            this.bulletGraphicsContext
+                .selectAll("g.axis path")
+                .style("stroke", axisColor);
+
+            this.bulletGraphicsContext
+                .selectAll(".tick line")
+                .style("stroke", axisColor);
+
+            this.bulletGraphicsContext
+                .selectAll(".tick text")
+                .style("fill", axisColor);
+
+            this.bulletGraphicsContext
+                .selectAll("g.axis > .tick text")
+                .call(
+                    AxisHelper.LabelLayoutStrategy.clip,
+                    BulletChart.XMarginVertical - BulletChart.value10,
+                    TextMeasurementService.svgEllipsis
+                );
+        }
+
+        // Draw Labels
+        if (model.settings.labels.show.value) {
+            barSelection
+                .join("text")
+                .classed(BulletChart.CategoryLabelsSelector.className, true)
+                .classed(HtmlSubSelectableClass, this.formatMode)
+                .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Labels.name)
+                .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Labels.displayName)
+                .attr(SubSelectableTypeAttribute, SubSelectionStylesType.Text)
+                .attr("x", (d: BarData) => d.x)
+                .attr("y", () => {
+                    return labelsStartPosition;
+                })
+                .style("fill", model.settings.labels.labelColor.value.value)
+                .style(
+                    "font-size",
+                    PixelConverter.fromPoint(model.settings.labels.font.fontSize.value)
+                )
+                .style("font-family", model.settings.labels.font.fontFamily.value)
+                .style("font-weight", model.settings.labels.font.bold.value ? "bold" : "normal")
+                .style("font-style", model.settings.labels.font.italic.value ? "italic" : "normal")
+                .style("text-decoration", model.settings.labels.font.underline.value ? "underline" : "none")
+                .text((d: BarData) => d.categoryLabel)
+                .append("title")
+                .text((d: BarData) => d.categoryLabel);
+        }
+    }
+
+    private renderAxisVertically(bar: BarData, reversed: boolean, axisColor: string) {
+        this.bulletGraphicsContext
             .append("g")
             .attr("transform", () => {
-              let xLocation: number = bar.x;
-              let yLocation: number = this.calculateLabelHeight(
-                bar,
-                null,
-                reveresed
-              );
-              return "translate(" + xLocation + "," + yLocation + ")";
+                const xLocation: number = bar.x;
+                const yLocation: number = this.calculateLabelHeight(
+                    bar,
+                    null,
+                    reversed
+                );
+                return `translate(${xLocation},${yLocation})`;
             })
-            .classed("axis", true)
+            .classed(BulletChart.AxisSelector.className, true)
+            .classed(HtmlSubSelectableClass, this.formatMode && this.visualSettings.axis.axis.value)
+            .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Axis.name)
+            .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Axis.displayName)
             .call(bar.xAxisProperties.axis)
-            .style("fill", axisColor)
             .style(
-              "font-size",
-              PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
+                "font-size",
+                PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
             )
             .selectAll("line")
             .style("stroke", axisColor);
-        }
-
-        this.bulletGraphicsContext
-          .selectAll("g.axis path")
-          .style("stroke", axisColor);
-
-        this.bulletGraphicsContext
-          .selectAll(".tick line")
-          .style("stroke", axisColor);
-
-        this.bulletGraphicsContext
-          .selectAll(".tick text")
-          .style("fill", axisColor);
-
-        this.bulletGraphicsContext
-          .selectAll("g.axis > .tick text")
-          .call(
-            AxisHelper.LabelLayoutStrategy.clip,
-            BulletChart.XMarginVertical - BulletChart.value10,
-            TextMeasurementService.svgEllipsis
-          );
-      }
-
-      // Draw Labels
-      if (model.settings.labels.show) {
-        barSelection
-          .enter()
-          .append("text")
-          .merge(barSelection)
-          .classed("title", true)
-          .attr("x", (d: BarData) => d.x)
-          .attr("y", (d: BarData) => {
-            return labelsStartPos;
-          })
-          .attr("fill", model.settings.labels.labelColor)
-          .attr(
-            "font-size",
-            PixelConverter.fromPoint(model.settings.labels.fontSize)
-          )
-          .text((d: BarData) => d.categoryLabel)
-          .append("title")
-          .text((d: BarData) => d.categoryLabel);
-      }
     }
 
-    private setUpBulletsVertically(bulletBody: BulletSelection<any>, model: BulletChartModel, reveresed: boolean) {
-        let bars: BarData[] = model.bars;
-        let rects: BarRect[] = model.barRects;
-        let valueRects: BarValueRect[] = model.valueRects;
-        let targetValues: TargetValue[] = model.targetValues;
-        let barSelection: BulletSelection<any> = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
-        let rectSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.range").data(rects, (d: BarRect) => d.key);
+    private renderAxisHorizontally(bar: BarData, reversed: boolean, axisColor: string) {
+        const barGroup = this.bulletGraphicsContext.append("g");
 
-        // Draw bullets
-        let bullets: BulletSelection<any> = rectSelection
-            .enter()
-            .append("rect")
-            .merge(rectSelection);
+        barGroup
+            .append("g")
+            .attr("transform", () => {
+                const xLocation: number = this.calculateLabelWidth(
+                    bar,
+                    null,
+                    reversed
+                );
+                const yLocation: number = bar.y + BulletChart.BulletSize;
 
-        bullets
+                return `translate(${xLocation},${yLocation})`;
+            })
+            .classed(BulletChart.AxisSelector.className, true)
+            .classed(HtmlSubSelectableClass, this.formatMode && this.visualSettings.axis.axis.value)
+            .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Axis.name)
+            .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Axis.displayName)
+            .call(bar.xAxisProperties.axis)
+            .style(
+                "font-size",
+                PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
+            )
+            .selectAll("line")
+            .style("stroke", axisColor);
+
+        barGroup.selectAll("path.bullet").style("stroke", axisColor);
+
+        barGroup.selectAll(".tick line").style("stroke", axisColor);
+
+        barGroup.selectAll(".tick text").style("fill", axisColor);
+
+        barGroup
+            .selectAll(".tick text")
+            .call(
+                AxisHelper.LabelLayoutStrategy.clip,
+                bar.xAxisProperties.xLabelMaxWidth,
+                TextMeasurementService.svgEllipsis
+            );
+    }
+
+    private setUpBulletsVertically(
+        model: BulletChartModel,
+        reversed: boolean,
+    ) {
+        const bars: BarData[] = model.bars;
+        const rects: BarRect[] = model.barRects;
+        const valueRects: BarValueRect[] = model.valueRects;
+        const targetValues: TargetValue[] = model.targetValues;
+        const barSelection: BulletSelection<any> = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
+
+        const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
+        const groupedBulletsSelection = this.bulletGraphicsContext
+            .selectAll(`g.${BulletChart.BulletContainerSelector.className}`)
+            .data(groupedBullets)
+            .join("g")
+            .classed(BulletChart.BulletContainerSelector.className, true)
+            .attr("focusable", true)
+            .attr("tabindex", 0);
+
+        const bullets = groupedBulletsSelection
+            .selectAll("rect.range")
+            .data(d => d[1])
+            .join("rect")
+            .classed("range", true)
             .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x)))
-            .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reveresed))))
+            .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
             .attr("height", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
             .attr("width", BulletChart.BulletSize)
             .classed("range", true)
             .style("fill", (d: BarRect) => d.fillColor)
-            .attr("stroke", (d: BarRect) => d.strokeColor)
-            .attr("stroke-width", (d: BarRect) => d.strokeWidth);
-
-        rectSelection.exit();
+            .classed(HtmlSubSelectableClass, this.formatMode)
+            .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
+            .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
+            .style("stroke", (d: BarRect) => d.strokeColor)
+            .style("stroke-width", (d: BarRect) => d.strokeWidth);
 
         // Draw value rects
-        let valueSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
-        let valueSelectionMerged = valueSelection
-            .enter()
-            .append("rect")
-            .merge(valueSelection)
+        const valueSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
+
+        const valueSelectionMerged = valueSelection
+            .join("rect")
             .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + BulletChart.bulletMiddlePosition)))
-            .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reveresed))))
+            .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
             .attr("height", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
             .attr("width", BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4)
             .classed("value", true)
+            .classed(HtmlSubSelectableClass, this.formatMode)
+            .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Bullet.name)
+            .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Bullet.displayName)
             .style("fill", (d: BarValueRect) => d.fillColor)
             .attr("stroke", (d: BarRect) => d.strokeColor)
             .attr("stroke-width", (d: BarRect) => d.strokeWidth);
 
-        valueSelection.exit();
         // Draw markers
         this.drawFirstTargets(
             targetValues,
             (d: TargetValue) => bars[d.barIndex].x + BulletChart.MarkerMarginVertical,
             (d: TargetValue) => bars[d.barIndex].x + (BulletChart.MarkerMarginVertical * BulletChart.value3),
-            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reveresed) + d.value,
-            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reveresed) + d.value);
+            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value,
+            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value);
         this.drawSecondTargets(targetValues,
             (d: TargetValue) => bars[d.barIndex].x + BulletChart.BulletSize / BulletChart.value2,
-            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reveresed) + d.value2);
-        let labelsStartPos: number =
+            (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value2);
+        const labelsStartPos: number =
             BulletChart.YMarginVertical +
-            (reveresed ? model.viewportLength + 15 : 0) +
+            (reversed ? model.viewportLength + 15 : 0) +
             this.data.labelHeightTop;
-        this.drawAxes(model, reveresed, labelsStartPos);
-        let measureUnitsText: string = TextMeasurementService.getTailoredTextOrDefault(
-            BulletChart.getTextProperties(model.settings.axis.measureUnits, BulletChart.DefaultSubtitleFontSizeInPt),
+        this.drawAxisAndLabelsForVerticalOrientation(model, reversed, labelsStartPos);
+        const measureUnitsText: string = TextMeasurementService.getTailoredTextOrDefault(
+            BulletChart.getTextProperties(model.settings.axis.measureUnits.value, BulletChart.DefaultSubtitleFontSizeInPt),
             BulletChart.MaxMeasureUnitWidth);
         // Draw measure label
-        if (model.settings.axis.measureUnits) {
+        if (model.settings.axis.measureUnits.value) {
             barSelection
-                .enter()
-                .append("text")
-                .merge(barSelection)
+                .join("text")
+                .classed(BulletChart.MeasureUnitsSelector.className, true)
                 .attr("x", ((d: BarData) => d.x + BulletChart.BulletSize))
-                .attr("y", ((d: BarData) => {
+                .attr("y", () => {
                     return labelsStartPos + BulletChart.SubtitleMargin + BulletChart.value12;
-                }))
-                .attr("fill", model.settings.axis.unitsColor)
+                })
+                .attr("fill", model.settings.axis.unitsColor.value.value)
                 .attr("font-size", PixelConverter.fromPoint(BulletChart.DefaultSubtitleFontSizeInPt))
                 .text(measureUnitsText);
         }
         if (this.interactivityService) {
-            let targetCollection: BarRect[] = this.data.barRects.concat(this.data.valueRects);
-            let behaviorOptions: BulletBehaviorOptions = {
+            const targetCollection: BarRect[] = this.data.barRects.concat(this.data.valueRects);
+            const behaviorOptions: BulletBehaviorOptions = {
                 rects: bullets,
+                groupedRects: groupedBulletsSelection,
                 valueRects: valueSelectionMerged,
                 clearCatcher: this.clearCatcher,
                 interactivityService: this.interactivityService,
@@ -1022,13 +1353,8 @@ export class BulletChart implements IVisual {
 
             this.interactivityService.bind(behaviorOptions);
         }
-        barSelection.exit();
-        this.tooltipServiceWrapper.addTooltip(
-            valueSelectionMerged,
-            (tooltipEvent: TooltipEventArgs<TooltipEnabledDataPoint>) => tooltipEvent.data.tooltipInfo);
-        this.tooltipServiceWrapper.addTooltip(
-            bullets,
-            (tooltipEvent: TooltipEventArgs<TooltipEnabledDataPoint>) => tooltipEvent.data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(valueSelectionMerged, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(bullets, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
     }
 
     private drawFirstTargets(
@@ -1038,11 +1364,11 @@ export class BulletChart implements IVisual {
         y1: (d: TargetValue) => number,
         y2: (d: TargetValue) => number) {
 
-        let selection = this.bulletGraphicsContext
+        const selection = this.bulletGraphicsContext
             .selectAll("line.target")
             .data(targetValues.filter(x => lodashIsnumber(x.value)));
 
-        let selectionMerged = selection
+        const selectionMerged = selection
             .enter()
             .append("line")
             .merge(<BulletSelection<any>>selection);
@@ -1066,109 +1392,379 @@ export class BulletChart implements IVisual {
         getX: (d: TargetValue) => number,
         getY: (d: TargetValue) => number): void {
 
-        let selection = this.bulletGraphicsContext
+        const selection = this.bulletGraphicsContext
             .selectAll("line.target2")
             .data(targetValues.filter(x => lodashIsnumber(x.value2)));
-        let enterSelection = selection.enter();
-
-        let targetStyle = {
-            "stroke": ((d: TargetValue) => d.fill),
-            "stroke-width": 2
-        };
-
-        let enterSelectionMinus = enterSelection
-          .append("line")
-          .merge((<BulletSelection<any>>selection))
-          .attr(
-            "x1",
-            (d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize
-          )
-          .attr(
-            "y1",
-            (d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize
-          )
-          .attr(
-            "x2",
-            (d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize
-          )
-          .attr(
-            "y2",
-            (d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize
-          )
-          .style("stroke", (d: TargetValue) => d.fill)
-          .style("stroke-width", 2)
-          .classed("target2", true);
-
-        let enterSelectionPlus = enterSelection
-          .append("line")
-          .merge(<BulletSelection<any>>selection)
-          .attr(
-            "x1",
-            (d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize
-          )
-          .attr(
-            "y1",
-            (d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize
-          )
-          .attr(
-            "x2",
-            (d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize
-          )
-          .attr(
-            "y2",
-            (d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize
-          )
-          .style("stroke", (d: TargetValue) => d.fill)
-          .style("stroke-width", 2)
-          .classed("target2", true);
-
+        const enterSelection = selection.enter();
+        enterSelection
+            .append("line")
+            .merge((<BulletSelection<any>>selection))
+            .attr(
+                "x1",
+                (d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize
+            )
+            .attr(
+                "y1",
+                (d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize
+            )
+            .attr(
+                "x2",
+                (d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize
+            )
+            .attr(
+                "y2",
+                (d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize
+            )
+            .style("stroke", (d: TargetValue) => d.fill)
+            .style("stroke-width", 2)
+            .classed("target2", true);
+        enterSelection
+            .append("line")
+            .merge(<BulletSelection<any>>selection)
+            .attr(
+                "x1",
+                (d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize
+            )
+            .attr(
+                "y1",
+                (d: TargetValue) => getY(d) - BulletChart.SecondTargetLineSize
+            )
+            .attr(
+                "x2",
+                (d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize
+            )
+            .attr(
+                "y2",
+                (d: TargetValue) => getY(d) + BulletChart.SecondTargetLineSize
+            )
+            .style("stroke", (d: TargetValue) => d.fill)
+            .style("stroke-width", 2)
+            .classed("target2", true);
         selection
             .exit()
             .remove();
     }
 
     // About to remove your visual, do clean up here
-    public destroy() { }
+    public destroy() {
+    }
+
+    public getFormattingModel(): powerbi.visuals.FormattingModel {
+        return this.formattingSettingsService.buildFormattingModel(this.visualSettings);
+    }
+
+    private getSubSelectionStyles(subSelections: CustomVisualSubSelection[]) {
+        const visualObjects = subSelections[0]?.customVisualObjects;
+        if (!visualObjects) {
+            return undefined;
+        }
+
+        let visualObject: CustomVisualObject;
+        if (visualObjects.length > 0 && visualObjects[0] != null) {
+            visualObject = visualObjects[0];
+        } else {
+            return undefined;
+        }
+
+        switch (visualObject.objectName) {
+            case BulletChartObjectNames.Labels.name:
+                return this.getLabelsStyles();
+            case BulletChartObjectNames.Axis.name:
+                return this.getAxisStyles();
+                // colors
+            case BulletChartObjectNames.Minimum.name:
+                return this.getMinimumStyles();
+            case BulletChartObjectNames.NeedsImprovement.name:
+                return this.getNeedsImprovementStyles();
+            case BulletChartObjectNames.Satisfactory.name:
+                return this.getSatisfactoryStyles();
+            case BulletChartObjectNames.Good.name:
+                return this.getGoodStyles();
+            case BulletChartObjectNames.VeryGood.name:
+                return this.getVeryGoodStyles();
+            case BulletChartObjectNames.Bullet.name:
+                return this.getBulletStyles();
+            default:
+                return undefined;
+        }
+    }
+
+    private getSubSelectionShortcuts(subSelections: powerbi.visuals.CustomVisualSubSelection[]) {
+        const visualObjects = subSelections[0]?.customVisualObjects;
+        if (!visualObjects) {
+            return undefined;
+        }
+
+        let visualObject: CustomVisualObject;
+        if (visualObjects.length > 0 && visualObjects[0] != null) {
+            visualObject = visualObjects[0];
+        } else {
+            return undefined;
+        }
+
+        switch (visualObject.objectName) {
+            case BulletChartObjectNames.Labels.name:
+                return this.getLabelsShortcuts();
+            case BulletChartObjectNames.Axis.name:
+                return this.getAxisShortcuts();
+            case BulletChartObjectNames.Minimum.name:
+            case BulletChartObjectNames.NeedsImprovement.name:
+            case BulletChartObjectNames.Satisfactory.name:
+            case BulletChartObjectNames.Good.name:
+            case BulletChartObjectNames.VeryGood.name:
+            case BulletChartObjectNames.Bullet.name:
+                return this.getColorsShortcuts();
+            default:
+                return undefined;
+        }
+    }
+
+    private getSubSelectables(filter?: powerbi.visuals.SubSelectionStylesType): CustomVisualSubSelection[] | undefined {
+        return this.subSelectionHelper.getAllSubSelectables(filter);
+    }
+
+    private getLabelsStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Text,
+            fontFamily: {
+                reference: { ...labelsReference.fontFamily },
+                label: labelsReference.fontFamily.propertyName
+            },
+            bold: {
+                reference: { ...labelsReference.bold },
+                label: labelsReference.bold.propertyName
+            },
+            italic: {
+                reference: { ...labelsReference.italic },
+                label: labelsReference.italic.propertyName
+            },
+            underline: {
+                reference: { ...labelsReference.underline },
+                label: labelsReference.underline.propertyName
+            },
+            fontSize: {
+                reference: { ...labelsReference.fontSize },
+                label: labelsReference.fontSize.propertyName
+            },
+            fontColor: {
+                reference: { ...labelsReference.labelColor },
+                label: labelsReference.labelColor.propertyName
+            }
+        };
+    }
+
+    private getAxisStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...axisReference.axisColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_AxisColor"),
+            },
+        }
+    }
+
+    private getMinimumStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...colorsReference.minColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_MinimumColor"),
+            }
+        }
+    }
+
+    private getNeedsImprovementStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...colorsReference.needsImprovementColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_NeedsImprovementColor"),
+            }
+        }
+    }
+
+    private getSatisfactoryStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...colorsReference.satisfactoryColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_SatisfactoryColor"),
+            },
+        }
+    }
+
+    private getGoodStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                  ...colorsReference.goodColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_GoodColor")
+            },
+        }
+    }
+
+    private getVeryGoodStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...colorsReference.veryGoodColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_VeryGoodColor"),
+            },
+        }
+    }
+
+    private getBulletStyles(): SubSelectionStyles {
+        return {
+            type: SubSelectionStylesType.Shape,
+            fill: {
+                reference: {
+                    ...colorsReference.bulletColor,
+                },
+                label: this.localizationManager.getDisplayName("Visual_Colors_BulletColor"),
+            },
+        }
+    }
+
+
+    private getLabelsShortcuts(): VisualSubSelectionShortcuts {
+        return [
+            {
+                type: VisualShortcutType.Reset,
+                relatedResetFormattingIds: [
+                    labelsReference.bold,
+                    labelsReference.fontFamily,
+                    labelsReference.fontSize,
+                    labelsReference.italic,
+                    labelsReference.underline,
+                    labelsReference.labelColor
+                ]
+            },
+            {
+                type: VisualShortcutType.Toggle,
+                ...labelsReference.show,
+                disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_DeleteLabels"),
+                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_AddLabels"),
+            },
+            {
+                type: VisualShortcutType.Divider,
+            },
+            {
+                type: VisualShortcutType.Navigate,
+                destinationInfo: { cardUid: labelsReference.cardUid },
+                label: this.localizationManager.getDisplayName("Visual_OnObject_FormatLabels")
+            }
+        ];
+    }
+
+    private getAxisShortcuts(): VisualSubSelectionShortcuts {
+        return [
+            {
+                type: VisualShortcutType.Reset,
+                relatedResetFormattingIds: [axisReference.axis, axisReference.axisColor, axisReference.syncAxis, axisReference.showMainAxis, axisReference.orientation],
+            },
+            {
+                type: VisualShortcutType.Toggle,
+                ...axisReference.axis,
+                disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_HideAxis"),
+                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowAxis"),
+            },
+            {
+                type: VisualShortcutType.Toggle,
+                ...axisReference.syncAxis,
+                disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_DoNotSyncAxis"),
+                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_SyncAxis"),
+            },
+            {
+                type: VisualShortcutType.Toggle,
+                ...axisReference.showMainAxis,
+                disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_HideMainAxis"),
+                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowMainAxis"),
+            },
+            {
+                type: VisualShortcutType.Picker,
+                ...axisReference.orientation,
+                label: this.localizationManager.getDisplayName("Visual_Orientation"),
+            },
+            {
+                type: VisualShortcutType.Divider,
+            },
+            {
+                type: VisualShortcutType.Navigate,
+                destinationInfo: { cardUid: axisReference.cardUid },
+                label: this.localizationManager.getDisplayName("Visual_OnObject_FormatAxis"),
+            }
+        ];
+    }
+
+    private getColorsShortcuts(): VisualSubSelectionShortcuts {
+        return [
+            {
+                type: VisualShortcutType.Reset,
+                relatedResetFormattingIds: [
+                    colorsReference.minColor,
+                    colorsReference.needsImprovementColor,
+                    colorsReference.satisfactoryColor,
+                    colorsReference.goodColor,
+                    colorsReference.veryGoodColor,
+                    colorsReference.bulletColor
+                ]
+            },
+            {
+                type: VisualShortcutType.Divider,
+            },
+            {
+                type: VisualShortcutType.Navigate,
+                destinationInfo: { cardUid: colorsReference.cardUid },
+                label: this.localizationManager.getDisplayName("Visual_OnObject_FormatColors")
+            },
+        ]
+    }
 }
-export module TextMeasurementHelper {
 
-    interface CanvasContext {
-        font: string;
-        measureText(text: string): { width: number };
-    }
 
-    interface CanvasElement extends HTMLElement {
-        getContext(name: string);
-    }
+interface CanvasElement extends HTMLElement {
+    getContext(name: string);
+}
 
-    let spanElement: HTMLElement;
-    let svgTextElement: BulletSelection<any>;
-    let canvasCtx: CanvasContext;
+class TextMeasurementHelper {
+    static estimateSvgTextBaselineDelta(textProperties: TextProperties): number {
+        const estimatedTextProperties: TextProperties = {
+            fontFamily: textProperties.fontFamily,
+            fontSize: textProperties.fontSize,
+            text: "M",
+        };
 
-    export function estimateSvgTextBaselineDelta(textProperties: TextProperties): number {
-        let rect = estimateSvgTextRect(textProperties);
+        const rect = TextMeasurementHelper.measureSvgTextRect(estimatedTextProperties);
         return rect.y + rect.height;
     }
 
-    function ensureDOM(): void {
-        if (spanElement)
-            return;
-
+    private static measureSvgTextRect(textProperties: TextProperties): SVGRect {
         select("body").append("span");
+
         // The style hides the svg element from the canvas, preventing canvas from scrolling down to show svg black square.
-        svgTextElement = select("body")
+        const svgTextElement = select("body")
             .append("svg")
             .style("height", "0px")
             .style("width", "0px")
             .style("position", "absolute")
             .append("text");
 
-        canvasCtx = (<CanvasElement>document.createElement("canvas")).getContext("2d");
-    }
-
-    function measureSvgTextRect(textProperties: TextProperties): SVGRect {
-
-        ensureDOM();
+        const canvasCtx = (<CanvasElement>document.createElement("canvas")).getContext("2d");
+        if (canvasCtx == null) {
+            console.error("canvas was not created");
+        }
 
         svgTextElement.style(null);
         svgTextElement
@@ -1184,14 +1780,6 @@ export module TextMeasurementHelper {
         // We're using SVGTextElement because it works across all browsers
         return svgTextElement.node().getBBox();
     }
-
-    function estimateSvgTextRect(textProperties: TextProperties): SVGRect {
-        let estimatedTextProperties: TextProperties = {
-            fontFamily: textProperties.fontFamily,
-            fontSize: textProperties.fontSize,
-            text: "M",
-        };
-
-        return measureSvgTextRect(estimatedTextProperties);
-    }
 }
+
+

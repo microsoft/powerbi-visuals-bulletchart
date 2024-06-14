@@ -63,61 +63,43 @@
     ],
     "objects": {
         "values": {
-            "displayName": "Data values",
-            "displayNameKey": "Visual_DataValues",
             "properties": {
                 "targetValue": {
-                    "displayName": "Target Value",
-                    "displayNameKey": "Visual_DataValues_TargetValue",
                     "type": {
                         "numeric": true
                     }
                 },
                 "targetValue2": {
-                    "displayName": "Target Value 2",
-                    "displayNameKey": "Visual_DataValues_TargetValue2",
                     "type": {
                         "numeric": true
                     }
                 },
                 "minimumPercent": {
-                    "displayName": "Minimum %",
-                    "displayNameKey": "Visual_DataValues_MinimumPercent",
                     "type": {
                         "numeric": true
                     }
                 },
                 "needsImprovementPercent": {
-                    "displayName": "Needs Improvement %",
-                    "displayNameKey": "Visual_DataValues_NeedsImprovementPercent",
                     "type": {
                         "numeric": true
                     }
                 },
                 "satisfactoryPercent": {
-                    "displayName": "Satisfactory %",
-                    "displayNameKey": "Visual_DataValues_SatisfactoryPercent",
                     "type": {
                         "numeric": true
                     }
                 },
                 "goodPercent": {
-                    "displayName": "Good %",
-                    "displayNameKey": "Visual_DataValues_GoodPercent",
                     "type": {
                         "numeric": true
                     }
                 },
                 "veryGoodPercent": {
-                    "displayName": "Very Good %",
-                    "displayNameKey": "Visual_DataValues_VeryGoodPercent",
                     "type": {
                         "numeric": true
                     }
                 },
                 "maximumPercent": {
-                    "displayName": "Maximum %",
-                    "displayNameKey": "Visual_DataValues_MaximumPercent",
                     "type": {
                         "numeric": true
                     }
@@ -125,26 +107,18 @@
             }
         },
         "tooltips": {
-            "displayName": "Tooltips",
-            "displayNameKey": "Visual_Tooltips",
             "properties": {
                 "valueCustomName": {
-                    "displayName": "\"Value\" custom name",
-                    "displayNameKey": "Visual_ValueCustomName",
                     "type": {
                         "text": true
                     }
                 },
                 "targetCustomName": {
-                    "displayName": "\"Target Value\" custom name",
-                    "displayNameKey": "Visual_TargetValueCustomName",
                     "type": {
                         "text": true
                     }
                 },
                 "target2CustomName": {
-                    "displayName": "\"Target Value 2\" custom name",
-                    "displayNameKey": "Visual_TargetValue2CustomName",
                     "type": {
                         "text": true
                     }
@@ -152,21 +126,13 @@
             }
         },
         "labels": {
-            "displayName": "Category labels",
-            "displayNameKey": "Visual_CategoryLabels",
             "properties": {
                 "show": {
-                    "displayName": "Show",
-                    "displayNameKey": "Visual_Show",
                     "type": {
                         "bool": true
                     }
                 },
                 "labelColor": {
-                    "displayName": "color",
-                    "displayNameKey": "Visual_Color",
-                    "description": "Select color for data labels",
-                    "descriptionKey": "Visual_Description_Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -175,61 +141,57 @@
                         }
                     }
                 },
+                "maxWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "fontSize": {
-                    "displayName": "Text Size",
-                    "displayNameKey": "Visual_TextSize",
                     "type": {
                         "formatting": {
                             "fontSize": true
                         }
                     }
                 },
-                "maxWidth": {
-                    "displayName": "Maximum width",
-                    "displayNameKey": "Visual_MaxWidth",
+                "fontFamily": {
                     "type": {
-                        "numeric": true
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "fontBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontUnderline": {
+                    "type": {
+                        "bool": true
                     }
                 }
             }
         },
         "orientation": {
-            "displayName": "Orientation",
-            "displayNameKey": "Visual_Orientation",
             "properties": {
                 "orientation": {
-                    "displayName": "Orientation",
-                    "displayNameKey": "Visual_Orientation",
                     "type": {
                         "enumeration": [
-                            {
-                                "value": "HorizontalLeft",
-                                "displayNameKey": "Visual_Orientation_HorizontalLeft",
-                                "displayName": "Horizontal Left"
-                            },
-                            {
-                                "value": "HorizontalRight",
-                                "displayNameKey": "Visual_Orientation_HorizontalRight",
-                                "displayName": "Horizontal Right"
-                            },
-                            {
-                                "value": "VerticalTop",
-                                "displayNameKey": "Visual_Orientation_VerticalTop",
-                                "displayName": "Vertical Top"
-                            },
-                            {
-                                "value": "VerticalBottom",
-                                "displayNameKey": "Visual_Orientation_VerticalBottom",
-                                "displayName": "Vertical Bottom"
-                            }
+                            { "value": "HorizontalLeft" },
+                            { "value": "HorizontalRight" },
+                            { "value": "VerticalTop" },
+                            { "value": "VerticalBottom" }
                         ]
                     }
                 }
             }
         },
         "colors": {
-            "displayName": "Colors",
-            "displayNameKey": "Visual_Colors",
             "properties": {
                 "minColor": {
                     "type": {
@@ -238,9 +200,7 @@
                                 "color": true
                             }
                         }
-                    },
-                    "displayName": "Minimum color",
-                    "displayNameKey": "Visual_Colors_MinimumColor"
+                    }
                 },
                 "needsImprovementColor": {
                     "type": {
@@ -249,9 +209,7 @@
                                 "color": true
                             }
                         }
-                    },
-                    "displayName": "Needs Improvement color",
-                    "displayNameKey": "Visual_Colors_NeedsImprovementColor"
+                    }
                 },
                 "satisfactoryColor": {
                     "type": {
@@ -260,9 +218,7 @@
                                 "color": true
                             }
                         }
-                    },
-                    "displayName": "Satisfactory color",
-                    "displayNameKey": "Visual_Colors_SatisfactoryColor"
+                    }
                 },
                 "goodColor": {
                     "type": {
@@ -271,9 +227,7 @@
                                 "color": true
                             }
                         }
-                    },
-                    "displayName": "Good color",
-                    "displayNameKey": "Visual_Colors_GoodColor"
+                    }
                 },
                 "veryGoodColor": {
                     "type": {
@@ -282,9 +236,7 @@
                                 "color": true
                             }
                         }
-                    },
-                    "displayName": "Very Good color",
-                    "displayNameKey": "Visual_Colors_VeryGoodColor"
+                    }
                 },
                 "bulletColor": {
                     "type": {
@@ -293,19 +245,13 @@
                                 "color": true
                             }
                         }
-                    },
-                    "displayName": "Bullet color",
-                    "displayNameKey": "Visual_Colors_BulletColor"
+                    }
                 }
             }
         },
         "axis": {
-            "displayName": "Axis",
-            "displayNameKey": "Visual_Axis",
             "properties": {
                 "axis": {
-                    "displayName": "Axis",
-                    "displayNameKey": "Visual_Axis",
                     "type": {
                         "bool": true
                     }
@@ -317,16 +263,12 @@
                                 "color": true
                             }
                         }
-                    },
-                    "displayName": "Axis color",
-                    "displayNameKey": "Visual_AxisColor"
+                    }
                 },
                 "measureUnits": {
                     "type": {
                         "text": true
-                    },
-                    "displayName": "Measure Units",
-                    "displayNameKey": "Visual_MeasureUnits"
+                    }
                 },
                 "unitsColor": {
                     "type": {
@@ -335,9 +277,21 @@
                                 "color": true
                             }
                         }
-                    },
-                    "displayName": "Units color",
-                    "displayNameKey": "Visual_UnitsColor"
+                    }
+                }
+            }
+        },
+        "syncAxis": {
+            "properties": {
+                "syncAxis": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showMainAxis": {
+                    "type": {
+                        "bool": true
+                    }
                 }
             }
         }
@@ -439,7 +393,11 @@
             }
         }
     ],
+    "privileges": [],
     "supportsHighlight": true,
+    "supportsKeyboardFocus": true,
+    "supportsOnObjectFormatting": true,
+    "enablePointerEventsFormatMode": true,
     "sorting": {
         "default": {}
     },

@@ -35,11 +35,11 @@ import SelectableDataPoint = interactivityService.SelectableDataPoint;
 import { axisInterfaces } from "powerbi-visuals-utils-chartutils";
 import IAxisProperties = axisInterfaces.IAxisProperties;
 
-import { BulletchartSettings } from "./settings";
+import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
 
 export interface BulletChartModel {
     bars: BarData[];
-    settings: BulletchartSettings;
+    settings: BulletChartSettingsModel;
     barRects: BarRect[];
     valueRects: BarValueRect[];
     targetValues: TargetValue[];
@@ -60,6 +60,16 @@ export interface BarData {
     key: string;
 }
 
+export enum BarRectType {
+    Minimum = "Minimum",
+    NeedsImprovement = "NeedsImprovement",
+    Satisfactory = "Satisfactory",
+    Good = "Good",
+    VeryGood = "VeryGood",
+    Bullet = "Bullet",
+}
+
+
 export interface BarRect extends SelectableDataPoint {
     barIndex: number;
     start: number;
@@ -70,6 +80,7 @@ export interface BarRect extends SelectableDataPoint {
     tooltipInfo?: VisualTooltipDataItem[];
     key: string;
     highlight?: boolean;
+    type: BarRectType;
 }
 
 export interface TargetValue {

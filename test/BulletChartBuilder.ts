@@ -33,8 +33,9 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 // powerbi.extensibility.utils.test
 import { VisualBuilderBase } from "powerbi-visuals-utils-testutils";
 
-import { BulletChart as VisualClass } from "../src/visual";
-import { BulletchartSettings as VisualSettings, BulletChartOrientation } from "../src/settings";
+import {BulletChart, BulletChart as VisualClass} from "../src/visual";
+import {BulletChartOrientation} from "../src/BulletChartOrientation";
+import {BulletChartSettingsModel} from "../src/BulletChartSettingsModel";
 
 export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	constructor(width: number, height: number) {
@@ -45,8 +46,8 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 		return new VisualClass(options);
 	}
 
-	public getSettings(): VisualSettings {
-		return new VisualSettings();
+	public getSettings(): BulletChartSettingsModel {
+		return new BulletChartSettingsModel();
 	}
 	
 	public get mainElement(): SVGElement {
@@ -72,7 +73,7 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	public get measureUnits(): NodeListOf<SVGElement> {
 		return this.mainElement
 		.querySelector("g")
-		.querySelectorAll("text:not(.title)");
+		.querySelectorAll(BulletChart.MeasureUnitsSelector.selectorName);
 	}
 
 	public get rangeRectsGrouped(): SVGElement[][] {
@@ -84,7 +85,7 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	}
 
 	public get orientation(): BulletChartOrientation {
-		return this.getSettings().orientation.orientation;
+		return this.getSettings().orientation.orientation.value.value as BulletChartOrientation;
 	}
 
 	public get isVertical(): boolean {
