@@ -1,3 +1,6 @@
+## 2.4.3
+* Fix sync axis by computing min and max category values
+
 ## 2.4.2
 * Check old enums with space like "Horizontal left" to maintain backward compatibility
 * Update API to 5.9.0

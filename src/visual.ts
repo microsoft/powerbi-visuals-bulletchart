@@ -353,6 +353,7 @@ export class BulletChart implements IVisual {
     }
 
     // Convert a DataView into a view model
+    // eslint-disable-next-line max-lines-per-function
     public CONVERTER(dataView: DataView, options: VisualUpdateOptions): BulletChartModel {
         const categorical: BulletChartColumns<
             DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns
@@ -386,10 +387,21 @@ export class BulletChart implements IVisual {
         const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
         const categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
         const length: number = categoricalValues.Value.length;
+        let categoryMinValue: number | undefined = undefined;
+        let categoryMaxValue: number | undefined = undefined;
 
+        if (this.visualSettings.syncAxis.syncAxis.value) {
+            const rangeValues = [...Array(length).keys()]
+                .map(idx => {
+                    const targetValue: number = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : this.visualSettings.values.targetValue.value;
+                    const min = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], this.visualSettings.values.minimumPercent.value, targetValue);
+                    const max = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Maximum?.[idx], this.visualSettings.values.maximumPercent.value, targetValue);
+                    return { min, max };
+                });
 
-        const categoryMinValue: number = categoricalValues.Minimum ? Math.min(...categoricalValues.Minimum) : undefined;
-        const categoryMaxValue: number = categoricalValues.Maximum ? Math.max(...categoricalValues.Maximum) : undefined;
+            categoryMinValue = Math.min(...rangeValues.map(x => x.min));
+            categoryMaxValue = Math.max(...rangeValues.map(x => x.max));
+        }
 
         for (let idx = 0; idx < length; idx++) {
             const toolTipItems: BulletChartTooltipItem[] = [];
@@ -503,8 +515,8 @@ export class BulletChart implements IVisual {
         toolTipItems: BulletChartTooltipItem[],
         categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
         categoricalValues: BulletChartColumns<any[]>,
-        categoryMinValue: number,
-        categoryMaxValue: number,
+        categoryMinValue: number | undefined,
+        categoryMaxValue: number | undefined,
         colorHelper: ColorHelper,
         bulletModel: BulletChartModel,
         visualHost: IVisualHost,
