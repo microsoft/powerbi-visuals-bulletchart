@@ -389,11 +389,7 @@ export class BulletChart implements IVisual {
             this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.HorizontalRight ||
             this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.VerticalBottom;
 
-        const longestCategory: string = categoricalValues.Category.reduce((longest: string, current: string) => {
-            return current.length > longest.length ? current : longest;
-        }, "");
-        const textProperties = BulletChart.getTextProperties(longestCategory, this.visualSettings.labels.font.fontSize.value);
-        const longestCategoryWidth = measureSvgTextWidth(textProperties, longestCategory) + 1; // Add 1 pixel to fit the longest category text
+        const longestCategoryWidth = this.computeLongestCategoryWidth(categorical, categoricalValues);
 
         const bulletModel: BulletChartModel = BulletChart.BuildBulletModel(
             this.visualSettings,
@@ -494,6 +490,22 @@ export class BulletChart implements IVisual {
         return bulletModel;
     }
 
+    private computeLongestCategoryWidth(categorical: BulletChartColumns<powerbiVisualsApi.DataViewCategoryColumn & powerbiVisualsApi.DataViewValueColumn[] & powerbiVisualsApi.DataViewValueColumns>, categoricalValues: BulletChartColumns<any[]>) {
+        if (!categorical?.Category) {
+            return 0;
+        }
+
+        let longestCategory: string = "";
+        for (let idx = 0; idx < categoricalValues.Category.length; idx++) {
+            if (categoricalValues?.Category[idx]?.length > longestCategory.length) {
+                longestCategory = categoricalValues.Category[idx];
+            }
+        }
+        const textProperties = BulletChart.getTextProperties(longestCategory, this.visualSettings.labels.font.fontSize.value);
+        // Add 1 pixel to the width to avoid text truncation
+        const longestCategoryWidth = measureSvgTextWidth(textProperties, longestCategory) + 1;
+        return longestCategoryWidth;
+    }
 
     private static BuildBulletModel(
         visualSettings: BulletChartSettingsModel,
@@ -1270,7 +1282,7 @@ export class BulletChart implements IVisual {
 
     private renderAxisHorizontally(bar: BarData, reversed: boolean, isMainAxis: boolean) {
         const axisColor = this.settings.axis.axisColor.value.value;
-        const barGroup = this.bulletGraphicsContext.append("g");
+        const barGroup = this.bulletGraphicsContext;
 
         barGroup
             .append("g")
