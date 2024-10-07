@@ -265,6 +265,35 @@
                         }
                     }
                 },
+                "axisFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "axisFontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "axisFontBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "axisFontItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "axisFontUnderline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "syncAxis": {
                     "type": {
                         "bool": true
@@ -287,6 +316,35 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "unitsFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "unitsFontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "unitsFontBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "unitsFontItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "unitsFontUnderline": {
+                    "type": {
+                        "bool": true
                     }
                 }
             }

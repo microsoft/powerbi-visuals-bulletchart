@@ -147,12 +147,10 @@ export class BulletChart implements IVisual {
     private static XMarginVertical: number = 70;
     private static YMarginVertical: number = 10;
     private static BulletSize: number = 25;
-    private static DefaultSubtitleFontSizeInPt: number = 9;
     private static BarMargin: number = 10;
     private static MaxLabelWidth: number = 80;
     private static MaxMeasureUnitWidth: number = BulletChart.MaxLabelWidth - 20;
     private static SubtitleMargin: number = 10;
-    private static AxisFontSizeInPt: number = 8;
     private static SecondTargetLineSize: number = 7;
     private static MarkerMarginHorizontal: number = BulletChart.BulletSize / 6;
     private static MarkerMarginHorizontalEnd: number = 5 * BulletChart.MarkerMarginHorizontal;
@@ -968,15 +966,13 @@ export class BulletChart implements IVisual {
             .data(bars, (d: BarData) => d.key);
 
         if (model.settings.axis.axis.value) {
-            const axisColor = model.settings.axis.axisColor.value.value;
-
             if (model.settings.axis.showOnlyMainAxis.value) {
                 // main axis should be last/at the bottom
                 const mainBar = bars[bars.length - 1];
-                this.renderAxisHorizontally(mainBar, reversed, axisColor);
+                this.renderAxisHorizontally(mainBar, reversed);
             } else {
                 for (let idx: number = 0; idx < bars.length; idx++) {
-                    this.renderAxisHorizontally(bars[idx], reversed, axisColor);
+                    this.renderAxisHorizontally(bars[idx], reversed);
                 }
             }
         }
@@ -1021,6 +1017,7 @@ export class BulletChart implements IVisual {
         }
     }
 
+    // eslint-disable-next-line max-lines-per-function
     private setUpBulletsHorizontally(
         model: BulletChartModel,
         reversed: boolean,
@@ -1088,7 +1085,7 @@ export class BulletChart implements IVisual {
 
         this.drawAxisAndLabelsForHorizontalOrientation(model, reversed);
         const measureUnitsText = TextMeasurementService.getTailoredTextOrDefault(
-            BulletChart.getTextProperties(model.settings.axis.measureUnits.value, BulletChart.DefaultSubtitleFontSizeInPt),
+            BulletChart.getTextProperties(model.settings.axis.measureUnits.value, model.settings.axis.unitsFont.fontSize.value),
             BulletChart.MaxMeasureUnitWidth);
         // Draw measure label
         if (model.settings.axis.measureUnits.value) {
@@ -1102,7 +1099,11 @@ export class BulletChart implements IVisual {
                 }))
                 .attr("y", ((d: BarData) => d.y + this.data.labelHeight / BulletChart.value2 + BulletChart.value12 + BulletChart.BulletSize / 2))
                 .attr("fill", model.settings.axis.unitsColor.value.value)
-                .attr("font-size", PixelConverter.fromPoint(BulletChart.DefaultSubtitleFontSizeInPt))
+                .attr("font-family", model.settings.axis.unitsFont.fontFamily.value)
+                .attr("font-size", PixelConverter.fromPoint(model.settings.axis.unitsFont.fontSize.value))
+                .attr("font-weight", model.settings.axis.unitsFont.bold.value ? "bold" : "normal")
+                .attr("font-style", model.settings.axis.unitsFont.italic.value ? "italic" : "normal")
+                .attr("text-decoration", model.settings.axis.unitsFont.underline.value ? "underline" : "none")
                 .text(measureUnitsText);
         }
 
@@ -1217,13 +1218,18 @@ export class BulletChart implements IVisual {
             .call(bar.xAxisProperties.axis)
             .style(
                 "font-size",
-                PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
+                PixelConverter.fromPoint(this.settings.axis.axisFont.fontSize.value)
             )
+            .style("font-family", this.settings.axis.axisFont.fontFamily.value)
+            .style("font-weight", this.settings.axis.axisFont.bold.value ? "bold" : "normal")
+            .style("font-style", this.settings.axis.axisFont.italic.value ? "italic" : "normal")
+            .style("text-decoration", this.settings.axis.axisFont.underline.value ? "underline" : "none")
             .selectAll("line")
             .style("stroke", axisColor);
     }
 
-    private renderAxisHorizontally(bar: BarData, reversed: boolean, axisColor: string) {
+    private renderAxisHorizontally(bar: BarData, reversed: boolean) {
+        const axisColor = this.settings.axis.axisColor.value.value;
         const barGroup = this.bulletGraphicsContext.append("g");
 
         barGroup
@@ -1245,8 +1251,12 @@ export class BulletChart implements IVisual {
             .call(bar.xAxisProperties.axis)
             .style(
                 "font-size",
-                PixelConverter.fromPoint(BulletChart.AxisFontSizeInPt)
+                PixelConverter.fromPoint(this.settings.axis.axisFont.fontSize.value)
             )
+            .style("font-family", this.settings.axis.axisFont.fontFamily.value)
+            .style("font-weight", this.settings.axis.axisFont.bold.value ? "bold" : "normal")
+            .style("font-style", this.settings.axis.axisFont.italic.value ? "italic" : "normal")
+            .style("text-decoration", this.settings.axis.axisFont.underline.value ? "underline" : "none")
             .selectAll("line")
             .style("stroke", axisColor);
 
@@ -1265,6 +1275,7 @@ export class BulletChart implements IVisual {
             );
     }
 
+    // eslint-disable-next-line max-lines-per-function
     private setUpBulletsVertically(
         model: BulletChartModel,
         reversed: boolean,
@@ -1334,8 +1345,9 @@ export class BulletChart implements IVisual {
             this.data.labelHeightTop;
         this.drawAxisAndLabelsForVerticalOrientation(model, reversed, labelsStartPos);
         const measureUnitsText: string = TextMeasurementService.getTailoredTextOrDefault(
-            BulletChart.getTextProperties(model.settings.axis.measureUnits.value, BulletChart.DefaultSubtitleFontSizeInPt),
+            BulletChart.getTextProperties(model.settings.axis.measureUnits.value, model.settings.axis.unitsFont.fontSize.value),
             BulletChart.MaxMeasureUnitWidth);
+
         // Draw measure label
         if (model.settings.axis.measureUnits.value) {
             barSelection
@@ -1346,7 +1358,11 @@ export class BulletChart implements IVisual {
                     return labelsStartPos + BulletChart.SubtitleMargin + BulletChart.value12;
                 })
                 .attr("fill", model.settings.axis.unitsColor.value.value)
-                .attr("font-size", PixelConverter.fromPoint(BulletChart.DefaultSubtitleFontSizeInPt))
+                .attr("font-family", model.settings.axis.unitsFont.fontFamily.value)
+                .attr("font-size", PixelConverter.fromPoint(model.settings.axis.unitsFont.fontSize.value))
+                .attr("font-weight", model.settings.axis.unitsFont.bold.value ? "bold" : "normal")
+                .attr("font-style", model.settings.axis.unitsFont.italic.value ? "italic" : "normal")
+                .attr("text-decoration", model.settings.axis.unitsFont.underline.value ? "underline" : "none")
                 .text(measureUnitsText);
         }
         if (this.interactivityService) {

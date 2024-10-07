@@ -8,7 +8,9 @@ import Card = formattingSettings.SimpleCard;
 import CompositeCard = formattingSettings.CompositeCard;
 import IEnumMember = powerbi.IEnumMember;
 import FormattingId = powerbi.visuals.FormattingId;
+import ValidatorType = powerbi.visuals.ValidatorType;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
+
 
 const nameof = <T>(name: Extract<keyof T, string>): string => name;
 
@@ -412,6 +414,37 @@ class AxisCard extends CompositeCard {
         value: { value: "#808080" },
     });
 
+    axisFont = new formattingSettings.FontControl({
+        name: "axisFont",
+        displayNameKey: "Visual_Font",
+        fontSize: new formattingSettings.NumUpDown({
+            name: "axisFontSize",
+            displayName: "Text size",
+            displayNameKey: "Visual_Text_Size",
+            value: 8,
+            options: {
+                minValue: { value: 0, type: ValidatorType.Min },
+                maxValue: { value: TextSizeDefaults.MaxSize, type: ValidatorType.Max },
+            }
+        }),
+        fontFamily: new formattingSettings.FontPicker({
+            name: "axisFontFamily",
+            value: "Arial, sans-serif"
+        }),
+        bold: new formattingSettings.ToggleSwitch({
+            name: "axisFontBold",
+            value: false,
+        }),
+        italic: new formattingSettings.ToggleSwitch({
+            name: "axisFontItalic",
+            value: false,
+        }),
+        underline: new formattingSettings.ToggleSwitch({
+            name: "axisFontUnderline",
+            value: false,
+        }),
+    });
+
     syncAxis = new formattingSettings.ToggleSwitch({
         name: "syncAxis",
         displayName: "Sync Axis",
@@ -430,7 +463,38 @@ class AxisCard extends CompositeCard {
         name: "axisGeneralGroup",
         displayName: "General",
         displayNameKey: "Visual_General",
-        slices: [this.axisColor, this.syncAxis, this.showOnlyMainAxis],
+        slices: [this.axisColor, this.axisFont, this.syncAxis, this.showOnlyMainAxis],
+    });
+
+    unitsFont = new formattingSettings.FontControl({
+        name: "unitsFont",
+        displayNameKey: "Visual_Font",
+        fontSize: new formattingSettings.NumUpDown({
+            name: "unitsFontSize",
+            displayName: "Text size",
+            displayNameKey: "Visual_Text_Size",
+            value: 9,
+            options: {
+                minValue: { value: 0, type: ValidatorType.Min },
+                maxValue: { value: TextSizeDefaults.MaxSize, type: ValidatorType.Max },
+            }
+        }),
+        fontFamily: new formattingSettings.FontPicker({
+            name: "unitsFontFamily",
+            value: "Arial, sans-serif"
+        }),
+        bold: new formattingSettings.ToggleSwitch({
+            name: "unitsFontBold",
+            value: false,
+        }),
+        italic: new formattingSettings.ToggleSwitch({
+            name: "unitsFontItalic",
+            value: false,
+        }),
+        underline: new formattingSettings.ToggleSwitch({
+            name: "unitsFontUnderline",
+            value: false,
+        }),
     });
 
     measureUnits = new formattingSettings.TextInput({
@@ -443,8 +507,8 @@ class AxisCard extends CompositeCard {
 
     unitsColor = new formattingSettings.ColorPicker({
         name: "unitsColor",
-        displayName: "Units color",
-        displayNameKey: "Visual_UnitsColor",
+        displayName: "Color",
+        displayNameKey: "Visual_Color",
         value: { value: "#808080" },
     });
 
@@ -452,7 +516,7 @@ class AxisCard extends CompositeCard {
         name: "measureUnitsGroup",
         displayName: "Measure units",
         displayNameKey: "Visual_MeasureUnits",
-        slices: [this.measureUnits, this.unitsColor],
+        slices: [this.measureUnits, this.unitsColor, this.unitsFont],
     });
 
     topLevelSlice = this.axis;
