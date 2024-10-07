@@ -79,7 +79,7 @@ import {VisualLayout} from "./visualLayout";
 import {BulletBehaviorOptions, BulletWebBehavior} from "./behavior";
 import {BulletChartOrientation} from "./BulletChartOrientation";
 import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
-import {BulletChartObjectNames, BulletChartSettingsModel} from "./BulletChartSettingsModel";
+import { BulletChartObjectNames, BulletChartSettingsModel } from './BulletChartSettingsModel';
 
 // OnObject
 import {
@@ -140,7 +140,6 @@ function CreateClassAndSelector(className: string) {
 
 export class BulletChart implements IVisual {
     private static ScrollBarSize: number = 22;
-    private static SpaceRequiredForBarVertically: number = 100;
     private static XMarginHorizontalLeft: number = 20;
     private static XMarginHorizontalRight: number = 55;
     private static YMarginHorizontal: number = 17.5;
@@ -158,7 +157,7 @@ export class BulletChart implements IVisual {
     private static FontFamily: string = "Segoe UI";
 
     private static CategoryLabelsSelector: ClassAndSelector = CreateClassAndSelector("categoryLabel");
-    public static MeasureUnitsSelector: ClassAndSelector = CreateClassAndSelector("measureUnits");
+    private static MeasureUnitsSelector: ClassAndSelector = CreateClassAndSelector("measureUnits");
     private static AxisSelector: ClassAndSelector = CreateClassAndSelector("axis");
     private static BulletContainerSelector: ClassAndSelector = CreateClassAndSelector("bulletContainer");
 
@@ -186,6 +185,14 @@ export class BulletChart implements IVisual {
     private events: IVisualEventService;
     private tooltipServiceWrapper: ITooltipServiceWrapper;
     private selectionManager: ISelectionManager;
+
+    private get SpaceRequiredForBarVertically(): number {
+        if (!this.visualSettings.axis.axis.value) {
+            return 50;
+        }
+
+        return this.visualSettings.axis.showOnlyMainAxis.value ? 50 : 100;
+    }
 
     private get reverse(): boolean {
         switch (this.settings && this.settings.orientation.orientation.value.value) {
@@ -225,8 +232,10 @@ export class BulletChart implements IVisual {
     private static value1dot4: number = 1.4;
     private static value2: number = 2;
     private static value12: number = 12;
+    private static value20: number = 20;
     private static value25: number = 25;
     private static value28: number = 28;
+    private static value40: number = 40;
     private static value60: number = 60;
     private static emptyString: string = "";
 
@@ -490,7 +499,7 @@ export class BulletChart implements IVisual {
 
         bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.font.fontSize.value));
         bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.font.fontSize.value)) / BulletChart.value1dot4;
-        bulletModel.spaceRequiredForBarHorizontally = Math.max(visualSettings.axis.axis.value ? BulletChart.value60 : BulletChart.value28, bulletModel.labelHeight + BulletChart.value25);
+        bulletModel.spaceRequiredForBarHorizontally = Math.max(visualSettings.axis.axis.value ? (visualSettings.axis.showOnlyMainAxis.value ? BulletChart.value40 : BulletChart.value60) : BulletChart.value28, bulletModel.labelHeight + BulletChart.value25);
         bulletModel.viewportLength = Math.max(0, (isVerticalOrientation
             ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value25 - BulletChart.YMarginVertical * BulletChart.value2)
             : (viewPortWidth - (visualSettings.labels.show.value ? visualSettings.labels.maxWidth.value : 0) - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
@@ -603,7 +612,7 @@ export class BulletChart implements IVisual {
 
         const barData: BarData = {
             scale: scale, barIndex: idx, categoryLabel: category,
-            x: isVerticalOrientation ? (BulletChart.XMarginVertical + BulletChart.SpaceRequiredForBarVertically * idx) : (isReversedOrientation ? BulletChart.XMarginHorizontalRight : BulletChart.XMarginHorizontalLeft),
+            x: isVerticalOrientation ? (BulletChart.XMarginVertical + this.SpaceRequiredForBarVertically * idx) : (isReversedOrientation ? BulletChart.XMarginHorizontalRight : BulletChart.XMarginHorizontalLeft),
             y: isVerticalOrientation ? (BulletChart.YMarginVertical) : (BulletChart.YMarginHorizontal + bulletModel.spaceRequiredForBarHorizontally * idx),
             xAxisProperties: xAxisProperties,
             key: selectionIdBuilder().createSelectionId().getKey(),
@@ -856,66 +865,74 @@ export class BulletChart implements IVisual {
     public static oneString: string = "1";
 
     public update(options: VisualUpdateOptions) {
-        this.events.renderingStarted(options);
-        if (!options.dataViews || !options.dataViews[0]) {
-            return;
+        try {
+            this.events.renderingStarted(options);
+            if (!options.dataViews || !options.dataViews[0]) {
+                return;
+            }
+            const dataView: DataView = options.dataViews[0];
+            this.layout.viewport = options.viewport;
+            this.formatMode = options.formatMode ?? false;
+
+            this.visualSettings = this.formattingSettingsService.populateFormattingSettingsModel(BulletChartSettingsModel, dataView);
+            this.visualSettings.setLocalizedOptions(this.localizationManager);
+
+            const data: BulletChartModel = this.CONVERTER(dataView, options);
+
+            this.clearViewport();
+            if (!data) {
+                return;
+            }
+
+            this.data = data;
+
+            this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.font.fontSize.value));
+
+            if (this.interactivityService) {
+                this.interactivityService.applySelectionStateToData(this.data.barRects);
+            }
+
+            this.bulletBody
+                .style("height", PixelConverter.toString(this.layout.viewportIn.height))
+                .style("width", PixelConverter.toString(this.layout.viewportIn.width));
+
+            if (this.vertical) {
+                this.scrollContainer
+                    .attr("width", PixelConverter.toString(this.data.bars.length * this.SpaceRequiredForBarVertically + BulletChart.XMarginVertical))
+                    .attr("height", PixelConverter.toString(this.viewportScroll.height));
+            } else {
+                this.scrollContainer
+                    .attr("height", (
+                        this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
+                        + (this.data.settings.axis.axis.value ? 0 : BulletChart.YMarginHorizontal)
+                        + (this.data.settings.axis.showOnlyMainAxis.value ? 20 : 0)
+                    ) + "px")
+                    .attr("width", PixelConverter.toString(this.viewportScroll.width));
+            }
+
+            this.scrollContainer.attr("fill", "none");
+
+            if (this.vertical) {
+                this.setUpBulletsVertically(this.data, this.reverse);
+            } else {
+                this.setUpBulletsHorizontally(this.data, this.reverse);
+            }
+
+            this.behavior.renderSelection(this.interactivityService.hasSelection());
+
+            this.subSelectionHelper.setFormatMode(options.formatMode);
+            const shouldUpdateSubSelection = options.type & (powerbi.VisualUpdateType.Data
+                | powerbi.VisualUpdateType.Resize
+                | powerbi.VisualUpdateType.FormattingSubSelectionChange);
+            if (this.formatMode && shouldUpdateSubSelection) {
+                this.subSelectionHelper.updateOutlinesFromSubSelections(options.subSelections, true);
+            }
+
+            this.events.renderingFinished(options);
+        } catch (e) {
+            console.error(e);
+            this.events.renderingFailed(options, e);
         }
-        const dataView: DataView = options.dataViews[0];
-        this.layout.viewport = options.viewport;
-        this.formatMode = options.formatMode ?? false;
-
-        this.visualSettings = this.formattingSettingsService.populateFormattingSettingsModel(BulletChartSettingsModel, dataView);
-        this.visualSettings.setLocalizedOptions(this.localizationManager);
-
-        const data: BulletChartModel = this.CONVERTER(dataView, options);
-
-        this.clearViewport();
-        if (!data) {
-            return;
-        }
-
-        this.data = data;
-
-        this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.font.fontSize.value));
-
-        if (this.interactivityService) {
-            this.interactivityService.applySelectionStateToData(this.data.barRects);
-        }
-
-        this.bulletBody
-            .style("height", PixelConverter.toString(this.layout.viewportIn.height))
-            .style("width", PixelConverter.toString(this.layout.viewportIn.width));
-
-        if (this.vertical) {
-            this.scrollContainer
-                .attr("width", PixelConverter.toString(this.data.bars.length * BulletChart.SpaceRequiredForBarVertically + BulletChart.XMarginVertical))
-                .attr("height", PixelConverter.toString(this.viewportScroll.height));
-        } else {
-            this.scrollContainer
-                .attr("height", (this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
-                    + (this.data.settings.axis.axis.value ? 0 : BulletChart.YMarginHorizontal)) + "px")
-                .attr("width", PixelConverter.toString(this.viewportScroll.width));
-        }
-
-        this.scrollContainer.attr("fill", "none");
-
-        if (this.vertical) {
-            this.setUpBulletsVertically(this.data, this.reverse);
-        } else {
-            this.setUpBulletsHorizontally(this.data, this.reverse);
-        }
-
-        this.behavior.renderSelection(this.interactivityService.hasSelection());
-
-        this.subSelectionHelper.setFormatMode(options.formatMode);
-        const shouldUpdateSubSelection = options.type & (powerbi.VisualUpdateType.Data
-            | powerbi.VisualUpdateType.Resize
-            | powerbi.VisualUpdateType.FormattingSubSelectionChange);
-        if (this.formatMode && shouldUpdateSubSelection) {
-            this.subSelectionHelper.updateOutlinesFromSubSelections(options.subSelections, true);
-        }
-
-        this.events.renderingFinished(options);
     }
 
     private clearViewport() {

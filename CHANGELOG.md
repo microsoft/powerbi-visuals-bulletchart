@@ -2,6 +2,7 @@
 * Fix sync axis by computing min and max category values
 * Move "sync axis" and "show only main axis" settings to "Axis" card
 * Add font setttings for measure units and axis
+* When showing main axis only, reduce space between bars to save more place
 
 ## 2.4.2
 * Check old enums with space like "Horizontal left" to maintain backward compatibility
