@@ -390,7 +390,7 @@ export class BulletChart implements IVisual {
         let categoryMinValue: number | undefined = undefined;
         let categoryMaxValue: number | undefined = undefined;
 
-        if (this.visualSettings.syncAxis.syncAxis.value) {
+        if (this.visualSettings.axis.syncAxis.value) {
             const rangeValues = [...Array(length).keys()]
                 .map(idx => {
                     const targetValue: number = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : this.visualSettings.values.targetValue.value;
@@ -523,7 +523,7 @@ export class BulletChart implements IVisual {
     ): BarData {
 
         let minimum: number;
-        if (visualSettings.syncAxis.syncAxis.value) {
+        if (visualSettings.axis.syncAxis.value) {
             minimum = categoryMinValue;
         } else {
             minimum = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], visualSettings.values.minimumPercent.value, targetValue);
@@ -620,7 +620,7 @@ export class BulletChart implements IVisual {
         let good: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Good?.[idx], visualSettings.values.goodPercent.value, targetValue, minimum);
         let veryGood: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.VeryGood?.[idx], visualSettings.values.veryGoodPercent.value, targetValue, minimum);
         let maximum: number;
-        if (visualSettings.syncAxis.syncAxis.value) {
+        if (visualSettings.axis.syncAxis.value) {
             maximum = categoryMaxValue;
         } else {
             maximum = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Maximum?.[idx], visualSettings.values.maximumPercent.value, targetValue, minimum);
@@ -970,7 +970,7 @@ export class BulletChart implements IVisual {
         if (model.settings.axis.axis.value) {
             const axisColor = model.settings.axis.axisColor.value.value;
 
-            if (model.settings.syncAxis.showMainAxis.value) {
+            if (model.settings.axis.showOnlyMainAxis.value) {
                 // main axis should be last/at the bottom
                 const mainBar = bars[bars.length - 1];
                 this.renderAxisHorizontally(mainBar, reversed, axisColor);
@@ -1139,7 +1139,7 @@ export class BulletChart implements IVisual {
         if (model.settings.axis.axis.value) {
             const axisColor = model.settings.axis.axisColor.value.value;
 
-            if (model.settings.syncAxis.showMainAxis.value) {
+            if (model.settings.axis.showOnlyMainAxis.value) {
                 const mainBar = bars[0];
                 this.renderAxisVertically(mainBar, reversed, axisColor);
             } else {
@@ -1684,7 +1684,7 @@ export class BulletChart implements IVisual {
         return [
             {
                 type: VisualShortcutType.Reset,
-                relatedResetFormattingIds: [axisReference.axis, axisReference.axisColor, axisReference.syncAxis, axisReference.showMainAxis, axisReference.orientation],
+                relatedResetFormattingIds: [axisReference.axis, axisReference.axisColor, axisReference.syncAxis, axisReference.showOnlyMainAxis, axisReference.orientation],
             },
             {
                 type: VisualShortcutType.Toggle,
@@ -1700,9 +1700,9 @@ export class BulletChart implements IVisual {
             },
             {
                 type: VisualShortcutType.Toggle,
-                ...axisReference.showMainAxis,
-                disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_HideMainAxis"),
-                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowMainAxis"),
+                ...axisReference.showOnlyMainAxis,
+                disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowAllAxis"),
+                enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowOnlyMainAxis"),
             },
             {
                 type: VisualShortcutType.Picker,

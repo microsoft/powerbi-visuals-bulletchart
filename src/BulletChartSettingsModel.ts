@@ -1,20 +1,20 @@
 import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
+import { Group, SimpleSlice } from "powerbi-visuals-utils-formattingmodel/lib/FormattingSettingsComponents";
+import { BulletChartOrientation } from "./BulletChartOrientation";
+import { BarRectType } from "./dataInterfaces";
 
 import Model = formattingSettings.Model;
 import Card = formattingSettings.SimpleCard;
-import {SimpleSlice} from "powerbi-visuals-utils-formattingmodel/lib/FormattingSettingsComponents";
+import CompositeCard = formattingSettings.CompositeCard;
 import IEnumMember = powerbi.IEnumMember;
-import {BulletChartOrientation} from "./BulletChartOrientation";
-import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
-import {BarRectType} from "./dataInterfaces";
 import FormattingId = powerbi.visuals.FormattingId;
+import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 
 const nameof = <T>(name: Extract<keyof T, string>): string => name;
 
 export const BulletChartObjectNames = {
     Labels: { name: "labels", displayName: "Category labels" },
     Axis: { name: "axis", displayName: "Axis" },
-    SyncAxis: { name: "syncAxis", displayName: "Sync axis" },
     Orientation: { name: "orientation", displayName: "Orientation" },
     Colors: { name: "colors", displayName: "Colors" },
     // used for subselection
@@ -75,7 +75,7 @@ export const axisReference: {
     axis: FormattingId;
     axisColor: FormattingId,
     syncAxis: FormattingId,
-    showMainAxis: FormattingId,
+    showOnlyMainAxis: FormattingId,
     orientation: FormattingId,
 } = {
     cardUid: "Visual-axis-card",
@@ -89,12 +89,12 @@ export const axisReference: {
         propertyName: nameof<AxisCard>("axisColor")
     },
     syncAxis: {
-        objectName: BulletChartObjectNames.SyncAxis.name,
-        propertyName: nameof<SyncAxis>("syncAxis")
+        objectName: BulletChartObjectNames.Axis.name,
+        propertyName: nameof<AxisCard>("syncAxis")
     },
-    showMainAxis: {
-        objectName: BulletChartObjectNames.SyncAxis.name,
-        propertyName: nameof<SyncAxis>("showMainAxis")
+    showOnlyMainAxis: {
+        objectName: BulletChartObjectNames.Axis.name,
+        propertyName: nameof<AxisCard>("showOnlyMainAxis")
     },
     orientation: {
         objectName: BulletChartObjectNames.Orientation.name,
@@ -397,7 +397,7 @@ class ColorsCard extends Card {
     ];
 }
 
-class AxisCard extends Card {
+class AxisCard extends CompositeCard {
     axis = new formattingSettings.ToggleSwitch({
         name: "axis",
         displayName: "Axis",
@@ -405,19 +405,38 @@ class AxisCard extends Card {
         value: true,
     });
 
-    topLevelSlice = this.axis;
-
     axisColor = new formattingSettings.ColorPicker({
         name: "axisColor",
-        displayName: "Axis color",
-        displayNameKey: "Visual_AxisColor",
+        displayName: "Color",
+        displayNameKey: "Visual_Color",
         value: { value: "#808080" },
+    });
+
+    syncAxis = new formattingSettings.ToggleSwitch({
+        name: "syncAxis",
+        displayName: "Sync Axis",
+        displayNameKey: "Visual_SyncAxis",
+        value: false,
+    });
+
+    showOnlyMainAxis = new formattingSettings.ToggleSwitch({
+        name: "showOnlyMainAxis",
+        displayName: "Show only main axis",
+        displayNameKey: "Visual_ShowOnlyMainAxis",
+        value: false,
+    });
+
+    axisGeneralGroup = new Group({
+        name: "axisGeneralGroup",
+        displayName: "General",
+        displayNameKey: "Visual_General",
+        slices: [this.axisColor, this.syncAxis, this.showOnlyMainAxis],
     });
 
     measureUnits = new formattingSettings.TextInput({
         name: "measureUnits",
-        displayName: "Measure units",
-        displayNameKey: "Visual_MeasureUnits",
+        displayName: "Units of measurement",
+        displayNameKey: "Visual_UnitsOfMeasurement",
         value: "",
         placeholder: "",
     });
@@ -429,33 +448,18 @@ class AxisCard extends Card {
         value: { value: "#808080" },
     });
 
+    measureUnitsGroup = new Group({
+        name: "measureUnitsGroup",
+        displayName: "Measure units",
+        displayNameKey: "Visual_MeasureUnits",
+        slices: [this.measureUnits, this.unitsColor],
+    });
+
+    topLevelSlice = this.axis;
     name: string = BulletChartObjectNames.Axis.name;
     displayName: string = BulletChartObjectNames.Axis.displayName;
     displayNameKey: string =  "Visual_Axis";
-    slices = [this.axisColor, this.measureUnits, this.unitsColor];
-}
-
-class SyncAxis extends Card {
-    syncAxis = new formattingSettings.ToggleSwitch({
-        name: "syncAxis",
-        displayName: "Sync Axis",
-        displayNameKey: "Visual_AxisSync",
-        value: false,
-    });
-
-    topLevelSlice = this.syncAxis;
-
-    showMainAxis = new formattingSettings.ToggleSwitch({
-        name: "showMainAxis",
-        displayName: "Show main axis",
-        displayNameKey: "Visual_AxisShowMain",
-        value: false,
-    });
-
-    name: string = BulletChartObjectNames.SyncAxis.name;
-    displayName: string = BulletChartObjectNames.SyncAxis.displayName;
-    displayNameKey: string = "Visual_AxisSync";
-    slices = [this.showMainAxis];
+    groups = [this.axisGeneralGroup, this.measureUnitsGroup];
 }
 
 export class BulletChartSettingsModel extends Model {
@@ -465,7 +469,6 @@ export class BulletChartSettingsModel extends Model {
     orientation = new OrientationCard();
     colors = new ColorsCard();
     axis = new AxisCard();
-    syncAxis = new SyncAxis();
 
     cards = [
         this.values,
@@ -474,7 +477,6 @@ export class BulletChartSettingsModel extends Model {
         this.orientation,
         this.colors,
         this.axis,
-        this.syncAxis,
     ];
 
     public setLocalizedOptions(localizationManager: ILocalizationManager) {

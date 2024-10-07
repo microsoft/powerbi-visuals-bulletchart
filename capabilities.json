@@ -265,6 +265,16 @@
                         }
                     }
                 },
+                "syncAxis": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showOnlyMainAxis": {
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "measureUnits": {
                     "type": {
                         "text": true
@@ -277,20 +287,6 @@
                                 "color": true
                             }
                         }
-                    }
-                }
-            }
-        },
-        "syncAxis": {
-            "properties": {
-                "syncAxis": {
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "showMainAxis": {
-                    "type": {
-                        "bool": true
                     }
                 }
             }
