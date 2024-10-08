@@ -146,6 +146,7 @@ export class BulletChart implements IVisual {
     private static YMarginHorizontal: number = 17.5;
     private static XMarginVertical: number = 70;
     private static YMarginVertical: number = 10;
+    private static MainAxisPadding: number = 15;
     private static BulletSize: number = 25;
     private static BarMargin: number = 10;
     private static LabelsPadding: number = 10;
@@ -926,7 +927,7 @@ export class BulletChart implements IVisual {
                     .attr("height", (
                         this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
                         + (this.data.settings.axis.axis.value ? 0 : BulletChart.YMarginHorizontal)
-                        + (this.data.settings.axis.showOnlyMainAxis.value ? 20 : 0)
+                        + (this.data.settings.axis.showOnlyMainAxis.value ? BulletChart.BarMargin * 2 + BulletChart.MainAxisPadding : 0)
                     ) + "px")
                     .attr("width", PixelConverter.toString(this.viewportScroll.width));
             }
@@ -1005,10 +1006,10 @@ export class BulletChart implements IVisual {
             if (model.settings.axis.showOnlyMainAxis.value) {
                 // main axis should be last/at the bottom
                 const mainBar = bars[bars.length - 1];
-                this.renderAxisHorizontally(mainBar, reversed);
+                this.renderAxisHorizontally(mainBar, reversed, model.settings.axis.showOnlyMainAxis.value);
             } else {
                 for (let idx: number = 0; idx < bars.length; idx++) {
-                    this.renderAxisHorizontally(bars[idx], reversed);
+                    this.renderAxisHorizontally(bars[idx], reversed, model.settings.axis.showOnlyMainAxis.value);
                 }
             }
         }
@@ -1178,11 +1179,11 @@ export class BulletChart implements IVisual {
 
             if (model.settings.axis.showOnlyMainAxis.value) {
                 const mainBar = bars[0];
-                this.renderAxisVertically(mainBar, reversed, axisColor);
+                this.renderAxisVertically(mainBar, reversed, axisColor, model.settings.axis.showOnlyMainAxis.value);
             } else {
                 for (let idx = 0; idx < bars.length; idx++) {
                     const bar = bars[idx];
-                    this.renderAxisVertically(bar, reversed, axisColor);
+                    this.renderAxisVertically(bar, reversed, axisColor, model.settings.axis.showOnlyMainAxis.value);
                 }
             }
 
@@ -1235,11 +1236,11 @@ export class BulletChart implements IVisual {
         }
     }
 
-    private renderAxisVertically(bar: BarData, reversed: boolean, axisColor: string) {
+    private renderAxisVertically(bar: BarData, reversed: boolean, axisColor: string, isMainAxis: boolean) {
         this.bulletGraphicsContext
             .append("g")
             .attr("transform", () => {
-                const xLocation: number = bar.x;
+                const xLocation: number = bar.x - (isMainAxis ? BulletChart.MainAxisPadding : 0);
                 const yLocation: number = this.calculateLabelHeight(
                     bar,
                     null,
@@ -1264,7 +1265,7 @@ export class BulletChart implements IVisual {
             .style("stroke", axisColor);
     }
 
-    private renderAxisHorizontally(bar: BarData, reversed: boolean) {
+    private renderAxisHorizontally(bar: BarData, reversed: boolean, isMainAxis: boolean) {
         const axisColor = this.settings.axis.axisColor.value.value;
         const barGroup = this.bulletGraphicsContext.append("g");
 
@@ -1276,7 +1277,7 @@ export class BulletChart implements IVisual {
                     null,
                     reversed
                 );
-                const yLocation: number = bar.y + BulletChart.BulletSize;
+                const yLocation: number = bar.y + BulletChart.BulletSize + (isMainAxis ? BulletChart.MainAxisPadding : 0);
 
                 return `translate(${xLocation},${yLocation})`;
             })
