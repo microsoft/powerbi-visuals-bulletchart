@@ -48,6 +48,7 @@ export interface BulletChartModel {
     labelHeight: number;
     labelHeightTop: number;
     spaceRequiredForBarHorizontally: number;
+    longestCategoryWidth: number;
 }
 
 export interface BarData {

@@ -315,6 +315,13 @@ class LabelsCard extends BaseFontCardSettings {
         value: { value: "#000000" }
     });
 
+    autoWidth = new formattingSettings.ToggleSwitch({
+        name: "autoWidth",
+        displayName: "Auto width",
+        displayNameKey: "Visual_AutoWidth",
+        value: false,
+    });
+
     maxWidth = new formattingSettings.NumUpDown({
         name: "maxWidth",
         displayName: "Maximum width",
@@ -325,7 +332,7 @@ class LabelsCard extends BaseFontCardSettings {
     name: string = BulletChartObjectNames.Labels.name;
     displayName: string = BulletChartObjectNames.Labels.displayName
     displayNameKey: string = "Visual_CategoryLabels";
-    slices = [this.font, this.labelColor, this.maxWidth];
+    slices = [this.font, this.labelColor, this.autoWidth, this.maxWidth];
 }
 
 class OrientationCard extends Card {

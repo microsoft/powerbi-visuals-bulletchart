@@ -124,6 +124,7 @@ import CustomVisualObject = powerbi.visuals.CustomVisualObject;
 import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 
 import { labelsReference, axisReference, colorsReference } from "./BulletChartSettingsModel";
+import { measureSvgTextWidth } from "powerbi-visuals-utils-formattingutils/lib/src/textMeasurementService";
 
 interface ClassAndSelector {
     className: string;
@@ -147,6 +148,7 @@ export class BulletChart implements IVisual {
     private static YMarginVertical: number = 10;
     private static BulletSize: number = 25;
     private static BarMargin: number = 10;
+    private static LabelsPadding: number = 10;
     private static MaxLabelWidth: number = 80;
     private static MaxMeasureUnitWidth: number = BulletChart.MaxLabelWidth - 20;
     private static SubtitleMargin: number = 10;
@@ -383,12 +385,20 @@ export class BulletChart implements IVisual {
             this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.HorizontalRight ||
             this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.VerticalBottom;
 
+        const longestCategory: string = categoricalValues.Category.reduce((longest: string, current: string) => {
+            return current.length > longest.length ? current : longest;
+        }, "");
+        const textProperties = BulletChart.getTextProperties(longestCategory, this.visualSettings.labels.font.fontSize.value);
+        const longestCategoryWidth = measureSvgTextWidth(textProperties, longestCategory) + 1; // Add 1 pixel to fit the longest category text
+
         const bulletModel: BulletChartModel = BulletChart.BuildBulletModel(
             this.visualSettings,
             categorical,
             options.viewport.height,
             options.viewport.width,
             isVerticalOrientation,
+            isReversedOrientation,
+            longestCategoryWidth,
         );
 
         const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
@@ -416,9 +426,10 @@ export class BulletChart implements IVisual {
             let category: string = BulletChart.emptyString;
             if (categorical.Category) {
                 category = valueFormatter.format(categoricalValues.Category[idx], categoryFormatString);
+                const textProperties = BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value);
                 category = TextMeasurementService.getTailoredTextOrDefault(
-                    BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value),
-                    isVerticalOrientation ? BulletChart.MaxLabelWidth : this.visualSettings.labels.maxWidth.value
+                    textProperties,
+                    this.visualSettings.labels.autoWidth.value ? longestCategoryWidth : this.visualSettings.labels.maxWidth.value
                 );
             }
 
@@ -486,6 +497,8 @@ export class BulletChart implements IVisual {
         viewPortHeight: number,
         viewPortWidth: number,
         isVerticalOrientation: boolean,
+        isReversedOrientation: boolean,
+        longestCategoryWidth: number,
     ): BulletChartModel {
 
         const bulletModel: BulletChartModel = <BulletChartModel>{
@@ -494,15 +507,21 @@ export class BulletChart implements IVisual {
             barRects: [],
             valueRects: [],
             targetValues: [],
-            viewportLength: BulletChart.zeroValue
+            viewportLength: BulletChart.zeroValue,
+            longestCategoryWidth: longestCategoryWidth,
         };
+
+        const labelsPadding: number = isReversedOrientation ? BulletChart.LabelsPadding : BulletChart.zeroValue;
+        const labelsWidth = visualSettings.labels.show.value
+            ? (visualSettings.labels.autoWidth.value ? longestCategoryWidth + labelsPadding : visualSettings.labels.maxWidth.value)
+            : 0;
 
         bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.font.fontSize.value));
         bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.font.fontSize.value)) / BulletChart.value1dot4;
         bulletModel.spaceRequiredForBarHorizontally = Math.max(visualSettings.axis.axis.value ? (visualSettings.axis.showOnlyMainAxis.value ? BulletChart.value40 : BulletChart.value60) : BulletChart.value28, bulletModel.labelHeight + BulletChart.value25);
         bulletModel.viewportLength = Math.max(0, (isVerticalOrientation
             ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value25 - BulletChart.YMarginVertical * BulletChart.value2)
-            : (viewPortWidth - (visualSettings.labels.show.value ? visualSettings.labels.maxWidth.value : 0) - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
+            : (viewPortWidth - labelsWidth - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
         bulletModel.hasHighlights = !!(categorical.Value[0].values.length > BulletChart.zeroValue && categorical.Value[0].highlights);
 
         return bulletModel;
@@ -849,8 +868,10 @@ export class BulletChart implements IVisual {
             .classed(BulletChart.bulletChartClassed, true)
             .attr(BulletChart.dragResizeDisabled, true);
 
-        this.scrollContainer = this.bulletBody.append("svg")
-            .classed(BulletChart.bulletScrollRegion, true);
+        this.scrollContainer = this.bulletBody
+            .append("svg")
+            .classed(BulletChart.bulletScrollRegion, true)
+            .attr("fill", "none");
         this.clearCatcher = appendClearCatcher(this.scrollContainer);
 
         this.labelGraphicsContext = this.scrollContainer.append("g");
@@ -910,8 +931,6 @@ export class BulletChart implements IVisual {
                     .attr("width", PixelConverter.toString(this.viewportScroll.width));
             }
 
-            this.scrollContainer.attr("fill", "none");
-
             if (this.vertical) {
                 this.setUpBulletsVertically(this.data, this.reverse);
             } else {
@@ -958,7 +977,7 @@ export class BulletChart implements IVisual {
     private calculateLabelWidth(barData: BarData, bar?: BarRect, reversed?: boolean) {
         return (reversed
                 ? BulletChart.XMarginHorizontalRight
-                : barData.x + (this.settings.labels.show.value ? this.settings.labels.maxWidth.value : 0) + BulletChart.XMarginHorizontalLeft)
+                : barData.x + (this.settings.labels.show.value ? (this.settings.labels.autoWidth.value ? this.data.longestCategoryWidth : this.settings.labels.maxWidth.value) : 0) + BulletChart.XMarginHorizontalLeft)
             + (bar ? bar.start : BulletChart.zeroValue);
     }
 
@@ -1395,7 +1414,6 @@ export class BulletChart implements IVisual {
                 behavior: this.behavior,
                 dataPoints: targetCollection
             };
-
             this.interactivityService.bind(behaviorOptions);
         }
         this.tooltipServiceWrapper.addTooltip(valueSelectionMerged, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
@@ -1495,6 +1513,10 @@ export class BulletChart implements IVisual {
     }
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
+        if (this.visualSettings.labels.autoWidth.value) {
+            this.visualSettings.labels.maxWidth.visible = false;
+        }
+
         return this.formattingSettingsService.buildFormattingModel(this.visualSettings);
     }
 

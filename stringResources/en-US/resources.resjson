@@ -45,6 +45,7 @@
 	"Visual_ShowOnlyMainAxis": "Show only main axis",
 	"Visual_MeasureUnits": "Measure units",
 	"Visual_UnitsOfMeasurement": "Units of measurement",
+	"Visual_AutoWidth": "Auto width",
 	"Visual_MaxWidth": "Maximum width",
 	"Visual_Category": "Category",
 	"Visual_Value": "Value",

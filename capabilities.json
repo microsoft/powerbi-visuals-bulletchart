@@ -141,6 +141,11 @@
                         }
                     }
                 },
+                "autoWidth": {
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "maxWidth": {
                     "type": {
                         "numeric": true
