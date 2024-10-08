@@ -366,7 +366,6 @@ export class BulletChart implements IVisual {
     }
 
     // Convert a DataView into a view model
-    // eslint-disable-next-line max-lines-per-function
     public CONVERTER(dataView: DataView, options: VisualUpdateOptions): BulletChartModel {
         const categorical: BulletChartColumns<
             DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns
@@ -404,21 +403,8 @@ export class BulletChart implements IVisual {
         const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
         const categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
         const length: number = categoricalValues.Value.length;
-        let categoryMinValue: number | undefined = undefined;
-        let categoryMaxValue: number | undefined = undefined;
 
-        if (this.visualSettings.axis.syncAxis.value) {
-            const rangeValues = [...Array(length).keys()]
-                .map(idx => {
-                    const targetValue: number = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : this.visualSettings.values.targetValue.value;
-                    const min = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], this.visualSettings.values.minimumPercent.value, targetValue);
-                    const max = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Maximum?.[idx], this.visualSettings.values.maximumPercent.value, targetValue);
-                    return { min, max };
-                });
-
-            categoryMinValue = Math.min(...rangeValues.map(x => x.min));
-            categoryMaxValue = Math.max(...rangeValues.map(x => x.max));
-        }
+        const { categoryMinValue, categoryMaxValue }: { categoryMinValue: number; categoryMaxValue: number; } = this.calculateCategoryValueRange(length, categoricalValues);
 
         for (let idx = 0; idx < length; idx++) {
             const toolTipItems: BulletChartTooltipItem[] = [];
@@ -488,6 +474,24 @@ export class BulletChart implements IVisual {
         }
 
         return bulletModel;
+    }
+
+    private calculateCategoryValueRange(length: number, categoricalValues: BulletChartColumns<any[]>) {
+        let categoryMinValue: number | undefined = undefined;
+        let categoryMaxValue: number | undefined = undefined;
+        if (this.visualSettings.axis.syncAxis.value) {
+            const rangeValues = [...Array(length).keys()]
+                .map(idx => {
+                    const targetValue: number = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : this.visualSettings.values.targetValue.value;
+                    const min = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], this.visualSettings.values.minimumPercent.value, targetValue);
+                    const max = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Maximum?.[idx], this.visualSettings.values.maximumPercent.value, targetValue);
+                    return { min, max };
+                });
+
+            categoryMinValue = Math.min(...rangeValues.map(x => x.min));
+            categoryMaxValue = Math.max(...rangeValues.map(x => x.max));
+        }
+        return { categoryMinValue, categoryMaxValue };
     }
 
     private computeLongestCategoryWidth(categorical: BulletChartColumns<powerbiVisualsApi.DataViewCategoryColumn & powerbiVisualsApi.DataViewValueColumn[] & powerbiVisualsApi.DataViewValueColumns>, categoricalValues: BulletChartColumns<any[]>) {
@@ -1069,7 +1073,6 @@ export class BulletChart implements IVisual {
         }
     }
 
-    // eslint-disable-next-line max-lines-per-function
     private setUpBulletsHorizontally(
         model: BulletChartModel,
         reversed: boolean,
@@ -1366,7 +1369,6 @@ export class BulletChart implements IVisual {
 
         // Draw value rects
         const valueSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
-
         const valueSelectionMerged = valueSelection
             .join("rect")
             .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + BulletChart.bulletMiddlePosition)))
@@ -1388,13 +1390,12 @@ export class BulletChart implements IVisual {
             (d: TargetValue) => bars[d.barIndex].x + (BulletChart.MarkerMarginVertical * BulletChart.value3),
             (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value,
             (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value);
+
         this.drawSecondTargets(targetValues,
             (d: TargetValue) => bars[d.barIndex].x + BulletChart.BulletSize / BulletChart.value2,
             (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value2);
-        const labelsStartPos: number =
-            BulletChart.YMarginVertical +
-            (reversed ? model.viewportLength + 15 : 0) +
-            this.data.labelHeightTop;
+
+        const labelsStartPos: number = BulletChart.YMarginVertical + (reversed ? model.viewportLength + 15 : 0) + this.data.labelHeightTop;
         this.drawAxisAndLabelsForVerticalOrientation(model, reversed, labelsStartPos);
         const measureUnitsText: string = TextMeasurementService.getTailoredTextOrDefault(
             BulletChart.getTextProperties(model.settings.axis.measureUnits.value, model.settings.axis.unitsFont.fontSize.value),
