@@ -357,6 +357,9 @@ export class BulletChart implements IVisual {
                 bulletModel.viewportLength
             ),
             disableNiceOnlyForScale: true,
+            useTickIntervalForDisplayUnits: true,
+            axisDisplayUnits: <number>settings.axis.axisDisplayFormat.value.valueOf(),
+            axisPrecision: settings.axis.axisPrecision.value,
         });
 
         return xAxisProperties;

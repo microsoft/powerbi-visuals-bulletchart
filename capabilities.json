@@ -299,14 +299,16 @@
                         "bool": true
                     }
                 },
-                "syncAxis": {
+                "axisDisplayFormat": {
                     "type": {
-                        "bool": true
+                        "formatting": {
+                            "labelDisplayUnits": true
+                        }
                     }
                 },
-                "showOnlyMainAxis": {
+                "axitsPrecision": {
                     "type": {
-                        "bool": true
+                        "numeric": true
                     }
                 },
                 "measureUnits": {
@@ -348,6 +350,16 @@
                     }
                 },
                 "unitsFontUnderline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "syncAxis": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showOnlyMainAxis": {
                     "type": {
                         "bool": true
                     }

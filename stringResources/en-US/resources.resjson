@@ -13,6 +13,8 @@
 	"Visual_CategoryLabels": "Category labels",
 	"Visual_General": "General",
 	"Visual_Show": "Show",
+	"Visual_DisplayUnits": "Display units",
+	"Visual_Precision": "Precision",
 	"Visual_Color": "Color",
 	"Visual_Font": "Font",
 	"Visual_OnObject_DeleteLabels": "Delete data labels",

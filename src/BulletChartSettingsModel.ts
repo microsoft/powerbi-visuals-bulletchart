@@ -452,11 +452,29 @@ class AxisCard extends CompositeCard {
         }),
     });
 
+    axisDisplayFormat = new formattingSettings.AutoDropdown({
+        name: "axisDisplayFormat",
+        displayName: "Display units",
+        displayNameKey: "Visual_DisplayUnits",
+        value: 1, // none
+    });
+
+    axisPrecision = new formattingSettings.NumUpDown({
+        name: "axisPrecision",
+        displayName: "Precision",
+        displayNameKey: "Visual_Precision",
+        value: 0,
+        options: {
+            minValue: { value: 0, type: ValidatorType.Min },
+            maxValue: { value: 10, type: ValidatorType.Max },
+        }
+    });
+
     axisGeneralGroup = new Group({
         name: "axisGeneralGroup",
         displayName: "General",
         displayNameKey: "Visual_General",
-        slices: [this.axisColor, this.axisFont],
+        slices: [this.axisColor, this.axisFont, this.axisDisplayFormat, this.axisPrecision],
     });
 
     unitsFont = new formattingSettings.FontControl({
