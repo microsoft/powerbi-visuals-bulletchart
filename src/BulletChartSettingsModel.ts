@@ -1,3 +1,4 @@
+import powerbi from "powerbi-visuals-api";
 import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
 import { Group, SimpleSlice } from "powerbi-visuals-utils-formattingmodel/lib/FormattingSettingsComponents";
 import { BulletChartOrientation } from "./BulletChartOrientation";
@@ -10,7 +11,6 @@ import IEnumMember = powerbi.IEnumMember;
 import FormattingId = powerbi.visuals.FormattingId;
 import ValidatorType = powerbi.visuals.ValidatorType;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
-
 
 const nameof = <T>(name: Extract<keyof T, string>): string => name;
 
@@ -452,25 +452,11 @@ class AxisCard extends CompositeCard {
         }),
     });
 
-    syncAxis = new formattingSettings.ToggleSwitch({
-        name: "syncAxis",
-        displayName: "Sync Axis",
-        displayNameKey: "Visual_SyncAxis",
-        value: false,
-    });
-
-    showOnlyMainAxis = new formattingSettings.ToggleSwitch({
-        name: "showOnlyMainAxis",
-        displayName: "Show only main axis",
-        displayNameKey: "Visual_ShowOnlyMainAxis",
-        value: false,
-    });
-
     axisGeneralGroup = new Group({
         name: "axisGeneralGroup",
         displayName: "General",
         displayNameKey: "Visual_General",
-        slices: [this.axisColor, this.axisFont, this.syncAxis, this.showOnlyMainAxis],
+        slices: [this.axisColor, this.axisFont],
     });
 
     unitsFont = new formattingSettings.FontControl({
@@ -519,18 +505,40 @@ class AxisCard extends CompositeCard {
         value: { value: "#808080" },
     });
 
-    measureUnitsGroup = new Group({
-        name: "measureUnitsGroup",
+    axisMeasureUnitsGroup = new Group({
+        name: "axisMeasureUnitsGroup",
         displayName: "Measure units",
         displayNameKey: "Visual_MeasureUnits",
         slices: [this.measureUnits, this.unitsColor, this.unitsFont],
+    });
+
+    syncAxis = new formattingSettings.ToggleSwitch({
+        name: "syncAxis",
+        displayName: "Sync axis",
+        displayNameKey: "Visual_SyncAxis",
+        value: false,
+    });
+
+    showOnlyMainAxis = new formattingSettings.ToggleSwitch({
+        name: "showOnlyMainAxis",
+        displayName: "Show only main axis",
+        displayNameKey: "Visual_ShowOnlyMainAxis",
+        value: false,
+    });
+
+    axisSynchronizationGroup = new Group({
+        name: "axisSynchronizationGroup",
+        displayName: "Sync axis",
+        displayNameKey: "Visual_SyncAxis",
+        topLevelSlice: this.syncAxis,
+        slices: [this.showOnlyMainAxis],
     });
 
     topLevelSlice = this.axis;
     name: string = BulletChartObjectNames.Axis.name;
     displayName: string = BulletChartObjectNames.Axis.displayName;
     displayNameKey: string =  "Visual_Axis";
-    groups = [this.axisGeneralGroup, this.measureUnitsGroup];
+    groups = [this.axisGeneralGroup, this.axisMeasureUnitsGroup, this.axisSynchronizationGroup];
 }
 
 export class BulletChartSettingsModel extends Model {
