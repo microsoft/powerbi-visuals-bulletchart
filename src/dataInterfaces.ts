@@ -36,6 +36,7 @@ import { axisInterfaces } from "powerbi-visuals-utils-chartutils";
 import IAxisProperties = axisInterfaces.IAxisProperties;
 
 import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
+import { BarRectType } from './enums';
 
 export interface BulletChartModel {
     bars: BarData[];
@@ -60,16 +61,6 @@ export interface BarData {
     y: number;
     key: string;
 }
-
-export enum BarRectType {
-    Minimum = "Minimum",
-    NeedsImprovement = "NeedsImprovement",
-    Satisfactory = "Satisfactory",
-    Good = "Good",
-    VeryGood = "VeryGood",
-    Bullet = "Bullet",
-}
-
 
 export interface BarRect extends SelectableDataPoint {
     barIndex: number;

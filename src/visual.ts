@@ -69,15 +69,15 @@ import {BulletChartColumns} from "./BulletChartColumns";
 import {
     BarData,
     BarRect,
-    BarRectType,
     BarValueRect,
     BulletChartModel,
     BulletChartTooltipItem,
     TargetValue
 } from "./dataInterfaces";
+import { BarRectType } from "./enums";
 import {VisualLayout} from "./visualLayout";
 import {BulletBehaviorOptions, BulletWebBehavior} from "./behavior";
-import {BulletChartOrientation} from "./BulletChartOrientation";
+import { BulletChartOrientation } from "./enums";
 import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
 import { BulletChartObjectNames, BulletChartSettingsModel } from './BulletChartSettingsModel';
 
@@ -160,7 +160,7 @@ export class BulletChart implements IVisual {
     private static FontFamily: string = "Segoe UI";
 
     private static CategoryLabelsSelector: ClassAndSelector = CreateClassAndSelector("categoryLabel");
-    private static MeasureUnitsSelector: ClassAndSelector = CreateClassAndSelector("measureUnits");
+    public static MeasureUnitsSelector: ClassAndSelector = CreateClassAndSelector("measureUnits");
     private static AxisSelector: ClassAndSelector = CreateClassAndSelector("axis");
     private static BulletContainerSelector: ClassAndSelector = CreateClassAndSelector("bulletContainer");
 

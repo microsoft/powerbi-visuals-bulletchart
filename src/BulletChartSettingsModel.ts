@@ -1,8 +1,8 @@
 import powerbi from "powerbi-visuals-api";
 import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
 import { Group, SimpleSlice } from "powerbi-visuals-utils-formattingmodel/lib/FormattingSettingsComponents";
-import { BulletChartOrientation } from "./BulletChartOrientation";
-import { BarRectType } from "./dataInterfaces";
+import { BulletChartOrientation } from "./enums";
+import { BarRectType } from "./enums";
 
 import Model = formattingSettings.Model;
 import Card = formattingSettings.SimpleCard;
