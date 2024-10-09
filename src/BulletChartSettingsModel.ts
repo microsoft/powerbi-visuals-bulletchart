@@ -192,6 +192,23 @@ class BaseFontCardSettings extends Card {
     });
 }
 
+class GeneralCard extends Card {
+    barSize = new formattingSettings.NumUpDown({
+        name: "barSize",
+        displayName: "Bar size",
+        displayNameKey: "Visual_BarSize",
+        value: 25,
+        options: {
+            minValue: { value: 0, type: ValidatorType.Min },
+        }
+    });
+
+    name = "general";
+    displayName = "General";
+    displayNameKey = "Visual_General";
+    slices = [this.barSize];
+}
+
 class DataValuesCard extends Card {
     targetValue = new formattingSettings.NumUpDown({
         name: "targetValue",
@@ -351,6 +368,7 @@ class OrientationCard extends Card {
 }
 
 class ColorsCard extends Card {
+
     minColor = new formattingSettings.ColorPicker({
         name: "minColor",
         displayName: "Minimum color",
@@ -560,6 +578,7 @@ class AxisCard extends CompositeCard {
 }
 
 export class BulletChartSettingsModel extends Model {
+    general = new GeneralCard();
     values = new DataValuesCard();
     tooltips = new TooltipsCard();
     labels = new LabelsCard();
@@ -568,6 +587,7 @@ export class BulletChartSettingsModel extends Model {
     axis = new AxisCard();
 
     cards = [
+        this.general,
         this.values,
         this.tooltips,
         this.labels,

@@ -146,17 +146,16 @@ export class BulletChart implements IVisual {
     private static YMarginHorizontal: number = 17.5;
     private static XMarginVertical: number = 70;
     private static YMarginVertical: number = 10;
-    private static MainAxisPadding: number = 15;
-    private static BulletSize: number = 25;
+    private static BarPaddingVerticalShort: number = 10;
+    private static BarPaddingVerticalDefault: number = 75;
+    private static BarPaddingHorizontalShort: number = 5;
+    private static BarPaddingHorizontalDefault: number = 35;
     private static BarMargin: number = 10;
     private static LabelsPadding: number = 10;
     private static MaxLabelWidth: number = 80;
     private static MaxMeasureUnitWidth: number = BulletChart.MaxLabelWidth - 20;
     private static SubtitleMargin: number = 10;
     private static SecondTargetLineSize: number = 7;
-    private static MarkerMarginHorizontal: number = BulletChart.BulletSize / 6;
-    private static MarkerMarginHorizontalEnd: number = 5 * BulletChart.MarkerMarginHorizontal;
-    private static MarkerMarginVertical: number = BulletChart.BulletSize / 4;
     private static FontFamily: string = "Segoe UI";
 
     private static CategoryLabelsSelector: ClassAndSelector = CreateClassAndSelector("categoryLabel");
@@ -189,13 +188,23 @@ export class BulletChart implements IVisual {
     private tooltipServiceWrapper: ITooltipServiceWrapper;
     private selectionManager: ISelectionManager;
 
+    private get BarSize(): number {
+        return this.visualSettings.general.barSize.value;
+    }
+
     private get SpaceRequiredForBarVertically(): number {
         if (!this.visualSettings.axis.axis.value) {
-            return 50;
+            return this.BarSize + BulletChart.BarPaddingVerticalShort;
         }
 
-        return this.visualSettings.axis.showOnlyMainAxis.value ? 50 : 100;
+        return this.visualSettings.axis.showOnlyMainAxis.value
+            ? this.BarSize + BulletChart.BarPaddingVerticalShort
+            : this.BarSize + BulletChart.BarPaddingVerticalDefault;
     }
+
+    private get MarkerMarginHorizontal(): number { return this.BarSize / 6; }
+    private get MarkerMarginHorizontalEnd(): number { return 5 * this.MarkerMarginHorizontal; }
+    private get MarkerMarginVertical(): number { return this.BarSize / 4; }
 
     private get reverse(): boolean {
         switch (this.settings && this.settings.orientation.orientation.value.value) {
@@ -536,9 +545,14 @@ export class BulletChart implements IVisual {
             ? (visualSettings.labels.autoWidth.value ? longestCategoryWidth + labelsPadding : visualSettings.labels.maxWidth.value)
             : 0;
 
-        bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.font.fontSize.value));
-        bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && parseFloat(PixelConverter.fromPoint(visualSettings.labels.font.fontSize.value)) / BulletChart.value1dot4;
-        bulletModel.spaceRequiredForBarHorizontally = Math.max(visualSettings.axis.axis.value ? (visualSettings.axis.showOnlyMainAxis.value ? BulletChart.value40 : BulletChart.value60) : BulletChart.value28, bulletModel.labelHeight + BulletChart.value25);
+        bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value));
+        bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value)) / BulletChart.value1dot4;
+        bulletModel.spaceRequiredForBarHorizontally = visualSettings.general.barSize.value +
+            (visualSettings.axis.axis.value
+                ? (visualSettings.axis.showOnlyMainAxis.value ? BulletChart.BarPaddingHorizontalShort : BulletChart.BarPaddingHorizontalDefault)
+                : BulletChart.BarPaddingHorizontalShort
+            );
+
         bulletModel.viewportLength = Math.max(0, (isVerticalOrientation
             ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value25 - BulletChart.YMarginVertical * BulletChart.value2)
             : (viewPortWidth - labelsWidth - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
@@ -944,10 +958,10 @@ export class BulletChart implements IVisual {
             } else {
                 this.scrollContainer
                     .attr("height", (
-                        this.data.bars.length * (this.data.spaceRequiredForBarHorizontally || BulletChart.zeroValue)
-                        + (this.data.settings.axis.axis.value ? 0 : BulletChart.YMarginHorizontal)
-                        + (this.data.settings.axis.showOnlyMainAxis.value ? BulletChart.BarMargin * 2 + BulletChart.MainAxisPadding : 0)
-                    ) + "px")
+                        this.data.bars.length * this.data.spaceRequiredForBarHorizontally
+                            + BulletChart.YMarginHorizontal
+                            + (this.settings.axis.axis.value ? BulletChart.YMarginHorizontal : BulletChart.zeroValue)
+                    ))
                     .attr("width", PixelConverter.toString(this.viewportScroll.width));
             }
 
@@ -1013,7 +1027,7 @@ export class BulletChart implements IVisual {
     private static value1: number = 1;
     private static value4: number = 4;
     private static value14: number = 14;
-    private static bulletMiddlePosition: number = (1 / BulletChart.value8 + 1 / BulletChart.value4) * BulletChart.BulletSize;
+    private get bulletMiddlePosition(): number { return (1 / BulletChart.value8 + 1 / BulletChart.value4) * this.BarSize; }
 
     private drawAxisAndLabelsForHorizontalOrientation(model: BulletChartModel, reversed: boolean) {
         const bars: BarData[] = model.bars;
@@ -1056,7 +1070,7 @@ export class BulletChart implements IVisual {
                     (d: BarData) =>
                         d.y +
                         this.baselineDelta +
-                        BulletChart.BulletSize / BulletChart.value2
+                        this.BarSize / BulletChart.value2
                 )
                 .style("fill", model.settings.labels.labelColor.value.value)
                 .style(
@@ -1100,7 +1114,7 @@ export class BulletChart implements IVisual {
             .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y)))
             .attr("width", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
-            .attr("height", BulletChart.BulletSize)
+            .attr("height", this.BarSize)
             .classed("range", true)
             .classed(HtmlSubSelectableClass, this.formatMode)
             .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
@@ -1115,9 +1129,9 @@ export class BulletChart implements IVisual {
             .data(valueRects, (d: BarValueRect) => d.key)
             .join("rect")
             .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
-            .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y + BulletChart.bulletMiddlePosition)))
+            .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y + this.bulletMiddlePosition)))
             .attr("width", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
-            .attr("height", BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4)
+            .attr("height", this.BarSize * BulletChart.value1 / BulletChart.value4)
             .classed("value", true)
             .classed(HtmlSubSelectableClass, this.formatMode)
             .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Bullet.name)
@@ -1130,13 +1144,13 @@ export class BulletChart implements IVisual {
         this.drawFirstTargets(targetValues,
             (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value,
             (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value,
-            (d: TargetValue) => bars[d.barIndex].y + BulletChart.MarkerMarginHorizontal,
-            (d: TargetValue) => bars[d.barIndex].y + BulletChart.MarkerMarginHorizontalEnd);
+            (d: TargetValue) => bars[d.barIndex].y + this.MarkerMarginHorizontal,
+            (d: TargetValue) => bars[d.barIndex].y + this.MarkerMarginHorizontalEnd);
 
         this.drawSecondTargets(
             targetValues,
             (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value2,
-            (d: TargetValue) => bars[d.barIndex].y + BulletChart.BulletSize / BulletChart.value2);
+            (d: TargetValue) => bars[d.barIndex].y + this.BarSize / BulletChart.value2);
 
         this.drawAxisAndLabelsForHorizontalOrientation(model, reversed);
         const measureUnitsText = TextMeasurementService.getTailoredTextOrDefault(
@@ -1152,7 +1166,7 @@ export class BulletChart implements IVisual {
                         return BulletChart.XMarginHorizontalLeft + BulletChart.XMarginHorizontalRight + model.viewportLength + BulletChart.SubtitleMargin;
                     return d.x - BulletChart.SubtitleMargin;
                 }))
-                .attr("y", ((d: BarData) => d.y + this.data.labelHeight / BulletChart.value2 + BulletChart.value12 + BulletChart.BulletSize / 2))
+                .attr("y", ((d: BarData) => d.y + this.data.labelHeight / BulletChart.value2 + BulletChart.value12 + this.BarSize / 2))
                 .attr("fill", model.settings.axis.unitsColor.value.value)
                 .attr("font-family", model.settings.axis.unitsFont.fontFamily.value)
                 .attr("font-size", PixelConverter.fromPoint(model.settings.axis.unitsFont.fontSize.value))
@@ -1258,7 +1272,7 @@ export class BulletChart implements IVisual {
         this.bulletGraphicsContext
             .append("g")
             .attr("transform", () => {
-                const xLocation: number = bar.x - (isMainAxis ? BulletChart.MainAxisPadding : 0);
+                const xLocation: number = bar.x - (isMainAxis ? this.SpaceRequiredForBarVertically - this.BarSize : 0);
                 const yLocation: number = this.calculateLabelHeight(
                     bar,
                     null,
@@ -1295,7 +1309,8 @@ export class BulletChart implements IVisual {
                     null,
                     reversed
                 );
-                const yLocation: number = bar.y + BulletChart.BulletSize + (isMainAxis ? BulletChart.MainAxisPadding : 0);
+                const gap = Math.abs(this.data.spaceRequiredForBarHorizontally - this.BarSize);
+                const yLocation: number = bar.y + this.BarSize + (isMainAxis ? gap : 0);
 
                 return `translate(${xLocation},${yLocation})`;
             })
@@ -1358,7 +1373,7 @@ export class BulletChart implements IVisual {
             .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x)))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
             .attr("height", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
-            .attr("width", BulletChart.BulletSize)
+            .attr("width", this.BarSize)
             .classed("range", true)
             .style("fill", (d: BarRect) => d.fillColor)
             .classed(HtmlSubSelectableClass, this.formatMode)
@@ -1371,10 +1386,10 @@ export class BulletChart implements IVisual {
         const valueSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
         const valueSelectionMerged = valueSelection
             .join("rect")
-            .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + BulletChart.bulletMiddlePosition)))
+            .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + this.bulletMiddlePosition)))
             .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
             .attr("height", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
-            .attr("width", BulletChart.BulletSize * BulletChart.value1 / BulletChart.value4)
+            .attr("width", this.BarSize * BulletChart.value1 / BulletChart.value4)
             .classed("value", true)
             .classed(HtmlSubSelectableClass, this.formatMode)
             .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Bullet.name)
@@ -1386,13 +1401,13 @@ export class BulletChart implements IVisual {
         // Draw markers
         this.drawFirstTargets(
             targetValues,
-            (d: TargetValue) => bars[d.barIndex].x + BulletChart.MarkerMarginVertical,
-            (d: TargetValue) => bars[d.barIndex].x + (BulletChart.MarkerMarginVertical * BulletChart.value3),
+            (d: TargetValue) => bars[d.barIndex].x + this.MarkerMarginVertical,
+            (d: TargetValue) => bars[d.barIndex].x + (this.MarkerMarginVertical * BulletChart.value3),
             (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value,
             (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value);
 
         this.drawSecondTargets(targetValues,
-            (d: TargetValue) => bars[d.barIndex].x + BulletChart.BulletSize / BulletChart.value2,
+            (d: TargetValue) => bars[d.barIndex].x + this.BarSize / BulletChart.value2,
             (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value2);
 
         const labelsStartPos: number = BulletChart.YMarginVertical + (reversed ? model.viewportLength + 15 : 0) + this.data.labelHeightTop;
@@ -1406,7 +1421,7 @@ export class BulletChart implements IVisual {
             barSelection
                 .join("text")
                 .classed(BulletChart.MeasureUnitsSelector.className, true)
-                .attr("x", ((d: BarData) => d.x + BulletChart.BulletSize))
+                .attr("x", ((d: BarData) => d.x + this.BarSize))
                 .attr("y", () => {
                     return labelsStartPos + BulletChart.SubtitleMargin + BulletChart.value12;
                 })

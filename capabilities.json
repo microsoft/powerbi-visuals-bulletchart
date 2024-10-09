@@ -62,6 +62,15 @@
         }
     ],
     "objects": {
+        "general": {
+            "properties": {
+                "barSize": {
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
         "values": {
             "properties": {
                 "targetValue": {
