@@ -64,6 +64,11 @@
     "objects": {
         "general": {
             "properties": {
+                "showCompletionPercent": {
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "barSize": {
                     "type": {
                         "numeric": true

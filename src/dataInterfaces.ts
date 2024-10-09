@@ -77,6 +77,8 @@ export interface BarRect extends SelectableDataPoint {
 
 export interface TargetValue {
     barIndex: number;
+    categoryValue: number;
+    targetValueUnscaled: number;
     value: number;
     value2: number;
     fill: string;

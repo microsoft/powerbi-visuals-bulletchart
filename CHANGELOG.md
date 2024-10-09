@@ -4,7 +4,7 @@
 * Add font setttings for measure units and axis
 * Add an ‘auto width’ toggle for category labels that, when enabled, adjusts the label width to display all categories without trimming
 * Add settings to control axis display format and precision
-* Add settings to control bar size
+* Add settings to control bar size and to show percent of completion
 
 ### Code improvements
 * Fix sync axis by computing min and max category values

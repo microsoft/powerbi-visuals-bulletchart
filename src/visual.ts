@@ -374,7 +374,10 @@ export class BulletChart implements IVisual {
         return xAxisProperties;
     }
 
-    // Convert a DataView into a view model
+    /**
+     * Convert a DataView into a view model.
+     */
+    // eslint-disable-next-line max-lines-per-function
     public CONVERTER(dataView: DataView, options: VisualUpdateOptions): BulletChartModel {
         const categorical: BulletChartColumns<
             DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns
@@ -397,7 +400,10 @@ export class BulletChart implements IVisual {
             this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.HorizontalRight ||
             this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.VerticalBottom;
 
-        const longestCategoryWidth = this.computeLongestCategoryWidth(categorical, categoricalValues);
+        const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
+        const categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
+
+        const longestCategoryWidth = this.computeLongestCategoryWidth(categorical, categoricalValues, isVerticalOrientation, isReversedOrientation);
 
         const bulletModel: BulletChartModel = BulletChart.BuildBulletModel(
             this.visualSettings,
@@ -409,8 +415,6 @@ export class BulletChart implements IVisual {
             longestCategoryWidth,
         );
 
-        const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
-        const categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
         const length: number = categoricalValues.Value.length;
 
         const { categoryMinValue, categoryMaxValue }: { categoryMinValue: number; categoryMaxValue: number; } = this.calculateCategoryValueRange(length, categoricalValues);
@@ -421,6 +425,8 @@ export class BulletChart implements IVisual {
             let category: string = BulletChart.emptyString;
             if (categorical.Category) {
                 category = valueFormatter.format(categoricalValues.Category[idx], categoryFormatString);
+                category = this.formatCategoryWithCompletionPercent({ category, categoricalValues, index: idx, isVerticalOrientation, isReversedOrientation });
+
                 const textProperties = BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value);
                 category = TextMeasurementService.getTailoredTextOrDefault(
                     textProperties,
@@ -503,21 +509,62 @@ export class BulletChart implements IVisual {
         return { categoryMinValue, categoryMaxValue };
     }
 
-    private computeLongestCategoryWidth(categorical: BulletChartColumns<powerbiVisualsApi.DataViewCategoryColumn & powerbiVisualsApi.DataViewValueColumn[] & powerbiVisualsApi.DataViewValueColumns>, categoricalValues: BulletChartColumns<any[]>) {
+    private computeLongestCategoryWidth(
+        categorical: BulletChartColumns<powerbiVisualsApi.DataViewCategoryColumn & powerbiVisualsApi.DataViewValueColumn[] & powerbiVisualsApi.DataViewValueColumns>,
+        categoricalValues: BulletChartColumns<any[]>,
+        isVerticalOrientation: boolean,
+        isReversedOrientation: boolean,
+    ) {
         if (!categorical?.Category) {
             return 0;
         }
 
         let longestCategory: string = "";
-        for (let idx = 0; idx < categoricalValues.Category.length; idx++) {
-            if (categoricalValues?.Category[idx]?.length > longestCategory.length) {
-                longestCategory = categoricalValues.Category[idx];
+        for (let index = 0; index < categoricalValues.Category.length; index++) {
+            let category: string = categoricalValues.Category[index];
+
+            category = this.formatCategoryWithCompletionPercent({ category, categoricalValues, index, isVerticalOrientation, isReversedOrientation });
+
+            if (category.length > longestCategory.length) {
+                longestCategory = category;
             }
         }
+
         const textProperties = BulletChart.getTextProperties(longestCategory, this.visualSettings.labels.font.fontSize.value);
         // Add 1 pixel to the width to avoid text truncation
         const longestCategoryWidth = measureSvgTextWidth(textProperties, longestCategory) + 1;
         return longestCategoryWidth;
+    }
+
+    private formatCategoryWithCompletionPercent({
+        category,
+        categoricalValues,
+        index,
+        isVerticalOrientation,
+        isReversedOrientation
+    }: {
+        category: string;
+        categoricalValues: BulletChartColumns<any[]>;
+        index: number;
+        isVerticalOrientation: boolean;
+        isReversedOrientation: boolean;
+    }) {
+        if (!this.visualSettings.general.showCompletionPercent.value
+            || !categoricalValues.Value?.[index]
+            || !categoricalValues.TargetValue?.[index]
+            || isVerticalOrientation
+        ) {
+            return category;
+        }
+
+        const categoryValue: number = categoricalValues.Value[index];
+        const targetValue: number = categoricalValues.TargetValue[index];
+
+        if (isReversedOrientation) {
+            return this.computeCompletionPercent(categoryValue, targetValue) + " - " + category;
+        } else {
+            return category + " - " + this.computeCompletionPercent(categoryValue, targetValue);
+        }
     }
 
     private static BuildBulletModel(
@@ -561,6 +608,7 @@ export class BulletChart implements IVisual {
         return bulletModel;
     }
 
+    // eslint-disable-next-line max-lines-per-function
     private BuildBulletChartItem(
         idx: number,
         category: string,
@@ -652,6 +700,8 @@ export class BulletChart implements IVisual {
         if (lodashIsnumber(scaledTarget)) {
             bulletModel.targetValues.push({
                 barIndex: idx,
+                categoryValue: categoryValue,
+                targetValueUnscaled: targetValue,
                 value: targetValue && scale(targetValue),
                 fill: bulletFillColor,
                 stroke: visualSettings.colors.bulletColor.value.value,
@@ -1242,7 +1292,7 @@ export class BulletChart implements IVisual {
 
         // Draw Labels
         if (model.settings.labels.show.value) {
-            barSelection
+            const textSelection = barSelection
                 .join("text")
                 .classed(BulletChart.CategoryLabelsSelector.className, true)
                 .classed(HtmlSubSelectableClass, this.formatMode)
@@ -1262,10 +1312,34 @@ export class BulletChart implements IVisual {
                 .style("font-weight", model.settings.labels.font.bold.value ? "bold" : "normal")
                 .style("font-style", model.settings.labels.font.italic.value ? "italic" : "normal")
                 .style("text-decoration", model.settings.labels.font.underline.value ? "underline" : "none")
-                .text((d: BarData) => d.categoryLabel)
-                .append("title")
-                .text((d: BarData) => d.categoryLabel);
+
+                // accessibility title
+                textSelection.append("title").text((d: BarData) => d.categoryLabel);
+
+                textSelection
+                    .append("tspan")
+                    .attr("x", (d: BarData) => d.x)
+                    .attr("dy", 0)
+                    .text((d: BarData) => d.categoryLabel);
+
+                if (this.settings.general.showCompletionPercent.value) {
+                    textSelection
+                        .append("tspan")
+                        .attr("x", (d: BarData) => d.x)
+                        .attr("dy", this.data.labelHeightTop + 3) // add a little space between the category label and the completion percent
+                        .text((d: BarData) => {
+                            const categoryValue = model.targetValues[d.barIndex].categoryValue;
+                            const targetValue = model.targetValues[d.barIndex].targetValueUnscaled;
+                            return this.computeCompletionPercent(categoryValue, targetValue);
+                        });
+                }
+
         }
+    }
+
+    private computeCompletionPercent(value: number, targetValue: number): string {
+        const percent = Math.round(value / targetValue * 100);
+        return isNaN(percent) ? "N/A" : percent + "%";
     }
 
     private renderAxisVertically(bar: BarData, reversed: boolean, axisColor: string, isMainAxis: boolean) {

@@ -193,6 +193,13 @@ class BaseFontCardSettings extends Card {
 }
 
 class GeneralCard extends Card {
+    showCompletionPercent = new formattingSettings.ToggleSwitch({
+        name: "showCompletionPercent",
+        displayNameKey: "Visual_ShowCompletionPercent",
+        descriptionKey: "Visual_ShowCompletionPercent",
+        value: false,
+    });
+
     barSize = new formattingSettings.NumUpDown({
         name: "barSize",
         displayName: "Bar size",
@@ -206,7 +213,7 @@ class GeneralCard extends Card {
     name = "general";
     displayName = "General";
     displayNameKey = "Visual_General";
-    slices = [this.barSize];
+    slices = [this.showCompletionPercent, this.barSize];
 }
 
 class DataValuesCard extends Card {
