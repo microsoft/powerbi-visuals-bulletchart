@@ -27,7 +27,7 @@
 import "regenerator-runtime/runtime.js";
 import "./../style/bulletChart.less";
 
-import {select, Selection} from 'd3-selection';
+import { select, Selection } from 'd3-selection';
 import lodashIsnumber from "lodash.isnumber";
 import lodashMax from "lodash.max";
 import powerbiVisualsApi from "powerbi-visuals-api";
@@ -82,10 +82,9 @@ import {
     SubSelectableTypeAttribute,
 } from "powerbi-visuals-utils-onobjectutils"
 
-// d3
-type BulletSelection<T1, T2 = T1> = Selection<any, T1, any, T2>;
 import IViewport = powerbiVisualsApi.IViewport;
 import DataView = powerbiVisualsApi.DataView;
+import DataViewObject = powerbiVisualsApi.DataViewObject;
 import DataViewCategoryColumn = powerbiVisualsApi.DataViewCategoryColumn;
 import DataViewMetadataColumn = powerbiVisualsApi.DataViewMetadataColumn;
 import DataViewValueColumns = powerbiVisualsApi.DataViewValueColumns;
@@ -114,7 +113,7 @@ import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 import { labelsReference, axisReference, colorsReference } from "./BulletChartSettingsModel";
 import { measureSvgTextWidth } from "powerbi-visuals-utils-formattingutils/lib/src/textMeasurementService";
 
-export function appendClearCatcher(selection: Selection<SVGSVGElement, unknown, HTMLDivElement, undefined>): Selection<SVGRectElement, unknown, HTMLDivElement, undefined> {
+export function appendClearCatcher(selection: Selection<SVGSVGElement, null, HTMLElement, undefined>) {
     return selection
         .append("rect")
         .classed("clearCatcher", true)
@@ -162,11 +161,11 @@ export class BulletChart implements IVisual {
 
     private baselineDelta: number = 0;
     // Variables
-    private clearCatcher: BulletSelection<any>;
-    private bulletBody: BulletSelection<any>;
-    private scrollContainer: BulletSelection<any>;
-    private labelGraphicsContext: BulletSelection<any>;
-    private bulletGraphicsContext: BulletSelection<any>;
+    private clearCatcher: Selection<SVGRectElement, null, HTMLElement, null>;
+    private bulletBody: Selection<HTMLDivElement, null, HTMLElement, null>;
+    private scrollContainer: Selection<SVGSVGElement, null, HTMLElement, null>;
+    private labelGraphicsContext: Selection<SVGGElement, null, HTMLElement, null>;
+    private bulletGraphicsContext: Selection<SVGGElement, null, HTMLElement, null>;
     private data: BulletChartModel;
     private selectionManager: ISelectionManager;
     private localizationManager: ILocalizationManager;
@@ -923,7 +922,8 @@ export class BulletChart implements IVisual {
             left: 0
         });
 
-        const body: BulletSelection<any> = select(options.element);
+        const body: Selection<HTMLElement, null, HTMLElement, null> = select(options.element);
+
         this.hostService = options.host;
         this.colorPalette = this.hostService.colorPalette;
         this.colorHelper = new ColorHelper(this.colorPalette);
@@ -938,6 +938,7 @@ export class BulletChart implements IVisual {
             .append("svg")
             .classed(BulletChart.bulletScrollRegion, true)
             .attr("fill", "none");
+
         this.clearCatcher = appendClearCatcher(this.scrollContainer);
 
         this.labelGraphicsContext = this.scrollContainer.append("g");
@@ -1048,8 +1049,8 @@ export class BulletChart implements IVisual {
 
     private drawAxisAndLabelsForHorizontalOrientation(model: BulletChartModel, reversed: boolean) {
         const bars: BarData[] = model.bars;
-        const barSelection: BulletSelection<any> = this.labelGraphicsContext
-            .selectAll("text")
+        const barSelection: Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
+            .selectAll<SVGTextElement, BarData>("text")
             .data(bars, (d: BarData) => d.key);
 
         if (model.settings.axis.axis.value) {
@@ -1112,7 +1113,9 @@ export class BulletChart implements IVisual {
         const rects: BarRect[] = model.barRects;
         const valueRects: BarValueRect[] = model.valueRects;
         const targetValues: TargetValue[] = model.targetValues;
-        const barSelection: BulletSelection<any> = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
+        const barSelection: Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
+            .selectAll<SVGTextElement, BarData>("text")
+            .data(bars, (d: BarData) => d.key);
 
         const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
         const groupedBulletsSelection = this.bulletGraphicsContext
@@ -1141,8 +1144,8 @@ export class BulletChart implements IVisual {
             .style("stroke-width", (d: BarRect) => d.strokeWidth);
 
         // Draw value rects
-        const valueSelection: BulletSelection<any> = this.bulletGraphicsContext
-            .selectAll("rect.value")
+        const valueSelection: Selection<SVGRectElement, BarValueRect, SVGGElement, null> = this.bulletGraphicsContext
+            .selectAll<SVGRectElement, BarValueRect>("rect.value")
             .data(valueRects, (d: BarValueRect) => d.key)
             .join("rect")
             .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
@@ -1214,8 +1217,8 @@ export class BulletChart implements IVisual {
 
     private drawAxisAndLabelsForVerticalOrientation(model: BulletChartModel, reversed: boolean, labelsStartPosition: number) {
         const bars: BarData[] = model.bars;
-        const barSelection: BulletSelection<any> = this.labelGraphicsContext
-            .selectAll("text")
+        const barSelection: Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
+            .selectAll<SVGTextElement, BarData>("text")
             .data(bars, (d: BarData) => d.key);
 
         if (model.settings.axis.axis.value) {
@@ -1390,7 +1393,9 @@ export class BulletChart implements IVisual {
         const rects: BarRect[] = model.barRects;
         const valueRects: BarValueRect[] = model.valueRects;
         const targetValues: TargetValue[] = model.targetValues;
-        const barSelection: BulletSelection<any> = this.labelGraphicsContext.selectAll("text").data(bars, (d: BarData) => d.key);
+        const barSelection: Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
+            .selectAll<SVGTextElement, BarData>("text")
+            .data(bars, (d: BarData) => d.key);
 
         const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
         const groupedBulletsSelection = this.bulletGraphicsContext
@@ -1494,14 +1499,14 @@ export class BulletChart implements IVisual {
         y1: (d: TargetValue) => number,
         y2: (d: TargetValue) => number) {
 
-        const selection = this.bulletGraphicsContext
-            .selectAll("line.target")
+        const selection: Selection<SVGLineElement, TargetValue, SVGGElement, null> = this.bulletGraphicsContext
+            .selectAll<SVGLineElement, TargetValue>("line.target")
             .data(targetValues.filter(x => lodashIsnumber(x.value)));
 
-        const selectionMerged = selection
+        const selectionMerged: Selection<SVGLineElement, TargetValue, SVGGElement, null> = selection
             .enter()
             .append("line")
-            .merge(<BulletSelection<any>>selection);
+            .merge(selection);
 
         selectionMerged
             .attr("x1", x1)
@@ -1522,13 +1527,14 @@ export class BulletChart implements IVisual {
         getX: (d: TargetValue) => number,
         getY: (d: TargetValue) => number): void {
 
-        const selection = this.bulletGraphicsContext
-            .selectAll("line.target2")
+        const selection: Selection<SVGLineElement, TargetValue, SVGGElement, null> = this.bulletGraphicsContext
+            .selectAll<SVGLineElement, TargetValue>("line.target2")
             .data(targetValues.filter(x => lodashIsnumber(x.value2)));
+
         const enterSelection = selection.enter();
         enterSelection
             .append("line")
-            .merge((<BulletSelection<any>>selection))
+            .merge((selection))
             .attr(
                 "x1",
                 (d: TargetValue) => getX(d) - BulletChart.SecondTargetLineSize
@@ -1548,9 +1554,10 @@ export class BulletChart implements IVisual {
             .style("stroke", (d: TargetValue) => d.fill)
             .style("stroke-width", 2)
             .classed("target2", true);
+
         enterSelection
             .append("line")
-            .merge(<BulletSelection<any>>selection)
+            .merge(selection)
             .attr(
                 "x1",
                 (d: TargetValue) => getX(d) + BulletChart.SecondTargetLineSize

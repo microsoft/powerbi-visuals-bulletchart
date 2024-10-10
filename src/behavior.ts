@@ -1,13 +1,12 @@
 // d3
-import {BaseType, Selection as d3Selection} from "d3-selection";
-type Selection<T1, T2 = T1> = d3Selection<any, T1, any, T2>;
+import { BaseType, Selection as d3Selection } from "d3-selection";
 
 import powerbi from "powerbi-visuals-api";
 import ISelectionId = powerbi.visuals.ISelectionId;
 import ISelectionManager = powerbi.extensibility.ISelectionManager
 
-import { BarRect, BarValueRect } from "./dataInterfaces";
 import { LegendDataPoint } from "powerbi-visuals-utils-chartutils/lib/legend/legendInterfaces";
+import { BarRect, BarValueRect } from "./dataInterfaces";
 
 export const DimmedOpacity: number = 0.4;
 export const DefaultOpacity: number = 1.0;
@@ -33,7 +32,7 @@ export interface BehaviorOptions {
     rects: d3Selection<BaseType | SVGRectElement, BarRect, BaseType | SVGGElement, [number, BarRect[]]>;
     valueRects: d3Selection<BaseType | SVGRectElement, BarValueRect, any, any>;
     groupedRects:  d3Selection<BaseType | SVGGElement, [number, BarRect[]], any, any>;
-    clearCatcher: Selection<any>;
+    clearCatcher: d3Selection<HTMLDivElement, null, HTMLElement, null>;
 }
 
 export class Behavior {
