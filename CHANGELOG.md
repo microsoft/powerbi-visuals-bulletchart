@@ -2,13 +2,14 @@
 ### Visual changes
 * Move "sync axis" and "show only main axis" settings to "Axis" card
 * Add font setttings for measure units and axis
-* Add an ‘auto width’ toggle for category labels that, when enabled, adjusts the label width to display all categories without trimming
+* Add an 'auto width' toggle for category labels that, when enabled, adjusts the label width to display all categories without trimming
 * Add settings to control axis display format and precision
 * Add settings to control bar size and to show percent of completion
 
 ### Code improvements
 * Fix sync axis by computing min and max category values
 * When showing main axis only, reduce space between bars to save more place
+* Remove interactivity-utils
 
 ## 2.4.2
 * Check old enums with space like "Horizontal left" to maintain backward compatibility

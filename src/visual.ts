@@ -37,13 +37,6 @@ import {group} from "d3-array"
 // powerbi.extensibility.utils.type
 import {pixelConverter as PixelConverter} from "powerbi-visuals-utils-typeutils";
 
-// powerbi.extensibility.utils.interactivity
-import {
-    interactivityBaseService as interactivityService,
-    interactivityBaseService,
-    interactivitySelectionService
-} from "powerbi-visuals-utils-interactivityutils";
-
 // powerbi.extensibility.utils.formatting
 // import { textMeasurementService as tms, valueFormatter } from "powerbi-visuals-utils-formattingutils";
 // import TextProperties = tms.TextProperties;
@@ -59,7 +52,6 @@ import {axis as AxisHelper, axisInterfaces, axisScale} from "powerbi-visuals-uti
 import {
     createTooltipServiceWrapper,
     ITooltipServiceWrapper,
-    TooltipEnabledDataPoint
 } from "powerbi-visuals-utils-tooltiputils";
 
 // powerbi.extensibility.utils.color
@@ -76,7 +68,7 @@ import {
 } from "./dataInterfaces";
 import { BarRectType } from "./enums";
 import {VisualLayout} from "./visualLayout";
-import {BulletBehaviorOptions, BulletWebBehavior} from "./behavior";
+import {BehaviorOptions, Behavior} from "./behavior";
 import { BulletChartOrientation } from "./enums";
 import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
 import { BulletChartObjectNames, BulletChartSettingsModel } from './BulletChartSettingsModel';
@@ -110,10 +102,6 @@ import IVisualEventService = powerbiVisualsApi.extensibility.IVisualEventService
 // powerbi.visuals
 import ISelectionId = powerbiVisualsApi.visuals.ISelectionId;
 import ISelectionIdBuilder = powerbiVisualsApi.visuals.ISelectionIdBuilder;
-import appendClearCatcher = interactivityService.appendClearCatcher;
-import IInteractivityService = interactivityService.IInteractivityService;
-import createInteractivitySelectionService = interactivitySelectionService.createInteractivitySelectionService;
-import BaseDataPoint = interactivityBaseService.BaseDataPoint;
 import IAxisProperties = axisInterfaces.IAxisProperties;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import CustomVisualSubSelection = powerbi.visuals.CustomVisualSubSelection;
@@ -125,6 +113,15 @@ import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 
 import { labelsReference, axisReference, colorsReference } from "./BulletChartSettingsModel";
 import { measureSvgTextWidth } from "powerbi-visuals-utils-formattingutils/lib/src/textMeasurementService";
+
+export function appendClearCatcher(selection: Selection<SVGSVGElement, unknown, HTMLDivElement, undefined>): Selection<SVGRectElement, unknown, HTMLDivElement, undefined> {
+    return selection
+        .append("rect")
+        .classed("clearCatcher", true)
+        .attr("width", "100%")
+        .attr("height", "100%");
+}
+
 
 interface ClassAndSelector {
     className: string;
@@ -171,6 +168,7 @@ export class BulletChart implements IVisual {
     private labelGraphicsContext: BulletSelection<any>;
     private bulletGraphicsContext: BulletSelection<any>;
     private data: BulletChartModel;
+    private selectionManager: ISelectionManager;
     private localizationManager: ILocalizationManager;
     private formattingSettingsService: FormattingSettingsService;
     private visualSettings: BulletChartSettingsModel;
@@ -178,15 +176,13 @@ export class BulletChart implements IVisual {
     private formatMode: boolean = false;
     public visualOnObjectFormatting?: powerbi.extensibility.visual.VisualOnObjectFormatting;
 
-    private behavior: BulletWebBehavior;
-    private interactivityService: IInteractivityService<BaseDataPoint>;
+    private behavior: Behavior;
     private hostService: IVisualHost;
     public layout: VisualLayout;
     private colorPalette: IColorPalette;
     private colorHelper: ColorHelper;
     private events: IVisualEventService;
     private tooltipServiceWrapper: ITooltipServiceWrapper;
-    private selectionManager: ISelectionManager;
 
     private get BarSize(): number {
         return this.visualSettings.general.barSize.value;
@@ -901,20 +897,6 @@ export class BulletChart implements IVisual {
     private static dragResizeDisabled: string = "drag-resize-disabled";
     private static bulletScrollRegion: string = "bullet-scroll-region";
 
-    public handleContextMenu() {
-        this.bulletBody.on("contextmenu", (event) => {
-            const dataPoint: BarRect = <BarRect>select(event.target).datum();
-            this.selectionManager.showContextMenu(
-                dataPoint?.identity || {},
-                {
-                    x: event.clientX,
-                    y: event.clientY,
-                }
-            );
-            event.preventDefault();
-        });
-    }
-
     constructor(options: VisualConstructorOptions) {
         this.tooltipServiceWrapper = createTooltipServiceWrapper(
             options.host.tooltipService,
@@ -961,10 +943,7 @@ export class BulletChart implements IVisual {
         this.labelGraphicsContext = this.scrollContainer.append("g");
         this.bulletGraphicsContext = this.scrollContainer.append("g");
 
-        this.behavior = new BulletWebBehavior();
-
-        this.interactivityService = createInteractivitySelectionService(options.host);
-        this.handleContextMenu();
+        this.behavior = new Behavior(this.selectionManager);
     }
 
     public static oneString: string = "1";
@@ -993,10 +972,6 @@ export class BulletChart implements IVisual {
 
             this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.font.fontSize.value));
 
-            if (this.interactivityService) {
-                this.interactivityService.applySelectionStateToData(this.data.barRects);
-            }
-
             this.bulletBody
                 .style("height", PixelConverter.toString(this.layout.viewportIn.height))
                 .style("width", PixelConverter.toString(this.layout.viewportIn.width));
@@ -1020,8 +995,6 @@ export class BulletChart implements IVisual {
             } else {
                 this.setUpBulletsHorizontally(this.data, this.reverse);
             }
-
-            this.behavior.renderSelection(this.interactivityService.hasSelection());
 
             this.subSelectionHelper.setFormatMode(options.formatMode);
             const shouldUpdateSubSelection = options.type & (powerbi.VisualUpdateType.Data
@@ -1050,12 +1023,6 @@ export class BulletChart implements IVisual {
         this.scrollContainer
             .attr("width", PixelConverter.toString(0))
             .attr("height", PixelConverter.toString(0));
-    }
-
-    public onClearSelection(): void {
-        if (this.interactivityService) {
-            this.interactivityService.clearSelection();
-        }
     }
 
     private calculateLabelWidth(barData: BarData, bar?: BarRect, reversed?: boolean) {
@@ -1226,25 +1193,20 @@ export class BulletChart implements IVisual {
                 .text(measureUnitsText);
         }
 
-        if (this.interactivityService) {
-            const targetCollection = this.data.barRects.concat(this.data.valueRects);
-            const behaviorOptions: BulletBehaviorOptions = {
-                rects: bullets,
-                groupedRects: groupedBulletsSelection,
-                valueRects: valueSelection,
-                clearCatcher: this.clearCatcher,
-                interactivityService: this.interactivityService,
-                bulletChartSettings: this.data.settings,
-                hasHighlights: this.data.hasHighlights,
-                behavior: this.behavior,
-                dataPoints: targetCollection
-            };
+        const targetCollection = this.data.barRects.concat(this.data.valueRects);
+        const behaviorOptions: BehaviorOptions = {
+            dataPoints: targetCollection,
+            hasHighlights: this.data.hasHighlights,
+            rects: bullets,
+            groupedRects: groupedBulletsSelection,
+            valueRects: valueSelection,
+            clearCatcher: this.bulletBody,
+        };
 
-            this.interactivityService.bind(behaviorOptions);
-        }
+        this.behavior.bindEvents(behaviorOptions);
 
-        this.tooltipServiceWrapper.addTooltip(valueSelection, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
-        this.tooltipServiceWrapper.addTooltip(bullets, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(valueSelection, (data: BarValueRect) => data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(bullets, (data: BarRect) => data.tooltipInfo);
     }
 
     private static value3: number = 3;
@@ -1457,7 +1419,9 @@ export class BulletChart implements IVisual {
             .style("stroke-width", (d: BarRect) => d.strokeWidth);
 
         // Draw value rects
-        const valueSelection: BulletSelection<any> = this.bulletGraphicsContext.selectAll("rect.value").data(valueRects, (d: BarValueRect) => d.key);
+        const valueSelection = this.bulletGraphicsContext
+            .selectAll("rect.value")
+            .data(valueRects, (d: BarValueRect) => d.key);
         const valueSelectionMerged = valueSelection
             .join("rect")
             .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + this.bulletMiddlePosition)))
@@ -1507,23 +1471,20 @@ export class BulletChart implements IVisual {
                 .attr("text-decoration", model.settings.axis.unitsFont.underline.value ? "underline" : "none")
                 .text(measureUnitsText);
         }
-        if (this.interactivityService) {
-            const targetCollection: BarRect[] = this.data.barRects.concat(this.data.valueRects);
-            const behaviorOptions: BulletBehaviorOptions = {
-                rects: bullets,
-                groupedRects: groupedBulletsSelection,
-                valueRects: valueSelectionMerged,
-                clearCatcher: this.clearCatcher,
-                interactivityService: this.interactivityService,
-                bulletChartSettings: this.data.settings,
-                hasHighlights: this.data.hasHighlights,
-                behavior: this.behavior,
-                dataPoints: targetCollection
-            };
-            this.interactivityService.bind(behaviorOptions);
-        }
-        this.tooltipServiceWrapper.addTooltip(valueSelectionMerged, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
-        this.tooltipServiceWrapper.addTooltip(bullets, (data: TooltipEnabledDataPoint) => data.tooltipInfo);
+
+        const targetCollection: BarRect[] = this.data.barRects.concat(this.data.valueRects);
+        const behaviorOptions: BehaviorOptions = {
+            dataPoints: targetCollection,
+            hasHighlights: this.data.hasHighlights,
+            rects: bullets,
+            groupedRects: groupedBulletsSelection,
+            valueRects: valueSelectionMerged,
+            clearCatcher: this.bulletBody,
+        };
+        this.behavior.bindEvents(behaviorOptions);
+
+        this.tooltipServiceWrapper.addTooltip(valueSelectionMerged, (data: BarValueRect) => data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(bullets, (data: BarRect) => data.tooltipInfo);
     }
 
     private drawFirstTargets(

@@ -29,14 +29,12 @@ import powerbiVisualsApi from "powerbi-visuals-api";
 import DataViewValueColumn = powerbiVisualsApi.DataViewValueColumn;
 import VisualTooltipDataItem = powerbiVisualsApi.extensibility.VisualTooltipDataItem;
 
-import { interactivitySelectionService as interactivityService } from "powerbi-visuals-utils-interactivityutils";
-import SelectableDataPoint = interactivityService.SelectableDataPoint;
-
 import { axisInterfaces } from "powerbi-visuals-utils-chartutils";
 import IAxisProperties = axisInterfaces.IAxisProperties;
 
 import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
 import { BarRectType } from './enums';
+import { SelectableDataPoint } from "./behavior";
 
 export interface BulletChartModel {
     bars: BarData[];
