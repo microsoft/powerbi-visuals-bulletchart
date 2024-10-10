@@ -1,8 +1,8 @@
 import powerbi from "powerbi-visuals-api";
+import { legendInterfaces } from "powerbi-visuals-utils-chartutils";
 import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
 import { Group, SimpleSlice } from "powerbi-visuals-utils-formattingmodel/lib/FormattingSettingsComponents";
-import { BulletChartOrientation } from "./enums";
-import { BarRectType } from "./enums";
+import { BarRectType, BulletChartOrientation } from "./enums";
 
 import Model = formattingSettings.Model;
 import Card = formattingSettings.SimpleCard;
@@ -11,6 +11,7 @@ import IEnumMember = powerbi.IEnumMember;
 import FormattingId = powerbi.visuals.FormattingId;
 import ValidatorType = powerbi.visuals.ValidatorType;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
+import LegendPosition = legendInterfaces.LegendPosition;
 
 const nameof = <T>(name: Extract<keyof T, string>): string => name;
 
@@ -155,6 +156,17 @@ const orientationOptions: IEnumMember[] = [
     { value: BulletChartOrientation.HorizontalRight, displayName: "Visual_Orientation_HorizontalRight" },
     { value: BulletChartOrientation.VerticalTop, displayName: "Visual_Orientation_VerticalTop" },
     { value: BulletChartOrientation.VerticalBottom, displayName: "Visual_Orientation_VerticalBottom" },
+];
+
+const legendPositionOptions: IEnumMember[] = [
+    { value: LegendPosition[LegendPosition.Top], displayName: "Visual_Top" },
+    { value: LegendPosition[LegendPosition.Bottom], displayName: "Visual_Bottom" },
+    { value: LegendPosition[LegendPosition.Right], displayName: "Visual_Right" },
+    { value: LegendPosition[LegendPosition.Left], displayName: "Visual_Left" },
+    { value: LegendPosition[LegendPosition.TopCenter], displayName: "Visual_TopCenter" },
+    { value: LegendPosition[LegendPosition.BottomCenter], displayName: "Visual_BottomCenter" },
+    { value: LegendPosition[LegendPosition.RightCenter], displayName: "Visual_RightCenter" },
+    { value: LegendPosition[LegendPosition.LeftCenter], displayName: "Visual_LeftCenter" },
 ];
 
 
@@ -375,7 +387,6 @@ class OrientationCard extends Card {
 }
 
 class ColorsCard extends Card {
-
     minColor = new formattingSettings.ColorPicker({
         name: "minColor",
         displayName: "Minimum color",
@@ -429,6 +440,19 @@ class ColorsCard extends Card {
         this.veryGoodColor,
         this.bulletColor,
     ];
+
+    public getData() {
+        const colors: { displayNameKey: string; color: string; }[] = [
+            { displayNameKey: this.minColor.displayNameKey, color: this.minColor.value.value },
+            { displayNameKey: this.needsImprovementColor.displayNameKey, color: this.needsImprovementColor.value.value },
+            { displayNameKey: this.satisfactoryColor.displayNameKey, color: this.satisfactoryColor.value.value },
+            { displayNameKey: this.goodColor.displayNameKey, color: this.goodColor.value.value },
+            { displayNameKey: this.veryGoodColor.displayNameKey, color: this.veryGoodColor.value.value },
+            { displayNameKey: this.bulletColor.displayNameKey, color: this.bulletColor.value.value },
+        ];
+
+        return colors;
+    }
 }
 
 class AxisCard extends CompositeCard {
@@ -584,6 +608,53 @@ class AxisCard extends CompositeCard {
     groups = [this.axisGeneralGroup, this.axisMeasureUnitsGroup, this.axisSynchronizationGroup];
 }
 
+class LegendCard extends BaseFontCardSettings {
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Show",
+        displayNameKey: "Visual_Show",
+        value: false,
+    });
+
+    position = new formattingSettings.ItemDropdown({
+        name: "position",
+        displayName: "Position",
+        displayNameKey: "Visual_Position",
+        items: legendPositionOptions,
+        value: legendPositionOptions[0],
+    });
+
+    showTitle = new formattingSettings.ToggleSwitch({
+        name: "showTitle",
+        displayName: "Show title",
+        displayNameKey: "Visual_ShowTitle",
+        value: true,
+    });
+
+    titleText = new formattingSettings.TextInput({
+        name: "titleText",
+        displayName: "Title",
+        displayNameKey: "Visual_Title",
+        value: "",
+        placeholder: "",
+    });
+
+    labelColor = new formattingSettings.ColorPicker({
+        name: "labelColor",
+        displayName: "Color",
+        displayNameKey: "Visual_Color",
+        value: { value: "#666666" },
+    });
+
+    topLevelSlice = this.show;
+    name = "legend";
+    displayName = "Legend";
+    displayNameKey = "Visual_Legend";
+    description = "Display legend options";
+    descriptionKey = "Visual_Description_Legend";
+    slices = [this.position, this.showTitle, this.titleText, this.labelColor, this.font];
+}
+
 export class BulletChartSettingsModel extends Model {
     general = new GeneralCard();
     values = new DataValuesCard();
@@ -592,6 +663,7 @@ export class BulletChartSettingsModel extends Model {
     orientation = new OrientationCard();
     colors = new ColorsCard();
     axis = new AxisCard();
+    legend = new LegendCard();
 
     cards = [
         this.general,
@@ -601,10 +673,12 @@ export class BulletChartSettingsModel extends Model {
         this.orientation,
         this.colors,
         this.axis,
+        this.legend,
     ];
 
     public setLocalizedOptions(localizationManager: ILocalizationManager) {
         this.setLocalizedDisplayName(orientationOptions, localizationManager);
+        this.setLocalizedDisplayName(legendPositionOptions, localizationManager);
     }
 
     private setLocalizedDisplayName(options: IEnumMember[], localizationManager: ILocalizationManager) {

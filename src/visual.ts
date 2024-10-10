@@ -46,7 +46,22 @@ import * as valueFormatter from "powerbi-visuals-utils-formattingutils/lib/src/v
 import {TextProperties} from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
 
 // powerbi.extensibility.utils.chart
-import {axis as AxisHelper, axisInterfaces, axisScale} from "powerbi-visuals-utils-chartutils";
+import {
+    axis as AxisHelper,
+    axisInterfaces,
+    axisScale,
+    legend as LegendModule,
+    legendInterfaces,
+    legendData,
+} from "powerbi-visuals-utils-chartutils";
+
+import createLegend = LegendModule.createLegend;
+import positionChartArea = LegendModule.positionChartArea;
+import ILegend = legendInterfaces.ILegend;
+import LegendData = legendInterfaces.LegendData;
+import LegendDataPoint = legendInterfaces.LegendDataPoint;
+import LegendPosition = legendInterfaces.LegendPosition;
+import MarkerShape = legendInterfaces.MarkerShape;
 
 // powerbi.extensibility.utils.tooltip
 import {
@@ -113,15 +128,6 @@ import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 import { labelsReference, axisReference, colorsReference } from "./BulletChartSettingsModel";
 import { measureSvgTextWidth } from "powerbi-visuals-utils-formattingutils/lib/src/textMeasurementService";
 
-export function appendClearCatcher(selection: Selection<SVGSVGElement, null, HTMLElement, undefined>) {
-    return selection
-        .append("rect")
-        .classed("clearCatcher", true)
-        .attr("width", "100%")
-        .attr("height", "100%");
-}
-
-
 interface ClassAndSelector {
     className: string;
     selectorName: string;
@@ -158,10 +164,11 @@ export class BulletChart implements IVisual {
     public static MeasureUnitsSelector: ClassAndSelector = CreateClassAndSelector("measureUnits");
     private static AxisSelector: ClassAndSelector = CreateClassAndSelector("axis");
     private static BulletContainerSelector: ClassAndSelector = CreateClassAndSelector("bulletContainer");
+    private static LegendItemSelector: ClassAndSelector = CreateClassAndSelector("legendItem");
 
     private baselineDelta: number = 0;
     // Variables
-    private clearCatcher: Selection<SVGRectElement, null, HTMLElement, null>;
+    private root: HTMLElement;
     private bulletBody: Selection<HTMLDivElement, null, HTMLElement, null>;
     private scrollContainer: Selection<SVGSVGElement, null, HTMLElement, null>;
     private labelGraphicsContext: Selection<SVGGElement, null, HTMLElement, null>;
@@ -175,6 +182,7 @@ export class BulletChart implements IVisual {
     private formatMode: boolean = false;
     public visualOnObjectFormatting?: powerbi.extensibility.visual.VisualOnObjectFormatting;
 
+    private legend: ILegend;
     private behavior: Behavior;
     private hostService: IVisualHost;
     public layout: VisualLayout;
@@ -804,7 +812,7 @@ export class BulletChart implements IVisual {
     }
 
     private get settings(): BulletChartSettingsModel {
-        return this.data && this.data.settings;
+        return (this.data && this.data.settings) || this.visualSettings;
     }
 
     private setHighContrastColors(): void {
@@ -818,6 +826,8 @@ export class BulletChart implements IVisual {
         this.visualSettings.colors.needsImprovementColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.colors.needsImprovementColor.value.value);
         this.visualSettings.colors.satisfactoryColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.colors.satisfactoryColor.value.value);
         this.visualSettings.colors.veryGoodColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.colors.veryGoodColor.value.value);
+
+        this.visualSettings.legend.labelColor.value.value = this.colorHelper.getHighContrastColor("foreground", this.visualSettings.legend.labelColor.value.value);
     }
 
     public static GETFITTICKSCOUNT(viewportLength: number): number {
@@ -928,7 +938,9 @@ export class BulletChart implements IVisual {
         this.colorPalette = this.hostService.colorPalette;
         this.colorHelper = new ColorHelper(this.colorPalette);
         this.events = options.host.eventService;
+        this.behavior = new Behavior(this.selectionManager);
 
+        this.root = options.element;
         this.bulletBody = body
             .append("div")
             .classed(BulletChart.bulletChartClassed, true)
@@ -939,12 +951,10 @@ export class BulletChart implements IVisual {
             .classed(BulletChart.bulletScrollRegion, true)
             .attr("fill", "none");
 
-        this.clearCatcher = appendClearCatcher(this.scrollContainer);
+        this.legend = createLegend(options.element, false);
 
         this.labelGraphicsContext = this.scrollContainer.append("g");
         this.bulletGraphicsContext = this.scrollContainer.append("g");
-
-        this.behavior = new Behavior(this.selectionManager);
     }
 
     public static oneString: string = "1";
@@ -973,10 +983,6 @@ export class BulletChart implements IVisual {
 
             this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.font.fontSize.value));
 
-            this.bulletBody
-                .style("height", PixelConverter.toString(this.layout.viewportIn.height))
-                .style("width", PixelConverter.toString(this.layout.viewportIn.width));
-
             if (this.vertical) {
                 this.scrollContainer
                     .attr("width", PixelConverter.toString(this.data.bars.length * this.SpaceRequiredForBarVertically + BulletChart.XMarginVertical))
@@ -984,9 +990,9 @@ export class BulletChart implements IVisual {
             } else {
                 this.scrollContainer
                     .attr("height", (
-                        this.data.bars.length * this.data.spaceRequiredForBarHorizontally
+                        PixelConverter.toString(this.data.bars.length * this.data.spaceRequiredForBarHorizontally
                             + BulletChart.YMarginHorizontal
-                            + (this.settings.axis.axis.value ? BulletChart.YMarginHorizontal : BulletChart.zeroValue)
+                            + (this.settings.axis.axis.value ? BulletChart.YMarginHorizontal : BulletChart.zeroValue))
                     ))
                     .attr("width", PixelConverter.toString(this.viewportScroll.width));
             }
@@ -996,6 +1002,8 @@ export class BulletChart implements IVisual {
             } else {
                 this.setUpBulletsHorizontally(this.data, this.reverse);
             }
+
+            this.renderLegend();
 
             this.subSelectionHelper.setFormatMode(options.formatMode);
             const shouldUpdateSubSelection = options.type & (powerbi.VisualUpdateType.Data
@@ -1210,6 +1218,51 @@ export class BulletChart implements IVisual {
 
         this.tooltipServiceWrapper.addTooltip(valueSelection, (data: BarValueRect) => data.tooltipInfo);
         this.tooltipServiceWrapper.addTooltip(bullets, (data: BarRect) => data.tooltipInfo);
+    }
+
+    private renderLegend(): void {
+        const legendDataObject: LegendData = {
+            dataPoints: [],
+            title: this.settings.legend.titleText.value,
+            fontSize: this.settings.legend.font.fontSize.value,
+            fontFamily: this.settings.legend.font.fontFamily.value,
+            labelColor: this.settings.legend.labelColor.value.value,
+        };
+
+        const emptyIdentity = this.hostService.createSelectionIdBuilder().createSelectionId();
+        const colors = this.settings.colors.getData();
+        const dataPoints: LegendDataPoint[] = colors.map((color) => ({
+            label: this.localizationManager.getDisplayName(color.displayNameKey),
+            color: color.color,
+            markerShape: MarkerShape.circle,
+            identity: emptyIdentity,
+            selected: false,
+        }));
+        legendDataObject.dataPoints = dataPoints;
+
+        const legendObject: DataViewObject = {
+            show: this.settings.legend.show.value,
+            showTitle: this.settings.legend.showTitle.value,
+            position: LegendPosition[this.settings.legend.position.value.value],
+            fontSize: this.settings.legend.font.fontSize.value,
+            titleText: this.settings.legend.titleText.value,
+            labelColor: {
+                solid: {
+                    color: this.settings.legend.labelColor.value.value,
+                }
+            }
+        };
+
+        legendData.update(legendDataObject, legendObject);
+        this.legend.changeOrientation(LegendPosition[this.settings.legend.position.value.value]);
+        this.legend.drawLegend(legendDataObject, this.layout.viewport);
+        positionChartArea(this.bulletBody, this.legend);
+
+        select(this.root)
+            .selectAll(BulletChart.LegendItemSelector.selectorName)
+            .style("font-weight", this.settings.legend.font.bold.value ? "bold" : "normal")
+            .style("font-style", this.settings.legend.font.italic.value ? "italic" : "normal")
+            .style("text-decoration", this.settings.legend.font.underline.value ? "underline" : "none");
     }
 
     private static value3: number = 3;

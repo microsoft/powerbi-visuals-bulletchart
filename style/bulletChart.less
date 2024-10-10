@@ -24,8 +24,13 @@
  *  THE SOFTWARE.
  */
 
+#sandbox-host {
+    cursor: initial;
+}
+
 .bulletChart {
     overflow: auto;
+    position: absolute;
 
     .bullet {
         font-size: 12px;
@@ -59,6 +64,8 @@
     }
 
     .bulletContainer {
+        cursor: pointer;
+
         &:focus {
             outline: none;
         }
