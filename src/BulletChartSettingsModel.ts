@@ -442,14 +442,14 @@ class ColorsCard extends Card {
     ];
 
     public getData() {
-        const colors: { displayNameKey: string; color: string; }[] = [
-            { displayNameKey: this.minColor.displayNameKey, color: this.minColor.value.value },
-            { displayNameKey: this.needsImprovementColor.displayNameKey, color: this.needsImprovementColor.value.value },
-            { displayNameKey: this.satisfactoryColor.displayNameKey, color: this.satisfactoryColor.value.value },
-            { displayNameKey: this.goodColor.displayNameKey, color: this.goodColor.value.value },
-            { displayNameKey: this.veryGoodColor.displayNameKey, color: this.veryGoodColor.value.value },
-            { displayNameKey: this.bulletColor.displayNameKey, color: this.bulletColor.value.value },
-        ];
+        const colors = {
+            minColor: { displayNameKey: this.minColor.displayNameKey, color: this.minColor.value.value },
+            needsImprovementColor: { displayNameKey: this.needsImprovementColor.displayNameKey, color: this.needsImprovementColor.value.value },
+            satisfactoryColor: { displayNameKey: this.satisfactoryColor.displayNameKey, color: this.satisfactoryColor.value.value },
+            goodColor: { displayNameKey: this.goodColor.displayNameKey, color: this.goodColor.value.value },
+            veryGoodColor: { displayNameKey: this.veryGoodColor.displayNameKey, color: this.veryGoodColor.value.value },
+            bulletColor: { displayNameKey: this.bulletColor.displayNameKey, color: this.bulletColor.value.value },
+        };
 
         return colors;
     }

@@ -380,7 +380,6 @@ export class BulletChart implements IVisual {
     /**
      * Convert a DataView into a view model.
      */
-    // eslint-disable-next-line max-lines-per-function
     public CONVERTER(dataView: DataView, options: VisualUpdateOptions): BulletChartModel {
         const categorical: BulletChartColumns<
             DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns
@@ -588,6 +587,7 @@ export class BulletChart implements IVisual {
             targetValues: [],
             viewportLength: BulletChart.zeroValue,
             longestCategoryWidth: longestCategoryWidth,
+            definedColors: {},
         };
 
         const labelsPadding: number = isReversedOrientation ? BulletChart.LabelsPadding : BulletChart.zeroValue;
@@ -693,6 +693,8 @@ export class BulletChart implements IVisual {
             maximumScale
         );
 
+        this.determineDefinedColors(anyRangeIsDefined, minimumScale, needsImprovementScale, bulletModel, satisfactoryScale, goodScale, veryGoodScale, maximumScale, valueScale);
+
         const bulletFillColor = colorHelper.isHighContrast ? colorHelper.getThemeColor() : visualSettings.colors.bulletColor.value.value;
 
         this.addItemToBarArray(bulletModel.valueRects, idx, minimumScale, valueScale, bulletFillColor, visualSettings.colors.bulletColor.value.value,
@@ -725,6 +727,36 @@ export class BulletChart implements IVisual {
         };
 
         return barData;
+    }
+
+    private determineDefinedColors(anyRangeisDefined: boolean, minimumScale: number, needsImprovementScale: number, bulletModel: BulletChartModel, satisfactoryScale: number, goodScale: number, veryGoodScale: number, maximumScale: number, valueScale: number) {
+        if (!anyRangeisDefined) {
+            return;
+        }
+
+        if (!isNaN(minimumScale) && !isNaN(needsImprovementScale) && minimumScale !== needsImprovementScale) {
+            bulletModel.definedColors.minColor = true;
+        }
+
+        if (!isNaN(needsImprovementScale) && !isNaN(satisfactoryScale) && needsImprovementScale !== satisfactoryScale) {
+            bulletModel.definedColors.needsImprovementColor = true;
+        }
+
+        if (!isNaN(satisfactoryScale) && !isNaN(goodScale) && satisfactoryScale !== goodScale) {
+            bulletModel.definedColors.satisfactoryColor = true;
+        }
+
+        if (!isNaN(goodScale) && !isNaN(veryGoodScale) && goodScale !== veryGoodScale) {
+            bulletModel.definedColors.goodColor = true;
+        }
+
+        if (!isNaN(veryGoodScale) && !isNaN(maximumScale) && veryGoodScale !== maximumScale) {
+            bulletModel.definedColors.veryGoodColor = true;
+        }
+
+        if (!isNaN(minimumScale) && !isNaN(valueScale) && minimumScale !== valueScale) {
+            bulletModel.definedColors.bulletColor = true;
+        }
     }
 
     private static computeCategoryNumbers(categoricalValues: BulletChartColumns<any[]>, idx: number, visualSettings: BulletChartSettingsModel, targetValue: number, minimum: number, categoryMaxValue: number, categoryValue: number, targetValue2: number) {
@@ -1229,9 +1261,18 @@ export class BulletChart implements IVisual {
             labelColor: this.settings.legend.labelColor.value.value,
         };
 
-        const emptyIdentity = this.hostService.createSelectionIdBuilder().createSelectionId();
         const colors = this.settings.colors.getData();
-        const dataPoints: LegendDataPoint[] = colors.map((color) => ({
+        const filtered: { displayNameKey: string; color: string }[] = [];
+
+        Object.entries(this.data.definedColors).forEach(([key, value]) => {
+            if (value) {
+                const color: { displayNameKey: string; color: string; } = colors[key];
+                filtered.push(color);
+            }
+        });
+
+        const emptyIdentity = this.hostService.createSelectionIdBuilder().createSelectionId();
+        const dataPoints: LegendDataPoint[] = filtered.map((color) => ({
             label: this.localizationManager.getDisplayName(color.displayNameKey),
             color: color.color,
             markerShape: MarkerShape.circle,
