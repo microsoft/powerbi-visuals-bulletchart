@@ -35,6 +35,7 @@ import IAxisProperties = axisInterfaces.IAxisProperties;
 import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
 import { BarRectType } from './enums';
 import { SelectableDataPoint } from "./behavior";
+import { ScaleLinear as d3ScaleLinear } from "d3-scale";
 
 export type DefinedColors = {
     minColor?: boolean,
@@ -49,7 +50,7 @@ export interface BulletChartModel {
     bars: BarData[];
     settings: BulletChartSettingsModel;
     barRects: BarRect[];
-    valueRects: BarValueRect[];
+    valueRects: BarRect[];
     targetValues: TargetValue[];
     hasHighlights: boolean;
     viewportLength: number;
@@ -60,7 +61,7 @@ export interface BulletChartModel {
 }
 
 export interface BarData {
-    scale: any;
+    scale: d3ScaleLinear<number, number>;
     barIndex: number;
     categoryLabel: string;
     xAxisProperties: IAxisProperties;
@@ -101,8 +102,6 @@ export interface ScaledValues {
     fourthScale: number;
     fifthScale: number;
 }
-
-export interface BarValueRect extends BarRect { }
 
 export interface BulletChartAxis {
     axis: boolean;

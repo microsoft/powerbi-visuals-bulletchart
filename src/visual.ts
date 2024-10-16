@@ -76,7 +76,6 @@ import {BulletChartColumns} from "./BulletChartColumns";
 import {
     BarData,
     BarRect,
-    BarValueRect,
     BulletChartModel,
     BulletChartTooltipItem,
     DefinedColors,
@@ -692,7 +691,6 @@ export class BulletChart implements IVisual {
         return bulletModel;
     }
 
-    // eslint-disable-next-line max-lines-per-function
     private BuildBulletChartItem(
         idx: number,
         category: string,
@@ -1207,7 +1205,7 @@ export class BulletChart implements IVisual {
     ): void {
         const bars: BarData[] = model.bars;
         const rects: BarRect[] = model.barRects;
-        const valueRects: BarValueRect[] = model.valueRects;
+        const valueRects: BarRect[] = model.valueRects;
         const targetValues: TargetValue[] = model.targetValues;
         const barSelection: Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
             .selectAll<SVGTextElement, BarData>("text")
@@ -1215,7 +1213,7 @@ export class BulletChart implements IVisual {
 
         const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
         const groupedBulletsSelection = this.bulletGraphicsContext
-            .selectAll(`g.${BulletChart.BulletContainerSelector.className}`)
+            .selectAll<SVGGElement, null>(`g.${BulletChart.BulletContainerSelector.className}`)
             .data(groupedBullets)
             .join("g")
             .classed(BulletChart.BulletContainerSelector.className, true)
@@ -1223,7 +1221,7 @@ export class BulletChart implements IVisual {
             .attr("tabindex", 0);
 
         const bullets = groupedBulletsSelection
-            .selectAll("rect.range")
+            .selectAll<SVGRectElement, null>("rect.range")
             .data(d => d[1])
             .join("rect")
             .classed("range", true)
@@ -1240,21 +1238,21 @@ export class BulletChart implements IVisual {
             .style("stroke-width", (d: BarRect) => d.strokeWidth);
 
         // Draw value rects
-        const valueSelection: Selection<SVGRectElement, BarValueRect, SVGGElement, null> = this.bulletGraphicsContext
-            .selectAll<SVGRectElement, BarValueRect>("rect.value")
-            .data(valueRects, (d: BarValueRect) => d.key)
+        const valueSelection: Selection<SVGRectElement, BarRect, SVGGElement, null> = this.bulletGraphicsContext
+            .selectAll<SVGRectElement, BarRect>("rect.value")
+            .data(valueRects, (d: BarRect) => d.key)
             .join("rect")
-            .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
-            .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y + this.bulletMiddlePosition)))
-            .attr("width", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
+            .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
+            .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y + this.bulletMiddlePosition)))
+            .attr("width", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
             .attr("height", this.BarSize * BulletChart.value1 / BulletChart.value4)
             .classed("value", true)
             .classed(HtmlSubSelectableClass, this.formatMode)
             .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Bullet.name)
             .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Bullet.displayName)
-            .style("fill", (d: BarValueRect) => d.fillColor)
-            .style("stroke", (d: BarValueRect) => d.strokeColor)
-            .style("stroke-width", (d: BarValueRect) => d.strokeWidth);
+            .style("fill", (d: BarRect) => d.fillColor)
+            .style("stroke", (d: BarRect) => d.strokeColor)
+            .style("stroke-width", (d: BarRect) => d.strokeWidth);
 
         // Draw markers
         this.drawFirstTargets(targetValues,
@@ -1304,7 +1302,7 @@ export class BulletChart implements IVisual {
 
         this.behavior.bindEvents(behaviorOptions);
 
-        this.tooltipServiceWrapper.addTooltip(valueSelection, (data: BarValueRect) => data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(valueSelection, (data: BarRect) => data.tooltipInfo);
         this.tooltipServiceWrapper.addTooltip(bullets, (data: BarRect) => data.tooltipInfo);
     }
 
@@ -1540,14 +1538,13 @@ export class BulletChart implements IVisual {
             );
     }
 
-    // eslint-disable-next-line max-lines-per-function
     private setUpBulletsVertically(
         model: BulletChartModel,
         reversed: boolean,
     ) {
         const bars: BarData[] = model.bars;
         const rects: BarRect[] = model.barRects;
-        const valueRects: BarValueRect[] = model.valueRects;
+        const valueRects: BarRect[] = model.valueRects;
         const targetValues: TargetValue[] = model.targetValues;
         const barSelection: Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
             .selectAll<SVGTextElement, BarData>("text")
@@ -1555,7 +1552,7 @@ export class BulletChart implements IVisual {
 
         const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
         const groupedBulletsSelection = this.bulletGraphicsContext
-            .selectAll(`g.${BulletChart.BulletContainerSelector.className}`)
+            .selectAll<SVGGElement, null>(`g.${BulletChart.BulletContainerSelector.className}`)
             .data(groupedBullets)
             .join("g")
             .classed(BulletChart.BulletContainerSelector.className, true)
@@ -1563,7 +1560,7 @@ export class BulletChart implements IVisual {
             .attr("tabindex", 0);
 
         const bullets = groupedBulletsSelection
-            .selectAll("rect.range")
+            .selectAll<SVGRectElement, null>("rect.range")
             .data(d => d[1])
             .join("rect")
             .classed("range", true)
@@ -1581,19 +1578,19 @@ export class BulletChart implements IVisual {
 
         // Draw value rects
         const valueSelection = this.bulletGraphicsContext
-            .selectAll("rect.value")
-            .data(valueRects, (d: BarValueRect) => d.key);
+            .selectAll<SVGRectElement, null>("rect.value")
+            .data(valueRects, (d: BarRect) => d.key);
         const valueSelectionMerged = valueSelection
             .join("rect")
-            .attr("x", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + this.bulletMiddlePosition)))
-            .attr("y", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
-            .attr("height", ((d: BarValueRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
+            .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].x + this.bulletMiddlePosition)))
+            .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelHeight(bars[d.barIndex], d, reversed))))
+            .attr("height", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
             .attr("width", this.BarSize * BulletChart.value1 / BulletChart.value4)
             .classed("value", true)
             .classed(HtmlSubSelectableClass, this.formatMode)
             .attr(SubSelectableObjectNameAttribute, BulletChartObjectNames.Bullet.name)
             .attr(SubSelectableDisplayNameAttribute, BulletChartObjectNames.Bullet.displayName)
-            .style("fill", (d: BarValueRect) => d.fillColor)
+            .style("fill", (d: BarRect) => d.fillColor)
             .attr("stroke", (d: BarRect) => d.strokeColor)
             .attr("stroke-width", (d: BarRect) => d.strokeWidth);
 
@@ -1644,7 +1641,7 @@ export class BulletChart implements IVisual {
         };
         this.behavior.bindEvents(behaviorOptions);
 
-        this.tooltipServiceWrapper.addTooltip(valueSelectionMerged, (data: BarValueRect) => data.tooltipInfo);
+        this.tooltipServiceWrapper.addTooltip(valueSelectionMerged, (data: BarRect) => data.tooltipInfo);
         this.tooltipServiceWrapper.addTooltip(bullets, (data: BarRect) => data.tooltipInfo);
     }
 

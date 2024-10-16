@@ -6,7 +6,7 @@ import ISelectionId = powerbi.visuals.ISelectionId;
 import ISelectionManager = powerbi.extensibility.ISelectionManager
 
 import { LegendDataPoint } from "powerbi-visuals-utils-chartutils/lib/legend/legendInterfaces";
-import { BarRect, BarValueRect } from "./dataInterfaces";
+import { BarRect } from "./dataInterfaces";
 
 export const DimmedOpacity: number = 0.4;
 export const DefaultOpacity: number = 1.0;
@@ -29,9 +29,9 @@ export interface SelectableDataPoint extends BaseDataPoint {
 export interface BehaviorOptions {
     dataPoints: BarRect[];
     hasHighlights: boolean;
-    rects: d3Selection<BaseType | SVGRectElement, BarRect, BaseType | SVGGElement, [number, BarRect[]]>;
-    valueRects: d3Selection<BaseType | SVGRectElement, BarValueRect, any, any>;
-    groupedRects:  d3Selection<BaseType | SVGGElement, [number, BarRect[]], any, any>;
+    rects: d3Selection<SVGRectElement, BarRect, SVGGElement, [number, BarRect[]]>;
+    valueRects: d3Selection<SVGRectElement, BarRect, SVGGElement, null>;
+    groupedRects:  d3Selection<SVGGElement, [number, BarRect[]], SVGGElement, null>;
     clearCatcher: d3Selection<HTMLDivElement, null, HTMLElement, null>;
 }
 
@@ -63,7 +63,7 @@ export class Behavior {
     }
 
     private handleClickEvents(): void {
-        this.options.valueRects.on("click", (event: MouseEvent, d: BarValueRect) => {
+        this.options.valueRects.on("click", (event: MouseEvent, d: BarRect) => {
             event.stopPropagation();
             this.selectDataPoint(d, event.ctrlKey || event.metaKey || event.shiftKey);
         });
@@ -116,7 +116,7 @@ export class Behavior {
         const hasHighlights: boolean = this.options.hasHighlights;
         const hasSelection: boolean = this.hasSelection;
 
-        this.options.valueRects.style("opacity", (d: BarValueRect) => getFillOpacity(d.selected, d.highlight, hasSelection, !d.selected && hasHighlights));
+        this.options.valueRects.style("opacity", (d: BarRect) => getFillOpacity(d.selected, d.highlight, hasSelection, !d.selected && hasHighlights));
         this.options.rects.style("opacity", (d: BarRect) => getFillOpacity(d.selected, d.highlight, hasSelection, hasHighlights));
     }
 
