@@ -6,6 +6,7 @@
 * Add settings to control axis display format and precision
 * Add settings to control bar size and to show percent of completion
 * Add "Legend" settings card
+* Update API to 5.11.0, tools to 5.6.0
 
 ### Code improvements
 * Fix sync axis by computing min and max category values
