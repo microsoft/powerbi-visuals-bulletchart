@@ -12,6 +12,7 @@
 * Fix sync axis by computing min and max category values
 * When showing main axis only, reduce space between bars to save more place
 * Remove interactivity-utils
+* Migrate to eslint v9
 
 ## 2.4.2
 * Check old enums with space like "Horizontal left" to maintain backward compatibility
