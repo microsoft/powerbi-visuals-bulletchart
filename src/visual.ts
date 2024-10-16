@@ -79,6 +79,7 @@ import {
     BarValueRect,
     BulletChartModel,
     BulletChartTooltipItem,
+    DefinedColors,
     TargetValue
 } from "./dataInterfaces";
 import { BarRectType } from "./enums";
@@ -171,6 +172,7 @@ export class BulletChart implements IVisual {
     private root: HTMLElement;
     private bulletBody: Selection<HTMLDivElement, null, HTMLElement, null>;
     private scrollContainer: Selection<SVGSVGElement, null, HTMLElement, null>;
+    private legendContext: Selection<SVGSVGElement, null, HTMLElement, null>;
     private labelGraphicsContext: Selection<SVGGElement, null, HTMLElement, null>;
     private bulletGraphicsContext: Selection<SVGGElement, null, HTMLElement, null>;
     private data: BulletChartModel;
@@ -377,49 +379,117 @@ export class BulletChart implements IVisual {
         return xAxisProperties;
     }
 
+    private computeDefinedColors(
+        categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
+        categoricalValues: BulletChartColumns<any[]>,
+    ): DefinedColors {
+        if (!categorical?.Value?.[0] || !categoricalValues) {
+            return;
+        }
+
+        const length: number = categoricalValues.Value.length;
+        const { categoryMinValue, categoryMaxValue }: { categoryMinValue: number | undefined; categoryMaxValue: number | undefined; } = this.calculateCategoryValueRange(length, categoricalValues);
+
+        const definedColors: DefinedColors = {
+        };
+
+        for (let idx = 0; idx < length; idx++) {
+            const categoryValue = categoricalValues.Value[idx] || 0;
+            const targetValue = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : this.visualSettings.values.targetValue.value;
+            const targetValue2 = categoricalValues.TargetValue2 ? categoricalValues.TargetValue2[idx] : this.visualSettings.values.targetValue2.value;
+
+            let minimumValue: number;
+            if (this.visualSettings.axis.syncAxis.value) {
+                minimumValue = categoryMinValue;
+            } else {
+                minimumValue = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], this.visualSettings.values.minimumPercent.value, targetValue);
+            }
+
+            const {
+                minimum,
+                needsImprovement,
+                satisfactory,
+                good,
+                veryGood,
+                maximum,
+                anyRangeIsDefined,
+            } = BulletChart.computeCategoryNumbers(categoricalValues, idx, this.visualSettings, targetValue, minimumValue, categoryMaxValue, categoryValue, targetValue2);
+
+            if (!anyRangeIsDefined) {
+                return;
+            }
+
+            if (!isNaN(minimum) && !isNaN(needsImprovement) && minimum !== needsImprovement) {
+                definedColors.minColor = true;
+            }
+
+            if (!isNaN(needsImprovement) && !isNaN(satisfactory) && needsImprovement !== satisfactory) {
+                definedColors.needsImprovementColor = true;
+            }
+
+            if (!isNaN(satisfactory) && !isNaN(good) && satisfactory !== good) {
+                definedColors.satisfactoryColor = true;
+            }
+
+            if (!isNaN(good) && !isNaN(veryGood) && good !== veryGood) {
+                definedColors.goodColor = true;
+            }
+
+            if (!isNaN(veryGood) && !isNaN(maximum) && veryGood !== maximum) {
+                definedColors.veryGoodColor = true;
+            }
+
+            if (!isNaN(minimum) && !isNaN(categoryValue) && minimum !== categoryValue) {
+                definedColors.bulletColor = true;
+            }
+
+        }
+
+        return definedColors;
+    }
+
     /**
      * Convert a DataView into a view model.
      */
-    public CONVERTER(dataView: DataView, options: VisualUpdateOptions): BulletChartModel {
-        const categorical: BulletChartColumns<
-            DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns
-        > = BulletChartColumns.GET_CATEGORICAL_COLUMNS(dataView);
+    public CONVERTER({
+        dataView,
+        options,
+        categorical,
+        categoricalValues,
+    }: {
+        dataView: DataView;
+        options: VisualUpdateOptions;
+        categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>;
+        categoricalValues: BulletChartColumns<any[]>;
+    }): BulletChartModel {
         if (!categorical || !categorical.Value || !categorical.Value[0]) {
             return null;
         }
-
-        const categoricalValues: BulletChartColumns<any[]> =
-            BulletChartColumns.GET_CATEGORICAL_VALUES(dataView);
 
         this.updateOrientation(dataView);
         this.limitProperties();
         this.setHighContrastColors();
 
-        const isVerticalOrientation: boolean =
-            this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.VerticalBottom ||
-            this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.VerticalTop;
-        const isReversedOrientation: boolean =
-            this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.HorizontalRight ||
-            this.visualSettings.orientation.orientation.value.value === BulletChartOrientation.VerticalBottom;
+        const orientation: BulletChartOrientation = <BulletChartOrientation>this.visualSettings.orientation.orientation.value.value;
+        const isVerticalOrientation: boolean = orientation === BulletChartOrientation.VerticalBottom || orientation === BulletChartOrientation.VerticalTop;
+        const isReversedOrientation: boolean = orientation === BulletChartOrientation.HorizontalRight || orientation === BulletChartOrientation.VerticalBottom;
 
         const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
         const categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
 
-        const longestCategoryWidth = this.computeLongestCategoryWidth(categorical, categoricalValues, isVerticalOrientation, isReversedOrientation);
-
-        const bulletModel: BulletChartModel = BulletChart.BuildBulletModel(
+        const bulletModel: BulletChartModel = this.BuildBulletModel(
             this.visualSettings,
             categorical,
+            categoricalValues,
             options.viewport.height,
             options.viewport.width,
             isVerticalOrientation,
             isReversedOrientation,
-            longestCategoryWidth,
         );
 
         const length: number = categoricalValues.Value.length;
 
-        const { categoryMinValue, categoryMaxValue }: { categoryMinValue: number; categoryMaxValue: number; } = this.calculateCategoryValueRange(length, categoricalValues);
+        const { categoryMinValue, categoryMaxValue }: { categoryMinValue: number | undefined; categoryMaxValue: number | undefined; } = this.calculateCategoryValueRange(length, categoricalValues);
 
         for (let idx = 0; idx < length; idx++) {
             const toolTipItems: BulletChartTooltipItem[] = [];
@@ -432,7 +502,7 @@ export class BulletChart implements IVisual {
                 const textProperties = BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value);
                 category = TextMeasurementService.getTailoredTextOrDefault(
                     textProperties,
-                    this.visualSettings.labels.autoWidth.value ? longestCategoryWidth : this.visualSettings.labels.maxWidth.value
+                    this.visualSettings.labels.autoWidth.value ? bulletModel.longestCategoryWidth : this.visualSettings.labels.maxWidth.value
                 );
             }
 
@@ -569,16 +639,17 @@ export class BulletChart implements IVisual {
         }
     }
 
-    private static BuildBulletModel(
+    private BuildBulletModel(
         visualSettings: BulletChartSettingsModel,
         categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
+        categoricalValues: BulletChartColumns<any[]>,
         viewPortHeight: number,
         viewPortWidth: number,
         isVerticalOrientation: boolean,
         isReversedOrientation: boolean,
-        longestCategoryWidth: number,
     ): BulletChartModel {
 
+        const longestCategoryWidth = this.computeLongestCategoryWidth(categorical, categoricalValues, isVerticalOrientation, isReversedOrientation);
         const bulletModel: BulletChartModel = <BulletChartModel>{
             settings: visualSettings,
             bars: [],
@@ -587,7 +658,6 @@ export class BulletChart implements IVisual {
             targetValues: [],
             viewportLength: BulletChart.zeroValue,
             longestCategoryWidth: longestCategoryWidth,
-            definedColors: {},
         };
 
         const labelsPadding: number = isReversedOrientation ? BulletChart.LabelsPadding : BulletChart.zeroValue;
@@ -603,9 +673,20 @@ export class BulletChart implements IVisual {
                 : BulletChart.BarPaddingHorizontalShort
             );
 
+
+        let legendWidth: number = 0;
+        switch (LegendPosition[this.visualSettings.legend.position.value.value]) {
+            case LegendPosition.Left:
+            case LegendPosition.LeftCenter:
+            case LegendPosition.Right:
+            case LegendPosition.RightCenter:
+                legendWidth = parseFloat(this.legendContext.attr("width")) || 0;
+                break;
+        }
+
         bulletModel.viewportLength = Math.max(0, (isVerticalOrientation
             ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value25 - BulletChart.YMarginVertical * BulletChart.value2)
-            : (viewPortWidth - labelsWidth - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight)) - BulletChart.ScrollBarSize);
+            : (viewPortWidth - labelsWidth - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight - legendWidth)) - BulletChart.ScrollBarSize);
         bulletModel.hasHighlights = !!(categorical.Value[0].values.length > BulletChart.zeroValue && categorical.Value[0].highlights);
 
         return bulletModel;
@@ -693,8 +774,6 @@ export class BulletChart implements IVisual {
             maximumScale
         );
 
-        this.determineDefinedColors(anyRangeIsDefined, minimumScale, needsImprovementScale, bulletModel, satisfactoryScale, goodScale, veryGoodScale, maximumScale, valueScale);
-
         const bulletFillColor = colorHelper.isHighContrast ? colorHelper.getThemeColor() : visualSettings.colors.bulletColor.value.value;
 
         this.addItemToBarArray(bulletModel.valueRects, idx, minimumScale, valueScale, bulletFillColor, visualSettings.colors.bulletColor.value.value,
@@ -727,36 +806,6 @@ export class BulletChart implements IVisual {
         };
 
         return barData;
-    }
-
-    private determineDefinedColors(anyRangeisDefined: boolean, minimumScale: number, needsImprovementScale: number, bulletModel: BulletChartModel, satisfactoryScale: number, goodScale: number, veryGoodScale: number, maximumScale: number, valueScale: number) {
-        if (!anyRangeisDefined) {
-            return;
-        }
-
-        if (!isNaN(minimumScale) && !isNaN(needsImprovementScale) && minimumScale !== needsImprovementScale) {
-            bulletModel.definedColors.minColor = true;
-        }
-
-        if (!isNaN(needsImprovementScale) && !isNaN(satisfactoryScale) && needsImprovementScale !== satisfactoryScale) {
-            bulletModel.definedColors.needsImprovementColor = true;
-        }
-
-        if (!isNaN(satisfactoryScale) && !isNaN(goodScale) && satisfactoryScale !== goodScale) {
-            bulletModel.definedColors.satisfactoryColor = true;
-        }
-
-        if (!isNaN(goodScale) && !isNaN(veryGoodScale) && goodScale !== veryGoodScale) {
-            bulletModel.definedColors.goodColor = true;
-        }
-
-        if (!isNaN(veryGoodScale) && !isNaN(maximumScale) && veryGoodScale !== maximumScale) {
-            bulletModel.definedColors.veryGoodColor = true;
-        }
-
-        if (!isNaN(minimumScale) && !isNaN(valueScale) && minimumScale !== valueScale) {
-            bulletModel.definedColors.bulletColor = true;
-        }
     }
 
     private static computeCategoryNumbers(categoricalValues: BulletChartColumns<any[]>, idx: number, visualSettings: BulletChartSettingsModel, targetValue: number, minimum: number, categoryMaxValue: number, categoryValue: number, targetValue2: number) {
@@ -984,6 +1033,7 @@ export class BulletChart implements IVisual {
             .attr("fill", "none");
 
         this.legend = createLegend(options.element, false);
+        this.legendContext = body.selectChild("svg.legend");
 
         this.labelGraphicsContext = this.scrollContainer.append("g");
         this.bulletGraphicsContext = this.scrollContainer.append("g");
@@ -1004,7 +1054,15 @@ export class BulletChart implements IVisual {
             this.visualSettings = this.formattingSettingsService.populateFormattingSettingsModel(BulletChartSettingsModel, dataView);
             this.visualSettings.setLocalizedOptions(this.localizationManager);
 
-            const data: BulletChartModel = this.CONVERTER(dataView, options);
+
+            const categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns> = BulletChartColumns.GET_CATEGORICAL_COLUMNS(dataView);
+            const categoricalValues: BulletChartColumns<any[]> = BulletChartColumns.GET_CATEGORICAL_VALUES(dataView);
+            const definedColors = this.computeDefinedColors(categorical, categoricalValues);
+
+            // Render legend first, so we can compute legend width and then adjust visual size
+            this.renderLegend(definedColors);
+
+            const data: BulletChartModel = this.CONVERTER({ dataView, options, categorical, categoricalValues });
 
             this.clearViewport();
             if (!data) {
@@ -1034,8 +1092,6 @@ export class BulletChart implements IVisual {
             } else {
                 this.setUpBulletsHorizontally(this.data, this.reverse);
             }
-
-            this.renderLegend();
 
             this.subSelectionHelper.setFormatMode(options.formatMode);
             const shouldUpdateSubSelection = options.type & (powerbi.VisualUpdateType.Data
@@ -1252,24 +1308,30 @@ export class BulletChart implements IVisual {
         this.tooltipServiceWrapper.addTooltip(bullets, (data: BarRect) => data.tooltipInfo);
     }
 
-    private renderLegend(): void {
+    private renderLegend(definedColors: DefinedColors): void {
         const legendDataObject: LegendData = {
             dataPoints: [],
-            title: this.settings.legend.titleText.value,
-            fontSize: this.settings.legend.font.fontSize.value,
-            fontFamily: this.settings.legend.font.fontFamily.value,
-            labelColor: this.settings.legend.labelColor.value.value,
+            title: this.visualSettings.legend.titleText.value,
+            fontSize: this.visualSettings.legend.font.fontSize.value,
+            fontFamily: this.visualSettings.legend.font.fontFamily.value,
+            labelColor: this.visualSettings.legend.labelColor.value.value,
         };
 
-        const colors = this.settings.colors.getData();
+        const colors = this.visualSettings.colors.getData();
         const filtered: { displayNameKey: string; color: string }[] = [];
 
-        Object.entries(this.data.definedColors).forEach(([key, value]) => {
-            if (value) {
-                const color: { displayNameKey: string; color: string; } = colors[key];
-                filtered.push(color);
-            }
-        });
+        if (definedColors) {
+            Object.entries(definedColors).forEach(([key, value]) => {
+                if (value) {
+                    const color: { displayNameKey: string; color: string; } = colors[key];
+                    filtered.push(color);
+                }
+            });
+        } else {
+            filtered.push(
+                ...Object.values(colors).map((color) => ({ displayNameKey: color.displayNameKey, color: color.color }))
+            );
+        }
 
         const emptyIdentity = this.hostService.createSelectionIdBuilder().createSelectionId();
         const dataPoints: LegendDataPoint[] = filtered.map((color) => ({
@@ -1282,28 +1344,28 @@ export class BulletChart implements IVisual {
         legendDataObject.dataPoints = dataPoints;
 
         const legendObject: DataViewObject = {
-            show: this.settings.legend.show.value,
-            showTitle: this.settings.legend.showTitle.value,
-            position: LegendPosition[this.settings.legend.position.value.value],
-            fontSize: this.settings.legend.font.fontSize.value,
-            titleText: this.settings.legend.titleText.value,
+            show: this.visualSettings.legend.show.value,
+            showTitle: this.visualSettings.legend.showTitle.value,
+            position: LegendPosition[this.visualSettings.legend.position.value.value],
+            fontSize: this.visualSettings.legend.font.fontSize.value,
+            titleText: this.visualSettings.legend.titleText.value,
             labelColor: {
                 solid: {
-                    color: this.settings.legend.labelColor.value.value,
+                    color: this.visualSettings.legend.labelColor.value.value,
                 }
             }
         };
 
         legendData.update(legendDataObject, legendObject);
-        this.legend.changeOrientation(LegendPosition[this.settings.legend.position.value.value]);
+        this.legend.changeOrientation(LegendPosition[this.visualSettings.legend.position.value.value]);
         this.legend.drawLegend(legendDataObject, this.layout.viewport);
         positionChartArea(this.bulletBody, this.legend);
 
         select(this.root)
             .selectAll(BulletChart.LegendItemSelector.selectorName)
-            .style("font-weight", this.settings.legend.font.bold.value ? "bold" : "normal")
-            .style("font-style", this.settings.legend.font.italic.value ? "italic" : "normal")
-            .style("text-decoration", this.settings.legend.font.underline.value ? "underline" : "none");
+            .style("font-weight", this.visualSettings.legend.font.bold.value ? "bold" : "normal")
+            .style("font-style", this.visualSettings.legend.font.italic.value ? "italic" : "normal")
+            .style("text-decoration", this.visualSettings.legend.font.underline.value ? "underline" : "none");
     }
 
     private static value3: number = 3;

@@ -36,13 +36,13 @@ import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
 import { BarRectType } from './enums';
 import { SelectableDataPoint } from "./behavior";
 
-type DefinedColors = {
-    minColor: boolean,
-    needsImprovementColor: boolean,
-    satisfactoryColor: boolean,
-    goodColor: boolean,
-    veryGoodColor: boolean,
-    bulletColor: boolean,
+export type DefinedColors = {
+    minColor?: boolean,
+    needsImprovementColor?: boolean,
+    satisfactoryColor?: boolean,
+    goodColor?: boolean,
+    veryGoodColor?: boolean,
+    bulletColor?: boolean,
 }
 
 export interface BulletChartModel {
@@ -57,7 +57,6 @@ export interface BulletChartModel {
     labelHeightTop: number;
     spaceRequiredForBarHorizontally: number;
     longestCategoryWidth: number;
-    definedColors: DefinedColors;
 }
 
 export interface BarData {
