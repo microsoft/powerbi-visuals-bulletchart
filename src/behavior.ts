@@ -1,5 +1,5 @@
 // d3
-import { BaseType, Selection as d3Selection } from "d3-selection";
+import { Selection as d3Selection } from "d3-selection";
 
 import powerbi from "powerbi-visuals-api";
 import ISelectionId = powerbi.visuals.ISelectionId;

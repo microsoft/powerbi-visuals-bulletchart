@@ -3,6 +3,7 @@ import { legendInterfaces } from "powerbi-visuals-utils-chartutils";
 import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
 import { Group, SimpleSlice } from "powerbi-visuals-utils-formattingmodel/lib/FormattingSettingsComponents";
 import { BarRectType, BulletChartOrientation } from "./enums";
+import { nameof } from './utils';
 
 import Model = formattingSettings.Model;
 import Card = formattingSettings.SimpleCard;
@@ -12,8 +13,6 @@ import FormattingId = powerbi.visuals.FormattingId;
 import ValidatorType = powerbi.visuals.ValidatorType;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import LegendPosition = legendInterfaces.LegendPosition;
-
-const nameof = <T>(name: Extract<keyof T, string>): string => name;
 
 export const BulletChartObjectNames = {
     Labels: { name: "labels", displayName: "Category labels" },

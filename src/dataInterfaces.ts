@@ -26,6 +26,7 @@
 
 import powerbiVisualsApi from "powerbi-visuals-api";
 
+import PrimitiveValue = powerbiVisualsApi.PrimitiveValue;
 import DataViewValueColumn = powerbiVisualsApi.DataViewValueColumn;
 import VisualTooltipDataItem = powerbiVisualsApi.extensibility.VisualTooltipDataItem;
 
@@ -85,8 +86,8 @@ export interface BarRect extends SelectableDataPoint {
 
 export interface TargetValue {
     barIndex: number;
-    categoryValue: number;
-    targetValueUnscaled: number;
+    categoryValue: PrimitiveValue;
+    targetValueUnscaled: PrimitiveValue;
     value: number;
     value2: number;
     fill: string;
@@ -111,7 +112,7 @@ export interface BulletChartAxis {
 }
 
 export interface BulletChartTooltipItem {
-    value: any;
+    value: PrimitiveValue;
     metadata?: DataViewValueColumn;
     customName: string;
 }

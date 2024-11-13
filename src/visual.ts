@@ -38,12 +38,12 @@ import {group} from "d3-array"
 import {pixelConverter as PixelConverter} from "powerbi-visuals-utils-typeutils";
 
 // powerbi.extensibility.utils.formatting
-// import { textMeasurementService as tms, valueFormatter } from "powerbi-visuals-utils-formattingutils";
-// import TextProperties = tms.TextProperties;
-// import TextMeasurementService = tms.textMeasurementService;
-import {textMeasurementService as TextMeasurementService} from "powerbi-visuals-utils-formattingutils";
-import * as valueFormatter from "powerbi-visuals-utils-formattingutils/lib/src/valueFormatter";
-import {TextProperties} from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
+import {
+    textMeasurementService as TextMeasurementService,
+    valueFormatter,
+    interfaces as formattingUtilsInterfaces
+} from "powerbi-visuals-utils-formattingutils";
+import TextProperties = formattingUtilsInterfaces.TextProperties;
 
 // powerbi.extensibility.utils.chart
 import {
@@ -72,7 +72,7 @@ import {
 // powerbi.extensibility.utils.color
 import {ColorHelper} from "powerbi-visuals-utils-colorutils";
 
-import {BulletChartColumns} from "./BulletChartColumns";
+import {BulletChartColumns, BulletChartValueColumns} from "./BulletChartColumns";
 import {
     BarData,
     BarRect,
@@ -100,10 +100,8 @@ import {
 import IViewport = powerbiVisualsApi.IViewport;
 import DataView = powerbiVisualsApi.DataView;
 import DataViewObject = powerbiVisualsApi.DataViewObject;
-import DataViewCategoryColumn = powerbiVisualsApi.DataViewCategoryColumn;
 import DataViewMetadataColumn = powerbiVisualsApi.DataViewMetadataColumn;
-import DataViewValueColumns = powerbiVisualsApi.DataViewValueColumns;
-import DataViewValueColumn = powerbiVisualsApi.DataViewValueColumn;
+import PrimitiveValue = powerbiVisualsApi.PrimitiveValue;
 
 import IVisual = powerbiVisualsApi.extensibility.IVisual;
 import IColorPalette = powerbiVisualsApi.extensibility.IColorPalette;
@@ -260,7 +258,7 @@ export class BulletChart implements IVisual {
         bulletModel: BulletChartModel,
         idx: number,
         maxStrokeWidthBars: number,
-        highlight: any,
+        highlight: boolean,
         toolTipItems: BulletChartTooltipItem[],
         selectionIdBuilder: () => powerbi.visuals.ISelectionIdBuilder,
         minimumScale: number, minFillColor: string, minColor: string,
@@ -347,7 +345,7 @@ export class BulletChart implements IVisual {
         settings: BulletChartSettingsModel,
         bulletModel: BulletChartModel,
         scale: ScaleLinear<number, number>,
-        categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
+        categorical: BulletChartColumns,
         valueFormatString: string,
         verticalOrientation: boolean,
     ) {
@@ -359,7 +357,7 @@ export class BulletChart implements IVisual {
         xAxisProperties = AxisHelper.createAxis({
             pixelSpan: bulletModel.viewportLength,
             dataDomain: scale.domain(),
-            metaDataColumn: categorical.Value[0].source,
+            metaDataColumn: categorical.Value.source,
             formatString: valueFormatString,
             outerPadding: 0,
             isScalar: true,
@@ -379,10 +377,10 @@ export class BulletChart implements IVisual {
     }
 
     private computeDefinedColors(
-        categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
-        categoricalValues: BulletChartColumns<any[]>,
+        categorical: BulletChartColumns,
+        categoricalValues: BulletChartValueColumns,
     ): DefinedColors {
-        if (!categorical?.Value?.[0] || !categoricalValues) {
+        if (!categorical?.Value || !categoricalValues) {
             return;
         }
 
@@ -393,9 +391,9 @@ export class BulletChart implements IVisual {
         };
 
         for (let idx = 0; idx < length; idx++) {
-            const categoryValue = categoricalValues.Value[idx] || 0;
-            const targetValue = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : this.visualSettings.values.targetValue.value;
-            const targetValue2 = categoricalValues.TargetValue2 ? categoricalValues.TargetValue2[idx] : this.visualSettings.values.targetValue2.value;
+            const categoryValue: PrimitiveValue = categoricalValues.Value[idx] || 0;
+            const targetValue: PrimitiveValue = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : this.visualSettings.values.targetValue.value;
+            const targetValue2: PrimitiveValue = categoricalValues.TargetValue2 ? categoricalValues.TargetValue2[idx] : this.visualSettings.values.targetValue2.value;
 
             let minimumValue: number;
             if (this.visualSettings.axis.syncAxis.value) {
@@ -438,7 +436,7 @@ export class BulletChart implements IVisual {
                 definedColors.veryGoodColor = true;
             }
 
-            if (!isNaN(minimum) && !isNaN(categoryValue) && minimum !== categoryValue) {
+            if (!isNaN(minimum) && typeof categoryValue === 'number' && !isNaN(categoryValue) && minimum !== categoryValue) {
                 definedColors.bulletColor = true;
             }
 
@@ -458,10 +456,10 @@ export class BulletChart implements IVisual {
     }: {
         dataView: DataView;
         options: VisualUpdateOptions;
-        categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>;
-        categoricalValues: BulletChartColumns<any[]>;
+        categorical: BulletChartColumns;
+        categoricalValues: BulletChartValueColumns;
     }): BulletChartModel {
-        if (!categorical || !categorical.Value || !categorical.Value[0]) {
+        if (!categorical || !categorical.Value) {
             return null;
         }
 
@@ -473,7 +471,7 @@ export class BulletChart implements IVisual {
         const isVerticalOrientation: boolean = orientation === BulletChartOrientation.VerticalBottom || orientation === BulletChartOrientation.VerticalTop;
         const isReversedOrientation: boolean = orientation === BulletChartOrientation.HorizontalRight || orientation === BulletChartOrientation.VerticalBottom;
 
-        const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value[0].source, true);
+        const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value.source, true);
         const categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
 
         const bulletModel: BulletChartModel = this.BuildBulletModel(
@@ -505,35 +503,35 @@ export class BulletChart implements IVisual {
                 );
             }
 
-            const categoryValue = categoricalValues.Value[idx] || BulletChart.zeroValue;
+            const categoryValue: PrimitiveValue = categoricalValues.Value[idx] || BulletChart.zeroValue;
 
             toolTipItems.push({
                 value: categoryValue,
-                metadata: categorical.Value[0],
+                metadata: categorical.Value,
                 customName: this.visualSettings.tooltips.valueCustomName.value
             });
 
-            const targetValue: number = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : this.visualSettings.values.targetValue.value;
+            const targetValue: PrimitiveValue = categoricalValues.TargetValue?.[idx] || this.visualSettings.values.targetValue.value;
 
             if (lodashIsnumber(targetValue)) {
                 toolTipItems.push({
                     value: targetValue,
-                    metadata: categorical.TargetValue && categorical.TargetValue[0],
+                    metadata: categorical.TargetValue,
                     customName: this.visualSettings.tooltips.targetCustomName.value,
                 });
             }
 
-            const targetValue2: number = categoricalValues.TargetValue2 ? categoricalValues.TargetValue2[idx] : this.visualSettings.values.targetValue2.value;
+            const targetValue2: PrimitiveValue = categoricalValues.TargetValue2?.[idx] || this.visualSettings.values.targetValue2.value;
 
             if (lodashIsnumber(targetValue2)) {
                 toolTipItems.push({
                     value: targetValue2,
-                    metadata: categorical.TargetValue2 && categorical.TargetValue2[0],
+                    metadata: categorical.TargetValue2,
                     customName: this.visualSettings.tooltips.target2CustomName.value,
                 });
             }
 
-            const highlight: any = categorical.Value[0].highlights && categorical.Value[0].highlights[idx] !== null;
+            const highlight: boolean = categorical.Value?.highlights?.[idx] !== null;
 
             const barData: BarData = this.BuildBulletChartItem(
                 idx,
@@ -562,13 +560,13 @@ export class BulletChart implements IVisual {
         return bulletModel;
     }
 
-    private calculateCategoryValueRange(length: number, categoricalValues: BulletChartColumns<any[]>) {
+    private calculateCategoryValueRange(length: number, categoricalValues: BulletChartValueColumns) {
         let categoryMinValue: number | undefined = undefined;
         let categoryMaxValue: number | undefined = undefined;
         if (this.visualSettings.axis.syncAxis.value) {
             const rangeValues = [...Array(length).keys()]
                 .map(idx => {
-                    const targetValue: number = categoricalValues.TargetValue ? categoricalValues.TargetValue[idx] : this.visualSettings.values.targetValue.value;
+                    const targetValue: PrimitiveValue = categoricalValues.TargetValue?.[idx] || this.visualSettings.values.targetValue.value;
                     const min = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], this.visualSettings.values.minimumPercent.value, targetValue);
                     const max = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Maximum?.[idx], this.visualSettings.values.maximumPercent.value, targetValue);
                     return { min, max };
@@ -581,8 +579,8 @@ export class BulletChart implements IVisual {
     }
 
     private computeLongestCategoryWidth(
-        categorical: BulletChartColumns<powerbiVisualsApi.DataViewCategoryColumn & powerbiVisualsApi.DataViewValueColumn[] & powerbiVisualsApi.DataViewValueColumns>,
-        categoricalValues: BulletChartColumns<any[]>,
+        categorical: BulletChartColumns,
+        categoricalValues: BulletChartValueColumns,
         isVerticalOrientation: boolean,
         isReversedOrientation: boolean,
     ) {
@@ -592,7 +590,7 @@ export class BulletChart implements IVisual {
 
         let longestCategory: string = "";
         for (let index = 0; index < categoricalValues.Category.length; index++) {
-            let category: string = categoricalValues.Category[index];
+            let category: string = categoricalValues.Category[index] as string;
 
             category = this.formatCategoryWithCompletionPercent({ category, categoricalValues, index, isVerticalOrientation, isReversedOrientation });
 
@@ -615,7 +613,7 @@ export class BulletChart implements IVisual {
         isReversedOrientation
     }: {
         category: string;
-        categoricalValues: BulletChartColumns<any[]>;
+        categoricalValues: BulletChartValueColumns;
         index: number;
         isVerticalOrientation: boolean;
         isReversedOrientation: boolean;
@@ -628,8 +626,8 @@ export class BulletChart implements IVisual {
             return category;
         }
 
-        const categoryValue: number = categoricalValues.Value[index];
-        const targetValue: number = categoricalValues.TargetValue[index];
+        const categoryValue: PrimitiveValue = categoricalValues.Value[index];
+        const targetValue: PrimitiveValue = categoricalValues.TargetValue[index];
 
         if (isReversedOrientation) {
             return this.computeCompletionPercent(categoryValue, targetValue) + " - " + category;
@@ -640,8 +638,8 @@ export class BulletChart implements IVisual {
 
     private BuildBulletModel(
         visualSettings: BulletChartSettingsModel,
-        categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
-        categoricalValues: BulletChartColumns<any[]>,
+        categorical: BulletChartColumns,
+        categoricalValues: BulletChartValueColumns,
         viewPortHeight: number,
         viewPortWidth: number,
         isVerticalOrientation: boolean,
@@ -686,7 +684,7 @@ export class BulletChart implements IVisual {
         bulletModel.viewportLength = Math.max(0, (isVerticalOrientation
             ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value25 - BulletChart.YMarginVertical * BulletChart.value2)
             : (viewPortWidth - labelsWidth - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight - legendWidth)) - BulletChart.ScrollBarSize);
-        bulletModel.hasHighlights = !!(categorical.Value[0].values.length > BulletChart.zeroValue && categorical.Value[0].highlights);
+        bulletModel.hasHighlights = !!(categorical.Value.values.length > BulletChart.zeroValue && categorical.Value.highlights);
 
         return bulletModel;
     }
@@ -694,17 +692,17 @@ export class BulletChart implements IVisual {
     private BuildBulletChartItem(
         idx: number,
         category: string,
-        categoryValue: number,
-        targetValue: number,
-        targetValue2: number,
-        highlight: any,
+        categoryValue: PrimitiveValue,
+        targetValue: PrimitiveValue,
+        targetValue2: PrimitiveValue,
+        highlight: boolean,
         valueFormatString: string,
         isVerticalOrientation: boolean,
         isReversedOrientation: boolean,
         visualSettings: BulletChartSettingsModel,
         toolTipItems: BulletChartTooltipItem[],
-        categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>,
-        categoricalValues: BulletChartColumns<any[]>,
+        categorical: BulletChartColumns,
+        categoricalValues: BulletChartValueColumns,
         categoryMinValue: number | undefined,
         categoryMaxValue: number | undefined,
         colorHelper: ColorHelper,
@@ -738,7 +736,7 @@ export class BulletChart implements IVisual {
         const goodScale: number = scale(good);
         const veryGoodScale: number = scale(veryGood);
         const maximumScale: number = scale(maximum);
-        const valueScale: number = scale(categoryValue);
+        const valueScale: number = lodashIsnumber(categoryValue) ? scale(categoryValue) : undefined;
         const minColor: string = visualSettings.colors.minColor.value.value,
             needsImprovementColor: string = visualSettings.colors.needsImprovementColor.value.value,
             satisfactoryColor: string = visualSettings.colors.satisfactoryColor.value.value,
@@ -777,19 +775,19 @@ export class BulletChart implements IVisual {
         this.addItemToBarArray(bulletModel.valueRects, idx, minimumScale, valueScale, bulletFillColor, visualSettings.colors.bulletColor.value.value,
             maxStrokeWidthValues, toolTipItems, selectionIdBuilder(), highlight, BarRectType.Bullet);
 
-        const scaledTarget: number = scale(targetValue || BulletChart.zeroValue);
+        const scaledTarget: number = lodashIsnumber(targetValue) ? scale(targetValue || BulletChart.zeroValue) : 0;
 
         if (lodashIsnumber(scaledTarget)) {
             bulletModel.targetValues.push({
                 barIndex: idx,
                 categoryValue: categoryValue,
                 targetValueUnscaled: targetValue,
-                value: targetValue && scale(targetValue),
+                value: targetValue && lodashIsnumber(targetValue) ? scale(targetValue) : undefined,
                 fill: bulletFillColor,
                 stroke: visualSettings.colors.bulletColor.value.value,
                 strokeWidth: maxStrokeWidthValues,
                 key: selectionIdBuilder().withMeasure(scaledTarget.toString()).createSelectionId().getKey(),
-                value2: targetValue2 && scale(targetValue2),
+                value2: targetValue2 && lodashIsnumber(targetValue2) ? scale(targetValue2) : undefined,
             });
         }
 
@@ -806,7 +804,7 @@ export class BulletChart implements IVisual {
         return barData;
     }
 
-    private static computeCategoryNumbers(categoricalValues: BulletChartColumns<any[]>, idx: number, visualSettings: BulletChartSettingsModel, targetValue: number, minimum: number, categoryMaxValue: number, categoryValue: number, targetValue2: number) {
+    private static computeCategoryNumbers(categoricalValues: BulletChartValueColumns, idx: number, visualSettings: BulletChartSettingsModel, targetValue: PrimitiveValue, minimum: number, categoryMaxValue: number, categoryValue: PrimitiveValue, targetValue2: PrimitiveValue) {
         let needsImprovement: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.NeedsImprovement?.[idx], visualSettings.values.needsImprovementPercent.value, targetValue, minimum);
         let satisfactory: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Satisfactory?.[idx], visualSettings.values.satisfactoryPercent.value, targetValue, minimum);
         let good: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Good?.[idx], visualSettings.values.goodPercent.value, targetValue, minimum);
@@ -842,9 +840,9 @@ export class BulletChart implements IVisual {
      * @param targetValue the target value the percent is based on
      * @param minimum the range minimum, usually 0 but when it is less than 0, than the result is adjusted
      */
-    public static CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(value: number, percent: number, targetValue: number, minimum?: number): number {
-        if (value !== null && isFinite(value)) {
-            return value;
+    public static CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(value: PrimitiveValue, percent: number, targetValue: PrimitiveValue, minimum?: number): number {
+        if (value !== null && isFinite(Number(value))) {
+            return Number(value);
         }
 
         let adjustedMinimum: number = BulletChart.zeroValue;
@@ -853,7 +851,7 @@ export class BulletChart implements IVisual {
             adjustedMinimum = minimum;
         }
 
-        if (isFinite(targetValue) && targetValue !== null && isFinite(percent) && percent !== null && percent >= 0) {
+        if (lodashIsnumber(targetValue) && isFinite(targetValue) && targetValue !== null && isFinite(percent) && percent !== null && percent >= 0) {
             return (percent * (targetValue - adjustedMinimum) / 100) + adjustedMinimum;
         }
 
@@ -1053,8 +1051,8 @@ export class BulletChart implements IVisual {
             this.visualSettings.setLocalizedOptions(this.localizationManager);
 
 
-            const categorical: BulletChartColumns<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns> = BulletChartColumns.GET_CATEGORICAL_COLUMNS(dataView);
-            const categoricalValues: BulletChartColumns<any[]> = BulletChartColumns.GET_CATEGORICAL_VALUES(dataView);
+            const categorical: BulletChartColumns = BulletChartColumns.getCategoricalColumns(dataView);
+            const categoricalValues: BulletChartValueColumns = BulletChartColumns.getCategoricalValues(dataView, categorical);
             const definedColors = this.computeDefinedColors(categorical, categoricalValues);
 
             // Render legend first, so we can compute legend width and then adjust visual size
@@ -1456,9 +1454,13 @@ export class BulletChart implements IVisual {
         }
     }
 
-    private computeCompletionPercent(value: number, targetValue: number): string {
-        const percent = Math.round(value / targetValue * 100);
-        return isNaN(percent) ? "N/A" : percent + "%";
+    private computeCompletionPercent(value: PrimitiveValue, targetValue: PrimitiveValue): string {
+        if (lodashIsnumber(value) && lodashIsnumber(targetValue)) {
+            const percent = Math.round(value / targetValue * 100);
+            return isNaN(percent) ? "N/A" : percent + "%";
+        }
+
+        return 'N/A';
     }
 
     private renderAxisVertically(bar: BarData, reversed: boolean, axisColor: string, isMainAxis: boolean) {
