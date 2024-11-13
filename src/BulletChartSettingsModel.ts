@@ -389,42 +389,42 @@ class OrientationCard extends Card {
 class ColorsCard extends Card {
     minColor = new formattingSettings.ColorPicker({
         name: "minColor",
-        displayName: "Minimum color",
+        displayName: "Minimum",
         displayNameKey: "Visual_Colors_MinimumColor",
         value: { value: "#8b0000" }
     });
 
     needsImprovementColor = new formattingSettings.ColorPicker({
         name: "needsImprovementColor",
-        displayName: "Needs Improvement color",
+        displayName: "Needs Improvement",
         displayNameKey: "Visual_Colors_NeedsImprovementColor",
         value: { value: "#FF0000" }
     });
 
     satisfactoryColor = new formattingSettings.ColorPicker({
         name: "satisfactoryColor",
-        displayName: "Satisfactory color",
+        displayName: "Satisfactory",
         displayNameKey: "Visual_Colors_SatisfactoryColor",
         value: { value: "#FFFF00" }
     });
 
     goodColor = new formattingSettings.ColorPicker({
         name: "goodColor",
-        displayName: "Good color",
+        displayName: "Good",
         displayNameKey: "Visual_Colors_GoodColor",
         value: { value: "#008000" }
     });
 
     veryGoodColor = new formattingSettings.ColorPicker({
         name: "veryGoodColor",
-        displayName: "Very Good color",
+        displayName: "Very Good",
         displayNameKey: "Visual_Colors_VeryGoodColor",
         value: { value: "#006400" }
     });
 
     bulletColor = new formattingSettings.ColorPicker({
         name: "bulletColor",
-        displayName: "Bullet color",
+        displayName: "Bullet",
         displayNameKey: "Visual_Colors_BulletColor",
         value: { value: "#000000" }
     });
