@@ -1,4 +1,4 @@
-## 2.4.3
+## 2.5.0
 ### Visual changes
 * Move "sync axis" and "show only main axis" settings to "Axis" card
 * Add font setttings for measure units and axis
