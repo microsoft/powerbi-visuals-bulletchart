@@ -41,7 +41,7 @@
     "powerbi-visuals-utils-tooltiputils": "^6.0.4",
     "regenerator-runtime": "^0.14.1",
     "terser-webpack-plugin": "^5.3.10",
-    "typescript-eslint": "^8.9.0"
+    "typescript-eslint": "^8.14.0"
   },
   "devDependencies": {
     "@types/d3-array": "^3.2.1",
@@ -49,7 +49,7 @@
     "@types/d3-selection": "^3.0.11",
     "@types/jasmine": "5.1.4",
     "@types/jasmine-jquery": "1.5.37",
-    "@types/karma": "6.3.8",
+    "@types/karma": "6.3.9",
     "@types/lodash.clone": "^4.5.6",
     "@types/lodash.groupby": "^4.6.6",
     "@types/lodash.isempty": "4.4.9",
@@ -60,10 +60,10 @@
     "@types/lodash.sumby": "^4.6.6",
     "@types/lodash.takeright": "^4.1.6",
     "@types/webpack": "5.28.5",
-    "@typescript-eslint/eslint-plugin": "^8.9.0",
-    "@typescript-eslint/parser": "^8.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.14.0",
+    "@typescript-eslint/parser": "^8.14.0",
     "css-loader": "7.1.2",
-    "eslint": "^9.12.0",
+    "eslint": "^9.14.0",
     "eslint-plugin-powerbi-visuals": "^1.0.0",
     "jasmine": "^5.4.0",
     "jasmine-jquery": "2.1.1",
@@ -79,7 +79,7 @@
     "less": "4.2.0",
     "less-loader": "12.2.0",
     "moment": "^2.29.4",
-    "playwright-chromium": "^1.48.1",
+    "playwright-chromium": "^1.48.2",
     "powerbi-models": "1.15.2",
     "powerbi-visuals-api": "~5.11.0",
     "powerbi-visuals-tools": "^5.6.0",
@@ -89,6 +89,6 @@
     "ts-loader": "9.5.1",
     "ts-node": "10.9.2",
     "typescript": "5.6.3",
-    "webpack": "^5.95.0"
+    "webpack": "^5.96.1"
   }
 }
