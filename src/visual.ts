@@ -478,6 +478,8 @@ export class BulletChart implements IVisual {
         const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value.source, true);
         const categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
 
+        categoricalValues.Category[0] = "formatCategoryWithCompletionPercent";
+        categoricalValues.Category[1] = "calculateCategoryValueRange";
         const bulletModel: BulletChartModel = this.BuildBulletModel(
             this.visualSettings,
             categorical,
@@ -498,13 +500,31 @@ export class BulletChart implements IVisual {
             let category: string = BulletChart.emptyString;
             if (categorical.Category) {
                 category = valueFormatter.format(categoricalValues.Category[idx], categoryFormatString);
-                category = this.formatCategoryWithCompletionPercent({ category, categoricalValues, index: idx, isVerticalOrientation, isReversedOrientation });
+
+                let completionPercentTextWidth: number = 0;
+                let completionPercentText: string = '';
+                if (this.visualSettings.general.showCompletionPercent.value) {
+                    if (isReversedOrientation) {
+                        completionPercentText = this.computeCompletionPercent(categoricalValues.Value[idx], categoricalValues.TargetValue[idx]) + ' - ';
+                    } else {
+                        completionPercentText = ' - ' + this.computeCompletionPercent(categoricalValues.Value[idx], categoricalValues.TargetValue[idx]);
+                    }
+                    completionPercentTextWidth = BulletChart.measureSvgTextWidth({ text: completionPercentText, fontSize: this.visualSettings.labels.font.fontSize.value });
+                }
 
                 const textProperties = BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value);
                 category = TextMeasurementService.getTailoredTextOrDefault(
                     textProperties,
-                    this.visualSettings.labels.autoWidth.value ? bulletModel.longestCategoryWidth : this.visualSettings.labels.maxWidth.value
+                    this.visualSettings.labels.autoWidth.value ? bulletModel.longestCategoryWidth : this.visualSettings.labels.maxWidth.value - completionPercentTextWidth
                 );
+
+                if (this.visualSettings.general.showCompletionPercent.value) {
+                    if (isReversedOrientation) {
+                        category = completionPercentText + category;
+                    } else {
+                        category = category + completionPercentText;
+                    }
+                }
             }
 
             const categoryValue: PrimitiveValue = categoricalValues.Value[idx] || BulletChart.zeroValue;
@@ -603,10 +623,15 @@ export class BulletChart implements IVisual {
             }
         }
 
-        const textProperties = BulletChart.getTextProperties(longestCategory, this.visualSettings.labels.font.fontSize.value);
-        // Add 1 pixel to the width to avoid text truncation
-        const longestCategoryWidth = measureSvgTextWidth(textProperties, longestCategory) + 1;
+        const longestCategoryWidth = BulletChart.measureSvgTextWidth({ text: longestCategory, fontSize: this.visualSettings.labels.font.fontSize.value });
         return longestCategoryWidth;
+    }
+
+    private static measureSvgTextWidth({text, fontSize}: { text: string, fontSize: number }) {
+        const textProperties = BulletChart.getTextProperties(text, fontSize);
+        // Add 1 pixel to the width to avoid text truncation
+        const width = measureSvgTextWidth(textProperties, text) + 1;
+        return width;
     }
 
     private formatCategoryWithCompletionPercent({
@@ -1129,9 +1154,10 @@ export class BulletChart implements IVisual {
     }
 
     private calculateLabelWidth(barData: BarData, bar?: BarRect, reversed?: boolean) {
+        const labelPadding = 10;
         return (reversed
                 ? BulletChart.XMarginHorizontalRight
-                : barData.x + (this.settings.labels.show.value ? (this.settings.labels.autoWidth.value ? this.data.longestCategoryWidth : this.settings.labels.maxWidth.value) : 0) + BulletChart.XMarginHorizontalLeft)
+                : barData.x + (this.settings.labels.show.value ? (this.settings.labels.autoWidth.value ? this.data.longestCategoryWidth : this.settings.labels.maxWidth.value) : 0) + BulletChart.XMarginHorizontalLeft + labelPadding)
             + (bar ? bar.start : BulletChart.zeroValue);
     }
 
