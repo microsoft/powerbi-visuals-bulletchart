@@ -221,10 +221,28 @@ class GeneralCard extends Card {
         }
     });
 
+    setGapSize = new formattingSettings.ToggleSwitch({
+        name: "setGapSize",
+        displayName: "Set gap size",
+        displayNameKey: "Visual_SetGapSize",
+        value: false,
+    });
+
+    gapSize = new formattingSettings.NumUpDown({
+        name: "gapSize",
+        displayName: "Gap size",
+        displayNameKey: "Visual_GapSize",
+        value: 35,
+        options: {
+            minValue: { value: 0, type: ValidatorType.Min },
+        }
+    });
+
+
     name = "general";
     displayName = "General";
     displayNameKey = "Visual_General";
-    slices = [this.showCompletionPercent, this.barSize];
+    slices = [this.showCompletionPercent, this.barSize, this.setGapSize, this.gapSize];
 }
 
 class DataValuesCard extends Card {

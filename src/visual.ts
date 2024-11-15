@@ -195,6 +195,10 @@ export class BulletChart implements IVisual {
     }
 
     private get SpaceRequiredForBarVertically(): number {
+        if (this.visualSettings.general.setGapSize.value) {
+            return this.visualSettings.general.gapSize.value;
+        }
+
         if (!this.visualSettings.axis.axis.value) {
             return this.BarSize + BulletChart.BarPaddingVerticalShort;
         }
@@ -664,11 +668,17 @@ export class BulletChart implements IVisual {
 
         bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value));
         bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value)) / BulletChart.value1dot4;
-        bulletModel.spaceRequiredForBarHorizontally = visualSettings.general.barSize.value +
-            (visualSettings.axis.axis.value
+
+        let gapSize: number;
+        if (visualSettings.general.setGapSize.value) {
+            gapSize = visualSettings.general.gapSize.value;
+        } else {
+            gapSize = visualSettings.axis.axis.value
                 ? (visualSettings.axis.showOnlyMainAxis.value ? BulletChart.BarPaddingHorizontalShort : BulletChart.BarPaddingHorizontalDefault)
-                : BulletChart.BarPaddingHorizontalShort
-            );
+                : BulletChart.BarPaddingHorizontalShort;
+        }
+
+        bulletModel.spaceRequiredForBarHorizontally = visualSettings.general.barSize.value + gapSize;
 
 
         let legendWidth: number = 0;
@@ -1744,6 +1754,10 @@ export class BulletChart implements IVisual {
     public getFormattingModel(): powerbi.visuals.FormattingModel {
         if (this.visualSettings.labels.autoWidth.value) {
             this.visualSettings.labels.maxWidth.visible = false;
+        }
+
+        if (!this.visualSettings.general.setGapSize.value) {
+            this.visualSettings.general.gapSize.visible = false;
         }
 
         return this.formattingSettingsService.buildFormattingModel(this.visualSettings);

@@ -5,6 +5,7 @@
 * Add an 'auto width' toggle for category labels that, when enabled, adjusts the label width to display all categories without trimming
 * Add settings to control axis display format and precision
 * Add settings to control bar size and to show percent of completion
+* Add settings to control the gap size between bars
 * Add "Legend" settings card
 * Update API to 5.11.0, tools to 5.6.0
 

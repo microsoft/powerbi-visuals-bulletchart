@@ -26,6 +26,8 @@
 	"Visual_ShowTitle": "Show title",
 	"Visual_Title": "Title",
 	"Visual_BarSize": "Bar size",
+	"Visual_SetGapSize": "Set gap size",
+	"Visual_GapSize": "Gap size",
 	"Visual_ShowCompletionPercent": "Show percent of completion",
 	"Visual_Show": "Show",
 	"Visual_DisplayUnits": "Display units",
