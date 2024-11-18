@@ -146,6 +146,7 @@ export class BulletChart implements IVisual {
     private static YMarginHorizontal: number = 17.5;
     private static XMarginVertical: number = 70;
     private static YMarginVertical: number = 10;
+    private static AxisWidth: number = 25;
     private static BarPaddingVerticalShort: number = 10;
     private static BarPaddingVerticalDefault: number = 75;
     private static BarPaddingHorizontalShort: number = 5;
@@ -515,10 +516,15 @@ export class BulletChart implements IVisual {
                 }
 
                 const textProperties = BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value);
-                category = TextMeasurementService.getTailoredTextOrDefault(
-                    textProperties,
-                    this.visualSettings.labels.autoWidth.value ? bulletModel.longestCategoryWidth : this.visualSettings.labels.maxWidth.value - completionPercentTextWidth
-                );
+
+                let categoryLabelMaxWidth: number;
+                if (this.visualSettings.labels.autoWidth.value) {
+                    categoryLabelMaxWidth = Math.min(Math.max(0, this.SpaceRequiredForBarVertically - BulletChart.AxisWidth), bulletModel.longestCategoryWidth);
+                } else {
+                    categoryLabelMaxWidth = this.visualSettings.labels.maxWidth.value - completionPercentTextWidth;
+                }
+
+                category = TextMeasurementService.getTailoredTextOrDefault(textProperties, categoryLabelMaxWidth);
 
                 if (this.visualSettings.general.showCompletionPercent.value && !isVerticalOrientation) {
                     if (isReversedOrientation) {
