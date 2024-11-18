@@ -504,11 +504,12 @@ export class BulletChart implements IVisual {
 
                 let completionPercentTextWidth: number = 0;
                 let completionPercentText: string = '';
-                if (this.visualSettings.general.showCompletionPercent.value) {
+                if (this.visualSettings.general.showCompletionPercent.value && !isVerticalOrientation) {
+                    completionPercentText = this.computeCompletionPercent(categoricalValues.Value[idx], categoricalValues.TargetValue[idx]);
                     if (isReversedOrientation) {
-                        completionPercentText = this.computeCompletionPercent(categoricalValues.Value[idx], categoricalValues.TargetValue[idx]) + ' - ';
+                        completionPercentText = completionPercentText + ' - ';
                     } else {
-                        completionPercentText = ' - ' + this.computeCompletionPercent(categoricalValues.Value[idx], categoricalValues.TargetValue[idx]);
+                        completionPercentText = ' - ' + completionPercentText;
                     }
                     completionPercentTextWidth = BulletChart.measureSvgTextWidth({ text: completionPercentText, fontSize: this.visualSettings.labels.font.fontSize.value });
                 }
@@ -519,7 +520,7 @@ export class BulletChart implements IVisual {
                     this.visualSettings.labels.autoWidth.value ? bulletModel.longestCategoryWidth : this.visualSettings.labels.maxWidth.value - completionPercentTextWidth
                 );
 
-                if (this.visualSettings.general.showCompletionPercent.value) {
+                if (this.visualSettings.general.showCompletionPercent.value && !isVerticalOrientation) {
                     if (isReversedOrientation) {
                         category = completionPercentText + category;
                     } else {
@@ -615,9 +616,7 @@ export class BulletChart implements IVisual {
 
         let longestCategory: string = "";
         for (let index = 0; index < categoricalValues.Category.length; index++) {
-            let category: string = categoricalValues.Category[index] as string;
-
-            category = this.formatCategoryWithCompletionPercent({ category, categoricalValues, index, isVerticalOrientation, isReversedOrientation });
+            const category = this.formatCategoryWithCompletionPercent({ categoricalValues, index, isVerticalOrientation, isReversedOrientation });
 
             if (category.length > longestCategory.length) {
                 longestCategory = category;
@@ -636,18 +635,18 @@ export class BulletChart implements IVisual {
     }
 
     private formatCategoryWithCompletionPercent({
-        category,
         categoricalValues,
         index,
         isVerticalOrientation,
         isReversedOrientation
     }: {
-        category: string;
         categoricalValues: BulletChartValueColumns;
         index: number;
         isVerticalOrientation: boolean;
         isReversedOrientation: boolean;
     }) {
+        const category = categoricalValues.Category[index].toString();
+
         if (!this.visualSettings.general.showCompletionPercent.value
             || !categoricalValues.Value?.[index]
             || !categoricalValues.TargetValue?.[index]
