@@ -330,7 +330,7 @@
                         }
                     }
                 },
-                "axitsPrecision": {
+                "axisPrecision": {
                     "type": {
                         "numeric": true
                     }
