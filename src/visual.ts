@@ -1479,7 +1479,7 @@ export class BulletChart implements IVisual {
                     textSelection
                         .append("tspan")
                         .attr("x", (d: BarData) => d.x)
-                        .attr("dy", this.data.labelHeightTop + 3) // add a little space between the category label and the completion percent
+                        .attr("dy", this.data.labelHeightTop + 7) // Add a little space between the category label and the completion percent
                         .text((d: BarData) => {
                             const categoryValue = model.targetValues[d.barIndex].categoryValue;
                             const targetValue = model.targetValues[d.barIndex].targetValueUnscaled;
