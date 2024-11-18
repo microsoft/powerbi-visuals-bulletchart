@@ -1501,8 +1501,10 @@ export class BulletChart implements IVisual {
 
     private computeCompletionPercent(value: PrimitiveValue, targetValue: PrimitiveValue): string {
         if (lodashIsnumber(value) && lodashIsnumber(targetValue)) {
-            const percent = Math.round(value / targetValue * 100);
-            return isNaN(percent) ? "N/A" : percent + "%";
+            const percent: number = Math.round(value / targetValue * 100);
+            if (!isNaN(percent) && isFinite(percent)) {
+                return percent + "%";
+            }
         }
 
         return 'N/A';
