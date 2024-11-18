@@ -480,6 +480,7 @@ export class BulletChart implements IVisual {
 
         categoricalValues.Category[0] = "formatCategoryWithCompletionPercent";
         categoricalValues.Category[1] = "calculateCategoryValueRange";
+
         const bulletModel: BulletChartModel = this.BuildBulletModel(
             this.visualSettings,
             categorical,
@@ -1103,6 +1104,10 @@ export class BulletChart implements IVisual {
             this.data = data;
 
             this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.font.fontSize.value));
+
+            this.bulletBody
+                .style("height", PixelConverter.toString(this.layout.viewportIn.height))
+                .style("width", PixelConverter.toString(this.layout.viewportIn.width));
 
             if (this.vertical) {
                 this.scrollContainer
