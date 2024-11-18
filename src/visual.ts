@@ -479,9 +479,6 @@ export class BulletChart implements IVisual {
         const valueFormatString: string = valueFormatter.getFormatStringByColumn(categorical.Value.source, true);
         const categoryFormatString: string = categorical.Category ? valueFormatter.getFormatStringByColumn(categorical.Category.source, true) : BulletChart.emptyString;
 
-        categoricalValues.Category[0] = "formatCategoryWithCompletionPercent";
-        categoricalValues.Category[1] = "calculateCategoryValueRange";
-
         const bulletModel: BulletChartModel = this.BuildBulletModel(
             this.visualSettings,
             categorical,
@@ -506,7 +503,9 @@ export class BulletChart implements IVisual {
                 let completionPercentTextWidth: number = 0;
                 let completionPercentText: string = '';
                 if (this.visualSettings.general.showCompletionPercent.value && !isVerticalOrientation) {
-                    completionPercentText = this.computeCompletionPercent(categoricalValues.Value[idx], categoricalValues.TargetValue[idx]);
+                    const value = categoricalValues.Value[idx];
+                    const targetValue = categoricalValues?.TargetValue?.[idx] ?? this.visualSettings.values.targetValue.value;
+                    completionPercentText = this.computeCompletionPercent(value, targetValue);
                     if (isReversedOrientation) {
                         completionPercentText = completionPercentText + ' - ';
                     } else {
@@ -655,14 +654,14 @@ export class BulletChart implements IVisual {
 
         if (!this.visualSettings.general.showCompletionPercent.value
             || !categoricalValues.Value?.[index]
-            || !categoricalValues.TargetValue?.[index]
+            || (!categoricalValues.TargetValue?.[index] && !this.visualSettings.values.targetValue.value)
             || isVerticalOrientation
         ) {
             return category;
         }
 
         const categoryValue: PrimitiveValue = categoricalValues.Value[index];
-        const targetValue: PrimitiveValue = categoricalValues.TargetValue[index];
+        const targetValue: PrimitiveValue = categoricalValues?.TargetValue?.[index] || this.visualSettings.values.targetValue.value;
 
         if (isReversedOrientation) {
             return this.computeCompletionPercent(categoryValue, targetValue) + " - " + category;
