@@ -146,7 +146,9 @@ export class BulletChart implements IVisual {
     private static YMarginHorizontal: number = 17.5;
     private static XMarginVertical: number = 70;
     private static YMarginVertical: number = 10;
+    private static AxisHeight: number = 20;
     private static AxisWidth: number = 25;
+    private static MainAxisSpacing: number = 15;
     private static BarPaddingVerticalShort: number = 10;
     private static BarPaddingVerticalDefault: number = 75;
     private static BarPaddingHorizontalShort: number = 5;
@@ -196,8 +198,8 @@ export class BulletChart implements IVisual {
     }
 
     private get SpaceRequiredForBarVertically(): number {
-        if (this.visualSettings.general.setGapSize.value) {
-            return this.visualSettings.general.gapSize.value;
+        if (this.visualSettings.general.customBarSpacing.value) {
+            return this.visualSettings.general.barSpacing.value;
         }
 
         if (!this.visualSettings.axis.axis.value) {
@@ -207,6 +209,20 @@ export class BulletChart implements IVisual {
         return this.visualSettings.axis.showOnlyMainAxis.value
             ? this.BarSize + BulletChart.BarPaddingVerticalShort
             : this.BarSize + BulletChart.BarPaddingVerticalDefault;
+    }
+
+    private get SpaceBetweenBarsHorizontally(): number {
+        if (this.visualSettings.general.customBarSpacing.value) {
+            return this.visualSettings.general.barSpacing.value;
+        }
+
+        if (!this.visualSettings.axis.axis.value) {
+            return BulletChart.BarPaddingHorizontalShort;
+        }
+
+        return this.visualSettings.axis.showOnlyMainAxis.value
+            ? BulletChart.BarPaddingHorizontalShort
+            : BulletChart.BarPaddingHorizontalDefault;
     }
 
     private get MarkerMarginHorizontal(): number { return this.BarSize / 6; }
@@ -698,18 +714,7 @@ export class BulletChart implements IVisual {
 
         bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value));
         bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value)) / BulletChart.value1dot4;
-
-        let gapSize: number;
-        if (visualSettings.general.setGapSize.value) {
-            gapSize = visualSettings.general.gapSize.value;
-        } else {
-            gapSize = visualSettings.axis.axis.value
-                ? (visualSettings.axis.showOnlyMainAxis.value ? BulletChart.BarPaddingHorizontalShort : BulletChart.BarPaddingHorizontalDefault)
-                : BulletChart.BarPaddingHorizontalShort;
-        }
-
-        bulletModel.spaceRequiredForBarHorizontally = visualSettings.general.barSize.value + gapSize;
-
+        bulletModel.spaceRequiredForBarHorizontally = visualSettings.general.barSize.value + this.SpaceBetweenBarsHorizontally;
 
         let legendWidth: number = 0;
         switch (LegendPosition[this.visualSettings.legend.position.value.value]) {
@@ -1122,7 +1127,9 @@ export class BulletChart implements IVisual {
                     .attr("height", (
                         PixelConverter.toString(this.data.bars.length * this.data.spaceRequiredForBarHorizontally
                             + BulletChart.YMarginHorizontal
-                            + (this.settings.axis.axis.value ? BulletChart.YMarginHorizontal : BulletChart.zeroValue))
+                            + (this.settings.axis.axis.value ? BulletChart.AxisHeight : BulletChart.zeroValue)
+                            + (this.settings.axis.showOnlyMainAxis.value ? BulletChart.MainAxisSpacing : BulletChart.zeroValue)
+                        )
                     ))
                     .attr("width", PixelConverter.toString(this.viewportScroll.width));
             }
@@ -1514,7 +1521,7 @@ export class BulletChart implements IVisual {
         this.bulletGraphicsContext
             .append("g")
             .attr("transform", () => {
-                const xLocation: number = bar.x - (isMainAxis ? this.SpaceRequiredForBarVertically - this.BarSize : 0);
+                const xLocation: number = bar.x - (isMainAxis ? BulletChart.MainAxisSpacing: 0);
                 const yLocation: number = this.calculateLabelHeight(
                     bar,
                     null,
@@ -1551,8 +1558,7 @@ export class BulletChart implements IVisual {
                     null,
                     reversed
                 );
-                const gap = Math.abs(this.data.spaceRequiredForBarHorizontally - this.BarSize);
-                const yLocation: number = bar.y + this.BarSize + (isMainAxis ? gap : 0);
+                const yLocation: number = bar.y + this.BarSize + (isMainAxis ? BulletChart.MainAxisSpacing : 0);
 
                 return `translate(${xLocation},${yLocation})`;
             })
@@ -1793,8 +1799,8 @@ export class BulletChart implements IVisual {
             this.visualSettings.labels.maxWidth.visible = false;
         }
 
-        if (!this.visualSettings.general.setGapSize.value) {
-            this.visualSettings.general.gapSize.visible = false;
+        if (!this.visualSettings.general.customBarSpacing.value) {
+            this.visualSettings.general.barSpacing.visible = false;
         }
 
         return this.formattingSettingsService.buildFormattingModel(this.visualSettings);

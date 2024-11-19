@@ -74,12 +74,12 @@
                         "numeric": true
                     }
                 },
-                "setGapSize": {
+                "customBarSpacing": {
                     "type": {
                         "bool": true
                     }
                 },
-                "gapSize": {
+                "barSpacing": {
                     "type": {
                         "numeric": true
                     }
