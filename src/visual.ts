@@ -533,7 +533,7 @@ export class BulletChart implements IVisual {
                 const textProperties = BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value);
 
                 let categoryLabelMaxWidth: number;
-                if (this.visualSettings.labels.autoWidth.value) {
+                if (this.visualSettings.labels.autoWidth.value && isVerticalOrientation) {
                     categoryLabelMaxWidth = Math.min(Math.max(0, this.SpaceRequiredForBarVertically - BulletChart.AxisWidth), bulletModel.longestCategoryWidth);
                 } else {
                     categoryLabelMaxWidth = this.visualSettings.labels.maxWidth.value - completionPercentTextWidth;
@@ -1127,8 +1127,11 @@ export class BulletChart implements IVisual {
                     .attr("height", (
                         PixelConverter.toString(this.data.bars.length * this.data.spaceRequiredForBarHorizontally
                             + BulletChart.YMarginHorizontal
-                            + (this.settings.axis.axis.value ? BulletChart.AxisHeight : BulletChart.zeroValue)
-                            + (this.settings.axis.showOnlyMainAxis.value ? BulletChart.MainAxisSpacing : BulletChart.zeroValue)
+                            + (this.settings.axis.axis.value
+                                ? BulletChart.AxisHeight + (this.settings.axis.showOnlyMainAxis.value
+                                    ? BulletChart.MainAxisSpacing - this.SpaceBetweenBarsHorizontally // replace old spacing with fixed one
+                                    : 0)
+                                : BulletChart.zeroValue)
                         )
                     ))
                     .attr("width", PixelConverter.toString(this.viewportScroll.width));
