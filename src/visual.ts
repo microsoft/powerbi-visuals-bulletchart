@@ -1386,9 +1386,9 @@ export class BulletChart implements IVisual {
         }
 
         const emptyIdentity = this.hostService.createSelectionIdBuilder().createSelectionId();
-        const dataPoints: LegendDataPoint[] = filtered.map((color) => ({
-            label: this.localizationManager.getDisplayName(color.displayNameKey),
-            color: color.color,
+        const dataPoints: LegendDataPoint[] = filtered.map((colorObject) => ({
+            label: this.localizationManager.getDisplayName(colorObject.displayNameKey),
+            color: this.colorHelper.getHighContrastColor("foreground", colorObject.color),
             markerShape: MarkerShape.circle,
             identity: emptyIdentity,
             selected: false,
