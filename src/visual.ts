@@ -1144,18 +1144,23 @@ export class BulletChart implements IVisual {
                 this.setUpBulletsHorizontally(this.data, this.reverse);
             }
 
-            this.subSelectionHelper.setFormatMode(options.formatMode);
-            const shouldUpdateSubSelection = options.type & (powerbi.VisualUpdateType.Data
-                | powerbi.VisualUpdateType.Resize
-                | powerbi.VisualUpdateType.FormattingSubSelectionChange);
-            if (this.formatMode && shouldUpdateSubSelection) {
-                this.subSelectionHelper.updateOutlinesFromSubSelections(options.subSelections, true);
-            }
+            this.updateSubSelectionOutlines(options);
 
             this.events.renderingFinished(options);
         } catch (e) {
             console.error(e);
             this.events.renderingFailed(options, e);
+        }
+    }
+
+    private updateSubSelectionOutlines(options: VisualUpdateOptions) {
+        this.subSelectionHelper.setFormatMode(options.formatMode);
+
+        const shouldUpdateSubSelection = options.type & (powerbi.VisualUpdateType.Data
+            | powerbi.VisualUpdateType.Resize
+            | powerbi.VisualUpdateType.FormattingSubSelectionChange);
+        if (this.formatMode && shouldUpdateSubSelection) {
+            this.subSelectionHelper.updateOutlinesFromSubSelections(options.subSelections, true);
         }
     }
 
@@ -1173,11 +1178,14 @@ export class BulletChart implements IVisual {
             .attr("height", PixelConverter.toString(0));
     }
 
-    private calculateLabelWidth(barData: BarData, bar?: BarRect, reversed?: boolean) {
-        const labelPadding = 10;
+    private calculateXPosition(barData: BarData, bar?: BarRect, reversed?: boolean) {
+        const labelWidth = this.settings.labels.show.value
+            ? this.settings.labels.autoWidth.value ? this.data.longestCategoryWidth : this.settings.labels.maxWidth.value
+            : 0;
+
         return (reversed
                 ? BulletChart.XMarginHorizontalRight
-                : barData.x + (this.settings.labels.show.value ? (this.settings.labels.autoWidth.value ? this.data.longestCategoryWidth : this.settings.labels.maxWidth.value) : 0) + BulletChart.XMarginHorizontalLeft + labelPadding)
+                : barData.x + labelWidth + BulletChart.XMarginHorizontalLeft + BulletChart.LabelsPadding)
             + (bar ? bar.start : BulletChart.zeroValue);
     }
 
@@ -1225,9 +1233,7 @@ export class BulletChart implements IVisual {
                 .attr("x", (d: BarData) => {
                     if (reversed)
                         return (
-                            BulletChart.XMarginHorizontalLeft +
-                            BulletChart.XMarginHorizontalRight +
-                            model.viewportLength
+                            this.viewportScroll.width - this.data.longestCategoryWidth - BulletChart.XMarginHorizontalLeft - BulletChart.LabelsPadding / 2
                         );
                     return d.x;
                 })
@@ -1279,7 +1285,7 @@ export class BulletChart implements IVisual {
             .data(d => d[1])
             .join("rect")
             .classed("range", true)
-            .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
+            .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateXPosition(bars[d.barIndex], d, reversed))))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y)))
             .attr("width", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
             .attr("height", this.BarSize)
@@ -1296,7 +1302,7 @@ export class BulletChart implements IVisual {
             .selectAll<SVGRectElement, BarRect>("rect.value")
             .data(valueRects, (d: BarRect) => d.key)
             .join("rect")
-            .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateLabelWidth(bars[d.barIndex], d, reversed))))
+            .attr("x", ((d: BarRect) => Math.max(BulletChart.zeroValue, this.calculateXPosition(bars[d.barIndex], d, reversed))))
             .attr("y", ((d: BarRect) => Math.max(BulletChart.zeroValue, bars[d.barIndex].y + this.bulletMiddlePosition)))
             .attr("width", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.end - d.start)))
             .attr("height", this.BarSize * BulletChart.value1 / BulletChart.value4)
@@ -1310,14 +1316,14 @@ export class BulletChart implements IVisual {
 
         // Draw markers
         this.drawFirstTargets(targetValues,
-            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value,
-            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value,
+            (d: TargetValue) => this.calculateXPosition(bars[d.barIndex], null, reversed) + d.value,
+            (d: TargetValue) => this.calculateXPosition(bars[d.barIndex], null, reversed) + d.value,
             (d: TargetValue) => bars[d.barIndex].y + this.MarkerMarginHorizontal,
             (d: TargetValue) => bars[d.barIndex].y + this.MarkerMarginHorizontalEnd);
 
         this.drawSecondTargets(
             targetValues,
-            (d: TargetValue) => this.calculateLabelWidth(bars[d.barIndex], null, reversed) + d.value2,
+            (d: TargetValue) => this.calculateXPosition(bars[d.barIndex], null, reversed) + d.value2,
             (d: TargetValue) => bars[d.barIndex].y + this.BarSize / BulletChart.value2);
 
         this.drawAxisAndLabelsForHorizontalOrientation(model, reversed);
@@ -1557,7 +1563,7 @@ export class BulletChart implements IVisual {
         barGroup
             .append("g")
             .attr("transform", () => {
-                const xLocation: number = this.calculateLabelWidth(
+                const xLocation: number = this.calculateXPosition(
                     bar,
                     null,
                     reversed
