@@ -532,11 +532,12 @@ export class BulletChart implements IVisual {
 
                 const textProperties = BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value);
 
-                let categoryLabelMaxWidth: number;
-                if (this.visualSettings.labels.autoWidth.value && isVerticalOrientation) {
-                    categoryLabelMaxWidth = Math.min(Math.max(0, this.SpaceRequiredForBarVertically - BulletChart.AxisWidth), bulletModel.longestCategoryWidth);
-                } else {
-                    categoryLabelMaxWidth = this.visualSettings.labels.maxWidth.value - completionPercentTextWidth;
+                let categoryLabelMaxWidth: number = this.visualSettings.labels.autoWidth.value
+                    ? bulletModel.longestCategoryWidth
+                    : this.visualSettings.labels.maxWidth.value - completionPercentTextWidth;
+
+                if (isVerticalOrientation) {
+                    categoryLabelMaxWidth = Math.min(Math.max(0, this.SpaceRequiredForBarVertically - BulletChart.AxisWidth), categoryLabelMaxWidth);
                 }
 
                 category = TextMeasurementService.getTailoredTextOrDefault(textProperties, categoryLabelMaxWidth);
@@ -1804,6 +1805,19 @@ export class BulletChart implements IVisual {
 
         if (!this.visualSettings.general.customBarSpacing.value) {
             this.visualSettings.general.barSpacing.visible = false;
+        }
+
+        if (!this.visualSettings.axis.syncAxis.value && this.visualSettings.axis.showOnlyMainAxis.value) {
+            this.hostService.persistProperties({
+                merge: [{
+                    objectName: 'axis',
+                    selector: null,
+                    properties: {
+                        syncAxis: false,
+                        showOnlyMainAxis: false
+                    }
+                }]
+            });
         }
 
         return this.formattingSettingsService.buildFormattingModel(this.visualSettings);
