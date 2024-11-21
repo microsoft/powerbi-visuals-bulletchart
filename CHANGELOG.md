@@ -2,17 +2,17 @@
 ### Visual changes
 * Move "sync axis" and "show only main axis" settings to "Axis" card
 * Add font setttings for measure units and axis
-* Add an 'auto width' toggle for category labels that, when enabled, adjusts the label width to display all categories without trimming
-* Add settings to control axis display format and precision
-* Add settings to control bar size and to show percent of completion
-* Add settings to control the gap size between bars
-* Add "Legend" settings card
-* Update API to 5.11.0, tools to 5.6.0
+* Add an 'auto width' toggle for category labels. When enabled, this feature dynamically adjusts the label width to ensure all category names are fully visible without truncation.
 
 ### Code improvements
 * Fix sync axis by computing min and max category values
 * When showing main axis only, reduce space between bars to save more place
 * Remove interactivity-utils
+* Add settings to control axis display format and precision
+* Add settings to control bar size and to show percent of completion
+* Add settings to control the gap size between bars
+* Add "Legend" settings card
+* Update API to 5.11.0, tools to 5.6.0
 * Migrate to eslint v9
 
 ## 2.4.2

@@ -1,4 +1,4 @@
-export enum BarRectType {
+export const enum BarRectType {
     Minimum = "Minimum",
     NeedsImprovement = "NeedsImprovement",
     Satisfactory = "Satisfactory",

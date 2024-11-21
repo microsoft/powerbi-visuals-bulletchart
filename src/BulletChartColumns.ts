@@ -35,7 +35,7 @@ import PrimitiveValue = powerbiVisualsApi.PrimitiveValue;
 
 import { converterHelper } from "powerbi-visuals-utils-dataviewutils";
 
-const dataViewValueColumns = [
+const bulletChartValueColumnNames = [
     'Value',
     'TargetValue',
     'Minimum',
@@ -81,7 +81,7 @@ export class BulletChartColumns {
         const categoryColumns: BulletChartColumns = {} as BulletChartColumns;
         categoryColumns.Category = categories.find(x => x.source.roles && x.source.roles['Category']);
 
-        for (const valueRole of dataViewValueColumns) {
+        for (const valueRole of bulletChartValueColumnNames) {
             const column = values.find(x => x.source.roles && x.source.roles[valueRole]);
 
             if (column) {
@@ -101,7 +101,7 @@ export class BulletChartColumns {
         const bulletChartValueColumns = {} as BulletChartValueColumns;
         bulletChartValueColumns.Category = categorical.Category?.values || [];
 
-        for (const valueRole of dataViewValueColumns) {
+        for (const valueRole of bulletChartValueColumnNames) {
             const valueColumn: DataViewValueColumn = categorical[valueRole];
             if (!valueColumn) {
                 continue;

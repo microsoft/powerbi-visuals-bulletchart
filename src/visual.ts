@@ -27,12 +27,12 @@
 import "regenerator-runtime/runtime.js";
 import "./../style/bulletChart.less";
 
-import { select, Selection } from 'd3-selection';
+import { select as d3Select, Selection as d3Selection } from 'd3-selection';
 import lodashIsnumber from "lodash.isnumber";
 import lodashMax from "lodash.max";
 import powerbiVisualsApi from "powerbi-visuals-api";
-import {scaleLinear, ScaleLinear} from "d3-scale";
-import {group} from "d3-array"
+import {scaleLinear as d3ScaleLinearFunction, ScaleLinear as d3ScaleLinear} from "d3-scale";
+import {group as d3Group} from "d3-array"
 
 // powerbi.extensibility.utils.type
 import {pixelConverter as PixelConverter} from "powerbi-visuals-utils-typeutils";
@@ -170,11 +170,11 @@ export class BulletChart implements IVisual {
     private baselineDelta: number = 0;
     // Variables
     private root: HTMLElement;
-    private bulletBody: Selection<HTMLDivElement, null, HTMLElement, null>;
-    private scrollContainer: Selection<SVGSVGElement, null, HTMLElement, null>;
-    private legendContext: Selection<SVGSVGElement, null, HTMLElement, null>;
-    private labelGraphicsContext: Selection<SVGGElement, null, HTMLElement, null>;
-    private bulletGraphicsContext: Selection<SVGGElement, null, HTMLElement, null>;
+    private bulletBody: d3Selection<HTMLDivElement, null, HTMLElement, null>;
+    private scrollContainer: d3Selection<SVGSVGElement, null, HTMLElement, null>;
+    private legendContext: d3Selection<SVGSVGElement, null, HTMLElement, null>;
+    private labelGraphicsContext: d3Selection<SVGGElement, null, HTMLElement, null>;
+    private bulletGraphicsContext: d3Selection<SVGGElement, null, HTMLElement, null>;
     private data: BulletChartModel;
     private selectionManager: ISelectionManager;
     private localizationManager: ILocalizationManager;
@@ -264,7 +264,7 @@ export class BulletChart implements IVisual {
         };
     }
 
-    private static value1dot4: number = 1.4;
+    private static ratioForLabelHeight: number = 1.4;
     private static value2: number = 2;
     private static value12: number = 12;
     private static value20: number = 20;
@@ -365,7 +365,7 @@ export class BulletChart implements IVisual {
     private static getXAxisProperties(
         settings: BulletChartSettingsModel,
         bulletModel: BulletChartModel,
-        scale: ScaleLinear<number, number>,
+        scale: d3ScaleLinear<number, number>,
         categorical: BulletChartColumns,
         valueFormatString: string,
         verticalOrientation: boolean,
@@ -390,7 +390,7 @@ export class BulletChart implements IVisual {
             ),
             disableNiceOnlyForScale: true,
             useTickIntervalForDisplayUnits: true,
-            axisDisplayUnits: <number>settings.axis.axisDisplayFormat.value.valueOf(),
+            axisDisplayUnits: Number(settings.axis.axisDisplayFormat.value.valueOf()),
             axisPrecision: settings.axis.axisPrecision.value,
         });
 
@@ -714,7 +714,7 @@ export class BulletChart implements IVisual {
             : 0;
 
         bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value));
-        bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value)) / BulletChart.value1dot4;
+        bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value)) / BulletChart.ratioForLabelHeight;
         bulletModel.spaceRequiredForBarHorizontally = visualSettings.general.barSize.value + this.SpaceBetweenBarsHorizontally;
 
         let legendWidth: number = 0;
@@ -771,7 +771,7 @@ export class BulletChart implements IVisual {
         const maximum = categoryNumbers.maximum;
         const anyRangeIsDefined = categoryNumbers.anyRangeIsDefined;
 
-        const scale: ScaleLinear<number, number> = scaleLinear()
+        const scale: d3ScaleLinear<number, number> = d3ScaleLinearFunction()
             .clamp(true)
             .domain([minimum, maximum])
             .range(isVerticalOrientation ? [bulletModel.viewportLength, 0] : [0, bulletModel.viewportLength]);
@@ -1055,7 +1055,7 @@ export class BulletChart implements IVisual {
             left: 0
         });
 
-        const body: Selection<HTMLElement, null, HTMLElement, null> = select(options.element);
+        const body: d3Selection<HTMLElement, null, HTMLElement, null> = d3Select(options.element);
 
         this.hostService = options.host;
         this.colorPalette = this.hostService.colorPalette;
@@ -1125,16 +1125,23 @@ export class BulletChart implements IVisual {
                     .attr("height", PixelConverter.toString(this.viewportScroll.height));
             } else {
                 this.scrollContainer
-                    .attr("height", (
-                        PixelConverter.toString(this.data.bars.length * this.data.spaceRequiredForBarHorizontally
-                            + BulletChart.YMarginHorizontal
-                            + (this.settings.axis.axis.value
-                                ? BulletChart.AxisHeight + (this.settings.axis.showOnlyMainAxis.value
-                                    ? BulletChart.MainAxisSpacing - this.SpaceBetweenBarsHorizontally // replace old spacing with fixed one
-                                    : 0)
-                                : BulletChart.zeroValue)
-                        )
-                    ))
+                    .attr("height", () => {
+                        const verticalShift: number = BulletChart.YMarginHorizontal;
+                        const barsHeight: number = this.data.bars.length * this.data.spaceRequiredForBarHorizontally;
+
+                        let axisHeight: number = 0;
+                        if (this.settings.axis.axis.value) {
+                            axisHeight = BulletChart.AxisHeight;
+                            if (this.settings.axis.showOnlyMainAxis.value) {
+                                const lastBarSpacing = this.SpaceBetweenBarsHorizontally;
+                                // Replace auto/custom spacing with fixed one
+                                axisHeight -= lastBarSpacing;
+                                axisHeight += BulletChart.MainAxisSpacing;
+                            }
+                        }
+
+                        return verticalShift + barsHeight + axisHeight
+                    })
                     .attr("width", PixelConverter.toString(this.viewportScroll.width));
             }
 
@@ -1205,7 +1212,7 @@ export class BulletChart implements IVisual {
 
     private drawAxisAndLabelsForHorizontalOrientation(model: BulletChartModel, reversed: boolean) {
         const bars: BarData[] = model.bars;
-        const barSelection: Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
+        const barSelection: d3Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
             .selectAll<SVGTextElement, BarData>("text")
             .data(bars, (d: BarData) => d.key);
 
@@ -1267,11 +1274,11 @@ export class BulletChart implements IVisual {
         const rects: BarRect[] = model.barRects;
         const valueRects: BarRect[] = model.valueRects;
         const targetValues: TargetValue[] = model.targetValues;
-        const barSelection: Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
+        const barSelection: d3Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
             .selectAll<SVGTextElement, BarData>("text")
             .data(bars, (d: BarData) => d.key);
 
-        const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
+        const groupedBullets = d3Group(rects, (d: BarRect) => d.barIndex);
         const groupedBulletsSelection = this.bulletGraphicsContext
             .selectAll<SVGGElement, null>(`g.${BulletChart.BulletContainerSelector.className}`)
             .data(groupedBullets)
@@ -1298,7 +1305,7 @@ export class BulletChart implements IVisual {
             .style("stroke-width", (d: BarRect) => d.strokeWidth);
 
         // Draw value rects
-        const valueSelection: Selection<SVGRectElement, BarRect, SVGGElement, null> = this.bulletGraphicsContext
+        const valueSelection: d3Selection<SVGRectElement, BarRect, SVGGElement, null> = this.bulletGraphicsContext
             .selectAll<SVGRectElement, BarRect>("rect.value")
             .data(valueRects, (d: BarRect) => d.key)
             .join("rect")
@@ -1387,7 +1394,7 @@ export class BulletChart implements IVisual {
             });
         } else {
             filtered.push(
-                ...Object.values(colors).map((color) => ({ displayNameKey: color.displayNameKey, color: color.color }))
+                ...Object.values(colors).map((colorObject) => ({ displayNameKey: colorObject.displayNameKey, color: colorObject.color }))
             );
         }
 
@@ -1419,7 +1426,7 @@ export class BulletChart implements IVisual {
         this.legend.drawLegend(legendDataObject, this.layout.viewport);
         positionChartArea(this.bulletBody, this.legend);
 
-        select(this.root)
+        d3Select(this.root)
             .selectAll(BulletChart.LegendItemSelector.selectorName)
             .style("font-weight", this.visualSettings.legend.font.bold.value ? "bold" : "normal")
             .style("font-style", this.visualSettings.legend.font.italic.value ? "italic" : "normal")
@@ -1431,7 +1438,7 @@ export class BulletChart implements IVisual {
 
     private drawAxisAndLabelsForVerticalOrientation(model: BulletChartModel, reversed: boolean, labelsStartPosition: number) {
         const bars: BarData[] = model.bars;
-        const barSelection: Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
+        const barSelection: d3Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
             .selectAll<SVGTextElement, BarData>("text")
             .data(bars, (d: BarData) => d.key);
 
@@ -1611,11 +1618,11 @@ export class BulletChart implements IVisual {
         const rects: BarRect[] = model.barRects;
         const valueRects: BarRect[] = model.valueRects;
         const targetValues: TargetValue[] = model.targetValues;
-        const barSelection: Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
+        const barSelection: d3Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
             .selectAll<SVGTextElement, BarData>("text")
             .data(bars, (d: BarData) => d.key);
 
-        const groupedBullets = group(rects, (d: BarRect) => d.barIndex);
+        const groupedBullets = d3Group(rects, (d: BarRect) => d.barIndex);
         const groupedBulletsSelection = this.bulletGraphicsContext
             .selectAll<SVGGElement, null>(`g.${BulletChart.BulletContainerSelector.className}`)
             .data(groupedBullets)
@@ -1717,11 +1724,11 @@ export class BulletChart implements IVisual {
         y1: (d: TargetValue) => number,
         y2: (d: TargetValue) => number) {
 
-        const selection: Selection<SVGLineElement, TargetValue, SVGGElement, null> = this.bulletGraphicsContext
+        const selection: d3Selection<SVGLineElement, TargetValue, SVGGElement, null> = this.bulletGraphicsContext
             .selectAll<SVGLineElement, TargetValue>("line.target")
             .data(targetValues.filter(x => lodashIsnumber(x.value)));
 
-        const selectionMerged: Selection<SVGLineElement, TargetValue, SVGGElement, null> = selection
+        const selectionMerged: d3Selection<SVGLineElement, TargetValue, SVGGElement, null> = selection
             .enter()
             .append("line")
             .merge(selection);
@@ -1745,7 +1752,7 @@ export class BulletChart implements IVisual {
         getX: (d: TargetValue) => number,
         getY: (d: TargetValue) => number): void {
 
-        const selection: Selection<SVGLineElement, TargetValue, SVGGElement, null> = this.bulletGraphicsContext
+        const selection: d3Selection<SVGLineElement, TargetValue, SVGGElement, null> = this.bulletGraphicsContext
             .selectAll<SVGLineElement, TargetValue>("line.target2")
             .data(targetValues.filter(x => lodashIsnumber(x.value2)));
 
@@ -2127,10 +2134,10 @@ class TextMeasurementHelper {
     }
 
     private static measureSvgTextRect(textProperties: TextProperties): SVGRect {
-        select("body").append("span");
+        d3Select("body").append("span");
 
         // The style hides the svg element from the canvas, preventing canvas from scrolling down to show svg black square.
-        const svgTextElement = select("body")
+        const svgTextElement = d3Select("body")
             .append("svg")
             .style("height", "0px")
             .style("width", "0px")
