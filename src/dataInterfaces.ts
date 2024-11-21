@@ -38,7 +38,7 @@ import { BarRectType } from './enums';
 import { SelectableDataPoint } from "./behavior";
 import { ScaleLinear as d3ScaleLinear } from "d3-scale";
 
-export type DefinedColors = {
+export type RenderedColors = {
     minColor?: boolean,
     needsImprovementColor?: boolean,
     satisfactoryColor?: boolean,
