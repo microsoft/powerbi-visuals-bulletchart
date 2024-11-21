@@ -841,7 +841,7 @@ export class BulletChart implements IVisual {
 
         const barData: BarData = {
             scale: scale, barIndex: idx, categoryLabel: category,
-            x: isVerticalOrientation ? (BulletChart.XMarginVertical + this.SpaceRequiredForBarVertically * idx) : (isReversedOrientation ? BulletChart.XMarginHorizontalRight : BulletChart.XMarginHorizontalLeft),
+            x: isVerticalOrientation ? (BulletChart.XMarginVertical + (this.SpaceRequiredForBarVertically + this.BarSize) * idx) : (isReversedOrientation ? BulletChart.XMarginHorizontalRight : BulletChart.XMarginHorizontalLeft),
             y: isVerticalOrientation ? (BulletChart.YMarginVertical) : (BulletChart.YMarginHorizontal + bulletModel.spaceRequiredForBarHorizontally * idx),
             xAxisProperties: xAxisProperties,
             key: selectionIdBuilder().createSelectionId().getKey(),
@@ -1121,7 +1121,7 @@ export class BulletChart implements IVisual {
 
             if (this.vertical) {
                 this.scrollContainer
-                    .attr("width", PixelConverter.toString(this.data.bars.length * this.SpaceRequiredForBarVertically + BulletChart.XMarginVertical))
+                    .attr("width", PixelConverter.toString(this.data.bars.length * (this.SpaceRequiredForBarVertically + this.BarSize) + BulletChart.XMarginVertical))
                     .attr("height", PixelConverter.toString(this.viewportScroll.height));
             } else {
                 this.scrollContainer
