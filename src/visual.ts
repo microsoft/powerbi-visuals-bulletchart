@@ -160,6 +160,11 @@ export class BulletChart implements IVisual {
     private static SubtitleMargin: number = 10;
     private static SecondTargetLineSize: number = 7;
     private static FontFamily: string = "Segoe UI";
+    private static ratioForLabelHeight: number = 1.4;
+    private static measureUnitShift: number = 12;
+    private static labelHeightReversedPadding: number = 5;
+    private static xAxisVerticalShift: number = 10;
+    private static verticalHeightOffset: number = 25;
 
     private static CategoryLabelsSelector: ClassAndSelector = CreateClassAndSelector("categoryLabel");
     public static MeasureUnitsSelector: ClassAndSelector = CreateClassAndSelector("measureUnits");
@@ -267,10 +272,6 @@ export class BulletChart implements IVisual {
             text: text,
         };
     }
-
-    private static ratioForLabelHeight: number = 1.4;
-    private static measureUnitShift: number = 12;
-    private static value25: number = 25;
 
     private addItems(
         anyRangeIsDefined: boolean,
@@ -727,7 +728,7 @@ export class BulletChart implements IVisual {
         const topAndBottomVerticalMargin: number = BulletChart.YMarginVertical * 2;
 
         bulletModel.viewportLength = Math.max(0, (isVerticalOrientation
-            ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.value25 - topAndBottomVerticalMargin)
+            ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.verticalHeightOffset - topAndBottomVerticalMargin)
             : (viewPortWidth - labelsWidth - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight - legendWidth)) - BulletChart.ScrollBarSize);
         bulletModel.hasHighlights = !!(categorical.Value.values.length > BulletChart.zeroValue && categorical.Value.highlights);
 
@@ -1195,11 +1196,9 @@ export class BulletChart implements IVisual {
             + (bar ? bar.start : BulletChart.zeroValue);
     }
 
-    private static value5: number = 5;
-
     private calculateLabelHeight(barData: BarData, bar?: BarRect, reversed?: boolean) {
         return BulletChart.YMarginVertical + (reversed
-                ? BulletChart.value5
+                ? BulletChart.labelHeightReversedPadding
                 : barData.y + this.data.labelHeightTop + BulletChart.BarMargin + BulletChart.SubtitleMargin)
             + (bar ? bar.end : 0);
     }
@@ -1440,8 +1439,6 @@ export class BulletChart implements IVisual {
             .style("text-decoration", this.visualSettings.legend.font.underline.value ? "underline" : "none");
     }
 
-    private static value10: number = 10;
-
     private drawAxisAndLabelsForVerticalOrientation(model: BulletChartModel, reversed: boolean, labelsStartPosition: number) {
         const bars: BarData[] = model.bars;
         const barSelection: d3Selection<SVGTextElement, BarData, SVGGElement, null> = this.labelGraphicsContext
@@ -1477,7 +1474,7 @@ export class BulletChart implements IVisual {
                 .selectAll("g.axis > .tick text")
                 .call(
                     AxisHelper.LabelLayoutStrategy.clip,
-                    BulletChart.XMarginVertical - BulletChart.value10,
+                    BulletChart.XMarginVertical - BulletChart.xAxisVerticalShift,
                     TextMeasurementService.svgEllipsis
                 );
         }
