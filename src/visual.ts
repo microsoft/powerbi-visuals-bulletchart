@@ -1251,7 +1251,7 @@ export class BulletChart implements IVisual {
                 .attr("x", (d: BarData) => {
                     if (reversed)
                         return (
-                            this.viewportScroll.width - this.data.longestCategoryWidth - BulletChart.XMarginHorizontalLeft - BulletChart.LabelsPadding / 2
+                            this.data.viewportLength + BulletChart.XMarginHorizontalRight + BulletChart.LabelsPadding
                         );
                     return d.x;
                 })
