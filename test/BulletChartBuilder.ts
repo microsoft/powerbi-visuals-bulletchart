@@ -34,7 +34,7 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 import { VisualBuilderBase } from "powerbi-visuals-utils-testutils";
 
 import {BulletChart, BulletChart as VisualClass} from "../src/visual";
-import {BulletChartOrientation} from "../src/BulletChartOrientation";
+import {BulletChartOrientation} from "../src/enums";
 import {BulletChartSettingsModel} from "../src/BulletChartSettingsModel";
 
 export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
@@ -51,7 +51,7 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	}
 	
 	public get mainElement(): SVGElement {
-		return this.element.querySelector("svg");
+		return this.element.querySelector("svg")!;
 	}
 
 	public get valueRects(): NodeListOf<SVGElement> {
@@ -63,7 +63,7 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	}
 
 	public get axis(): NodeListOf<HTMLElement> {
-		return this.mainElement.querySelectorAll("g > g > g.axis")
+		return this.mainElement.querySelectorAll("g.axis")
 	}
 
 	public get categoryLabels(): NodeListOf<HTMLElement> {
@@ -71,9 +71,7 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 	}
 
 	public get measureUnits(): NodeListOf<SVGElement> {
-		return this.mainElement
-		.querySelector("g")
-		.querySelectorAll(BulletChart.MeasureUnitsSelector.selectorName);
+		return this.mainElement.querySelectorAll(BulletChart.MeasureUnitsSelector.selectorName);
 	}
 
 	public get rangeRectsGrouped(): SVGElement[][] {

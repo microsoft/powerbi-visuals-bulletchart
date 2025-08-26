@@ -26,32 +26,43 @@
 
 import powerbiVisualsApi from "powerbi-visuals-api";
 
+import PrimitiveValue = powerbiVisualsApi.PrimitiveValue;
 import DataViewValueColumn = powerbiVisualsApi.DataViewValueColumn;
 import VisualTooltipDataItem = powerbiVisualsApi.extensibility.VisualTooltipDataItem;
-
-import { interactivitySelectionService as interactivityService } from "powerbi-visuals-utils-interactivityutils";
-import SelectableDataPoint = interactivityService.SelectableDataPoint;
 
 import { axisInterfaces } from "powerbi-visuals-utils-chartutils";
 import IAxisProperties = axisInterfaces.IAxisProperties;
 
 import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
+import { BarRectType } from './enums';
+import { SelectableDataPoint } from "./behavior";
+import { ScaleLinear as d3ScaleLinear } from "d3-scale";
+
+export type RenderedColors = {
+    minColor?: boolean,
+    needsImprovementColor?: boolean,
+    satisfactoryColor?: boolean,
+    goodColor?: boolean,
+    veryGoodColor?: boolean,
+    bulletColor?: boolean,
+}
 
 export interface BulletChartModel {
     bars: BarData[];
     settings: BulletChartSettingsModel;
     barRects: BarRect[];
-    valueRects: BarValueRect[];
+    valueRects: BarRect[];
     targetValues: TargetValue[];
     hasHighlights: boolean;
     viewportLength: number;
     labelHeight: number;
     labelHeightTop: number;
     spaceRequiredForBarHorizontally: number;
+    longestCategoryWidth: number;
 }
 
 export interface BarData {
-    scale: any;
+    scale: d3ScaleLinear<number, number>;
     barIndex: number;
     categoryLabel: string;
     xAxisProperties: IAxisProperties;
@@ -59,16 +70,6 @@ export interface BarData {
     y: number;
     key: string;
 }
-
-export enum BarRectType {
-    Minimum = "Minimum",
-    NeedsImprovement = "NeedsImprovement",
-    Satisfactory = "Satisfactory",
-    Good = "Good",
-    VeryGood = "VeryGood",
-    Bullet = "Bullet",
-}
-
 
 export interface BarRect extends SelectableDataPoint {
     barIndex: number;
@@ -85,6 +86,8 @@ export interface BarRect extends SelectableDataPoint {
 
 export interface TargetValue {
     barIndex: number;
+    categoryValue: PrimitiveValue;
+    targetValueUnscaled: PrimitiveValue;
     value: number;
     value2: number;
     fill: string;
@@ -101,8 +104,6 @@ export interface ScaledValues {
     fifthScale: number;
 }
 
-export interface BarValueRect extends BarRect { }
-
 export interface BulletChartAxis {
     axis: boolean;
     axisColor: string;
@@ -111,7 +112,7 @@ export interface BulletChartAxis {
 }
 
 export interface BulletChartTooltipItem {
-    value: any;
+    value: PrimitiveValue;
     metadata?: DataViewValueColumn;
     customName: string;
 }
