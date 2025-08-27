@@ -47,7 +47,7 @@ import {
 import {BulletChart, BulletChart as VisualClass} from "../src/visual";
 import {BulletChartTooltipItem} from "../src/dataInterfaces";
 import {areColorsEqual, isColorAppliedToElements} from "./helpers/helpers";
-import {BulletChartOrientation} from "../src/BulletChartOrientation";
+import {BulletChartOrientation} from "../src/enums";
 import {BulletChartSettingsModel} from "../src/BulletChartSettingsModel";
 import DataView = powerbiVisualsApi.DataView;
 import fromPointToPixel = pixelConverter.fromPointToPixel;
