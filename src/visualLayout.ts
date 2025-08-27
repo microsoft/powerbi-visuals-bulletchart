@@ -120,6 +120,7 @@ export class VisualLayout {
     }
 
     private static createNotifyChangedObject<T>(object: T, objectChanged: (o?: T, key?: string) => void): T {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result: T = <any>{};
 
         lodashKeys(object).forEach(key => Object.defineProperty(result, key, {

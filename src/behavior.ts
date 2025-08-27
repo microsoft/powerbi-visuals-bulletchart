@@ -1,83 +1,153 @@
 // d3
-import {BaseType, Selection} from "d3-selection";
-type d3Selection<T1, T2 = T1> = Selection<any, T1, any, T2>;
+import { Selection as d3Selection } from "d3-selection";
 
-// powerbi.extensibility.utils.interactivity
-import { interactivityBaseService as interactivityService } from "powerbi-visuals-utils-interactivityutils";
-import IInteractiveBehavior = interactivityService.IInteractiveBehavior;
-import IInteractivityService = interactivityService.IInteractivityService;
-import ISelectionHandler = interactivityService.ISelectionHandler;
-import IBehaviorOptions = interactivityService.IBehaviorOptions;
-import BaseDataPoint = interactivityService.BaseDataPoint;
+import powerbi from "powerbi-visuals-api";
+import ISelectionId = powerbi.visuals.ISelectionId;
+import ISelectionManager = powerbi.extensibility.ISelectionManager
 
-import { BarRect, BarValueRect } from "./dataInterfaces";
-import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
+import { LegendDataPoint } from "powerbi-visuals-utils-chartutils/lib/legend/legendInterfaces";
+import { BarRect } from "./dataInterfaces";
 
-export interface BulletBehaviorOptions extends IBehaviorOptions<BaseDataPoint> {
-    rects: Selection<BaseType | SVGRectElement, BarRect, BaseType | SVGGElement, [number, BarRect[]]>;
-    groupedRects:  Selection<BaseType | SVGGElement, [number, BarRect[]], any, any>;
-    valueRects: d3Selection<any>;
-    clearCatcher: d3Selection<any>;
-    interactivityService: IInteractivityService<BaseDataPoint>;
-    bulletChartSettings: BulletChartSettingsModel;
-    hasHighlights: boolean;
+export const DimmedOpacity: number = 0.4;
+export const DefaultOpacity: number = 1.0;
+
+function getFillOpacity(selected: boolean, highlight: boolean, hasSelection: boolean, hasPartialHighlights: boolean): number {
+    if ((hasPartialHighlights && !highlight) || (hasSelection && !selected))
+        return DimmedOpacity;
+    return DefaultOpacity;
 }
 
-export class BulletWebBehavior implements IInteractiveBehavior {
-    private static DimmedOpacity: number = 0.4;
-    private static DefaultOpacity: number = 1.0;
+export interface BaseDataPoint {
+    selected: boolean;
+}
 
-    private static getFillOpacity(selected: boolean, highlight: boolean, hasSelection: boolean, hasPartialHighlights: boolean): number {
-        if ((hasPartialHighlights && !highlight) || (hasSelection && !selected))
-            return BulletWebBehavior.DimmedOpacity;
-        return BulletWebBehavior.DefaultOpacity;
+export interface SelectableDataPoint extends BaseDataPoint {
+    identity: ISelectionId;
+    specificIdentity?: ISelectionId;
+}
+
+export interface BehaviorOptions {
+    dataPoints: BarRect[];
+    hasHighlights: boolean;
+    rects: d3Selection<SVGRectElement, BarRect, SVGGElement, [number, BarRect[]]>;
+    valueRects: d3Selection<SVGRectElement, BarRect, SVGGElement, null>;
+    groupedRects:  d3Selection<SVGGElement, [number, BarRect[]], SVGGElement, null>;
+    clearCatcher: d3Selection<HTMLDivElement, null, HTMLElement, null>;
+}
+
+export class Behavior {
+    private selectionManager: ISelectionManager;
+    private options: BehaviorOptions;
+
+    constructor(selectionManager: ISelectionManager) {
+        this.selectionManager = selectionManager;
+        this.selectionManager.registerOnSelectCallback(this.onSelectCallback.bind(this));
     }
 
-    private options: BulletBehaviorOptions;
+    public get isInitialized(): boolean {
+        return !!this.options;
+    }
 
-    public bindEvents(options: BulletBehaviorOptions, selectionHandler: ISelectionHandler) {
+    private get hasSelection(): boolean {
+        return this.selectionManager.hasSelection();
+    }
+
+    public bindEvents(options: BehaviorOptions) {
         this.options = options;
-        const clearCatcher = options.clearCatcher;
+        
+        this.onSelectCallback();
 
-        options.valueRects.on("click", (event: MouseEvent, d: BarValueRect) => {
-            selectionHandler.handleSelection(d, event.ctrlKey || event.metaKey);
+        this.handleClickEvents();
+        this.handleContextMenuEvents();
+        this.handleKeyboardEvents();
+    }
+
+    private handleClickEvents(): void {
+        this.options.valueRects.on("click", (event: MouseEvent, d: BarRect) => {
+            event.stopPropagation();
+            this.selectDataPoint(d, event.ctrlKey || event.metaKey || event.shiftKey);
         });
 
-        options.rects.on("click", (event: MouseEvent, d: BarRect) => {
-            selectionHandler.handleSelection(d, event.ctrlKey || event.metaKey);
+        this.options.rects.on("click", (event: MouseEvent, d: BarRect) => {
+            event.stopPropagation();
+            this.selectDataPoint(d, event.ctrlKey || event.metaKey || event.shiftKey);
         });
 
-        options.rects.on("keydown", (event: KeyboardEvent, d: BarRect) => {
-            if (event.code !== "Enter" && event.code !== "Space") {
-                return;
-            }
-
-            selectionHandler.handleSelection(d, event.ctrlKey || event.shiftKey || event.metaKey);
-        });
-
-        options.groupedRects.on("keydown", (event: KeyboardEvent, d: [number, BarRect[]]) => {
-            if (event.code !== "Enter" && event.code !== "Space") {
-                return;
-            }
-
-            const groupedBars = d[1];
-            const firstBarRect = groupedBars[0];
-            selectionHandler.handleSelection(firstBarRect, event.ctrlKey || event.shiftKey || event.metaKey);
-        });
-
-        clearCatcher.on("click", () => {
-            selectionHandler.handleClearSelection();
+        this.options.clearCatcher.on("click", () => {
+            this.clear();
         });
     }
 
-    public renderSelection(hasSelection: boolean) {
-        const options = this.options;
-        const hasHighlights = options.hasHighlights;
+    private handleContextMenuEvents(): void {
+        this.options.rects.on("contextmenu", (event: MouseEvent, d: BarRect) => {
+            event.preventDefault();
+            event.stopPropagation();
 
-        options.valueRects.style("opacity", (d: BarValueRect) =>
-            BulletWebBehavior.getFillOpacity(d.selected, d.highlight, !d.highlight && hasSelection, !d.selected && hasHighlights));
+            this.selectionManager.showContextMenu(d ? d.identity : null, {
+                x: event.clientX,
+                y: event.clientY
+            });
+        });
 
-        options.rects.style("opacity", (d: BarRect) =>
-            BulletWebBehavior.getFillOpacity(d.selected, d.highlight, !d.highlight && hasSelection, !d.selected && hasHighlights));
+        this.options.clearCatcher.on("contextmenu", (event: MouseEvent) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            this.selectionManager.showContextMenu(null, {
+                x: event.clientX,
+                y: event.clientY
+            });
+        });
+    }
+
+    private handleKeyboardEvents(): void {
+        this.options.groupedRects.on("keydown", (event: KeyboardEvent, d: [number, BarRect[]]) => {
+            if (event.code === "Enter" || event.code === "Space") {
+                event.stopPropagation();
+
+                const groupedBars = d[1];
+                const firstBarRect = groupedBars[0];
+                this.selectDataPoint(firstBarRect, event.ctrlKey || event.metaKey || event.shiftKey);
+            }
+        });
+    }
+
+    private renderSelection(): void {
+        const hasHighlights: boolean = this.options.hasHighlights;
+        const hasSelection: boolean = this.hasSelection;
+
+        this.options.valueRects.style("opacity", (d: BarRect) => getFillOpacity(d.selected, d.highlight, hasSelection, !d.selected && hasHighlights));
+        this.options.rects.style("opacity", (d: BarRect) => getFillOpacity(d.selected, d.highlight, hasSelection, hasHighlights));
+    }
+
+    private clear(): void {
+        this.selectionManager.clear();
+        this.onSelectCallback();
+    }
+
+    private selectDataPoint(dataPoint: SelectableDataPoint, multiSelect: boolean): void {
+        const selectionIdsToSelect: ISelectionId[] = [dataPoint.identity];
+        this.selectionManager.select(selectionIdsToSelect, multiSelect);
+        this.onSelectCallback();
+    }
+
+    private onSelectCallback(selectionIds?: ISelectionId[]): void {
+        this.applySelectionStateToDataPoints(selectionIds);
+        this.renderSelection();
+    }
+
+    private applySelectionStateToDataPoints(selectionIds?: ISelectionId[]): void {
+        const selectedIds: ISelectionId[] = selectionIds || <ISelectionId[]>this.selectionManager.getSelectionIds();
+        this.setSelectedToDataPoints(this.options.dataPoints, selectedIds);
+    }
+
+    private setSelectedToDataPoints(dataPoints: SelectableDataPoint[] | LegendDataPoint[], ids: ISelectionId[]): void {
+        dataPoints.forEach((dataPoint: SelectableDataPoint | LegendDataPoint) => {
+            dataPoint.selected = this.isDataPointSelected(dataPoint, ids);
+        });
+    }
+
+    private isDataPointSelected(dataPoint: SelectableDataPoint | LegendDataPoint, selectedIds: ISelectionId[]): boolean {
+        return selectedIds.some((selectedId: ISelectionId) => selectedId.includes(<ISelectionId>dataPoint.identity));
     }
 }

@@ -62,6 +62,30 @@
         }
     ],
     "objects": {
+        "general": {
+            "properties": {
+                "showCompletionPercent": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "barSize": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "customBarSpacing": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "barSpacing": {
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
         "values": {
             "properties": {
                 "targetValue": {
@@ -139,6 +163,11 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "autoWidth": {
+                    "type": {
+                        "bool": true
                     }
                 },
                 "maxWidth": {
@@ -265,6 +294,47 @@
                         }
                     }
                 },
+                "axisFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "axisFontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "axisFontBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "axisFontItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "axisFontUnderline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "axisDisplayFormat": {
+                    "type": {
+                        "formatting": {
+                            "labelDisplayUnits": true
+                        }
+                    }
+                },
+                "axisPrecision": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "measureUnits": {
                     "type": {
                         "text": true
@@ -278,17 +348,104 @@
                             }
                         }
                     }
-                }
-            }
-        },
-        "syncAxis": {
-            "properties": {
+                },
+                "unitsFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "unitsFontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "unitsFontBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "unitsFontItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "unitsFontUnderline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "syncAxis": {
                     "type": {
                         "bool": true
                     }
                 },
-                "showMainAxis": {
+                "showOnlyMainAxis": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "legend": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "position": {
+                    "type": {
+                        "enumeration": []
+                    }
+                },
+                "showTitle": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleText": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "labelColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "fontBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontUnderline": {
                     "type": {
                         "bool": true
                     }
