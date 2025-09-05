@@ -411,7 +411,6 @@
                         "numeric": true
                     }
                 },
-
                "lineStyle": {
                     "type": {
                         "enumeration": [
@@ -432,7 +431,6 @@
                         "numeric": true
                     }
                 }
-
             }
         },
         "legend": {

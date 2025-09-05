@@ -14,7 +14,7 @@ import LegendPosition = legendInterfaces.LegendPosition;
 import ILocalizedItemMember = formattingSettingsInterfaces.ILocalizedItemMember;
 
 export const BulletChartObjectNames = {
-    Labels: { name: "labels", displayName: "Category labels", displayNameKey: "Visual_CategoryLabels"},
+    Labels: { name: "labels", displayName: "Category labels", displayNameKey: "Visual_CategoryLabels" },
     Axis: { name: "axis", displayName: "Axis", displayNameKey: "Visual_Axis" },
     Orientation: { name: "orientation", displayName: "Orientation", displayNameKey: "Visual_Orientation" },
     Colors: { name: "colors", displayName: "Colors", displayNameKey:"Visual_Colors" },
@@ -22,10 +22,10 @@ export const BulletChartObjectNames = {
     // used for subselection
     Minimum: { name: BarRectType.Minimum, displayName: "Minimum", displayNameKey: "Visual_Minimum" },
     NeedsImprovement: { name: BarRectType.NeedsImprovement, displayName: "Needs Improvement", displayNameKey: "Visual_NeedsImprovement" },
-    Satisfactory: { name: BarRectType.Satisfactory, displayName: "Satisfactory", displayNameKey: "Visual_Satisfactory"},
+    Satisfactory: { name: BarRectType.Satisfactory, displayName: "Satisfactory", displayNameKey: "Visual_Satisfactory" },
     Good: { name: BarRectType.Good, displayName: "Good", displayNameKey: "Visual_Good" },
-    VeryGood: { name: BarRectType.VeryGood, displayName: "Very good", displayNameKey: "Visual_VeryGood"},
-    Bullet: { name: BarRectType.Bullet, displayName: "Bullet", displayNameKey: "Visual_Bullet"},
+    VeryGood: { name: BarRectType.VeryGood, displayName: "Very good", displayNameKey: "Visual_VeryGood" },
+    Bullet: { name: BarRectType.Bullet, displayName: "Bullet", displayNameKey: "Visual_Bullet" },
 } as const;
 
 export const labelsReference: {
@@ -75,10 +75,10 @@ export const axisReference: {
     cardUid: string;
     groupUid: string;
     axis: FormattingId;
-    axisColor: FormattingId,
-    orientation: FormattingId,
+    axisColor: FormattingId
     syncAxis: FormattingId,
     showMainAxis: FormattingId,
+    orientation: FormattingId
 } = {
     cardUid: "Visual-axis-card",
     groupUid: "axis-group",
@@ -90,10 +90,6 @@ export const axisReference: {
         objectName: BulletChartObjectNames.Axis.name,
         propertyName: nameof<AxisCard>("axisColor")
     },
-    orientation: {
-        objectName: BulletChartObjectNames.Orientation.name,
-        propertyName: nameof<OrientationCard>("orientation")
-    },
     syncAxis: {
         objectName: BulletChartObjectNames.SyncAxis.name,
         propertyName: nameof<SyncAxisCard>("syncAxis")
@@ -101,6 +97,10 @@ export const axisReference: {
     showMainAxis: {
         objectName: BulletChartObjectNames.SyncAxis.name,
         propertyName: nameof<SyncAxisCard>("showMainAxis")
+    },
+    orientation: {
+        objectName: BulletChartObjectNames.Orientation.name,
+        propertyName: nameof<OrientationCard>("orientation")
     }
 } as const;
 
