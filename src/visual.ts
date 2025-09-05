@@ -211,7 +211,7 @@ export class BulletChart implements IVisual {
             return this.BarSize + BulletChart.BarPaddingVerticalShort;
         }
 
-        return this.visualSettings.axis.showOnlyMainAxis.value
+        return this.visualSettings.syncAxis.showMainAxis.value
             ? this.BarSize + BulletChart.BarPaddingVerticalShort
             : this.BarSize + BulletChart.BarPaddingVerticalDefault;
     }
@@ -225,7 +225,7 @@ export class BulletChart implements IVisual {
             return BulletChart.BarPaddingHorizontalShort;
         }
 
-        return this.visualSettings.axis.showOnlyMainAxis.value
+        return this.visualSettings.syncAxis.showMainAxis.value
             ? BulletChart.BarPaddingHorizontalShort
             : BulletChart.BarPaddingHorizontalDefault;
     }
@@ -415,7 +415,7 @@ export class BulletChart implements IVisual {
             const targetValue2: PrimitiveValue = categoricalValues.TargetValue2 ? categoricalValues.TargetValue2[idx] : this.visualSettings.values.targetValue2.value;
 
             let minimumValue: number;
-            if (this.visualSettings.axis.syncAxis.value) {
+            if (this.visualSettings.syncAxis.syncAxis.value) {
                 minimumValue = categoryMinValue;
             } else {
                 minimumValue = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], this.visualSettings.values.minimumPercent.value, targetValue);
@@ -609,7 +609,7 @@ export class BulletChart implements IVisual {
     private calculateCategoryValueRange(length: number, categoricalValues: BulletChartValueColumns) {
         let categoryMinValue: number | undefined = undefined;
         let categoryMaxValue: number | undefined = undefined;
-        if (this.visualSettings.axis.syncAxis.value) {
+        if (this.visualSettings.syncAxis.syncAxis.value) {
             const rangeValues = [...Array(length).keys()]
                 .map(idx => {
                     const targetValue: PrimitiveValue = categoricalValues.TargetValue?.[idx] || this.visualSettings.values.targetValue.value;
@@ -757,7 +757,7 @@ export class BulletChart implements IVisual {
     ): BarData {
 
         let minimum: number;
-        if (visualSettings.axis.syncAxis.value) {
+        if (visualSettings.syncAxis.syncAxis.value) {
             minimum = categoryMinValue;
         } else {
             minimum = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], visualSettings.values.minimumPercent.value, targetValue);
@@ -856,7 +856,7 @@ export class BulletChart implements IVisual {
         let good: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Good?.[idx], visualSettings.values.goodPercent.value, targetValue, minimum);
         let veryGood: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.VeryGood?.[idx], visualSettings.values.veryGoodPercent.value, targetValue, minimum);
         let maximum: number;
-        if (visualSettings.axis.syncAxis.value) {
+        if (visualSettings.syncAxis.syncAxis.value) {
             maximum = categoryMaxValue;
         } else {
             maximum = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Maximum?.[idx], visualSettings.values.maximumPercent.value, targetValue, minimum);
@@ -1094,8 +1094,6 @@ export class BulletChart implements IVisual {
             this.formatMode = options.formatMode ?? false;
 
             this.visualSettings = this.formattingSettingsService.populateFormattingSettingsModel(BulletChartSettingsModel, dataView);
-            this.visualSettings.setLocalizedOptions(this.localizationManager);
-
 
             const categorical: BulletChartColumns = BulletChartColumns.getCategoricalColumns(dataView);
             const categoricalValues: BulletChartValueColumns = BulletChartColumns.getCategoricalValues(dataView, categorical);
@@ -1132,7 +1130,7 @@ export class BulletChart implements IVisual {
                         let axisHeight: number = 0;
                         if (this.settings.axis.axis.value) {
                             axisHeight = BulletChart.AxisHeight;
-                            if (this.settings.axis.showOnlyMainAxis.value) {
+                            if (this.settings.syncAxis.showMainAxis.value) {
                                 const lastBarSpacing = this.SpaceBetweenBarsHorizontally;
                                 // Replace auto/custom spacing with fixed one
                                 axisHeight -= lastBarSpacing;
@@ -1228,13 +1226,14 @@ export class BulletChart implements IVisual {
             .data(bars, (d: BarData) => d.key);
 
         if (model.settings.axis.axis.value) {
-            if (model.settings.axis.showOnlyMainAxis.value) {
+            if (model.settings.syncAxis.showMainAxis.value) {
                 // main axis should be last/at the bottom
                 const mainBar = bars[bars.length - 1];
-                this.renderAxisHorizontally(mainBar, reversed, model.settings.axis.showOnlyMainAxis.value);
+                this.renderAxisHorizontally(mainBar, reversed, model.settings.syncAxis.showMainAxis.value);
+                this.drawMainGridlinesHorizontal(mainBar, reversed, bars)
             } else {
                 for (let idx: number = 0; idx < bars.length; idx++) {
-                    this.renderAxisHorizontally(bars[idx], reversed, model.settings.axis.showOnlyMainAxis.value);
+                    this.renderAxisHorizontally(bars[idx], reversed, model.settings.syncAxis.showMainAxis.value);
                 }
             }
         }
@@ -1448,13 +1447,15 @@ export class BulletChart implements IVisual {
         if (model.settings.axis.axis.value) {
             const axisColor = model.settings.axis.axisColor.value.value;
 
-            if (model.settings.axis.showOnlyMainAxis.value) {
+            if (model.settings.syncAxis.showMainAxis.value) {
                 const mainBar = bars[0];
-                this.renderAxisVertically(mainBar, reversed, axisColor, model.settings.axis.showOnlyMainAxis.value);
+                this.renderAxisVertically(mainBar, reversed, axisColor, model.settings.syncAxis.showMainAxis.value);
+                this.drawMainGridlinesVertical(mainBar, reversed, bars);
+
             } else {
                 for (let idx = 0; idx < bars.length; idx++) {
                     const bar = bars[idx];
-                    this.renderAxisVertically(bar, reversed, axisColor, model.settings.axis.showOnlyMainAxis.value);
+                    this.renderAxisVertically(bar, reversed, axisColor, model.settings.syncAxis.showMainAxis.value);
                 }
             }
 
@@ -1611,6 +1612,96 @@ export class BulletChart implements IVisual {
                 bar.xAxisProperties.xLabelMaxWidth,
                 TextMeasurementService.svgEllipsis
             );
+    }
+
+    private getGridStrokeStyleArray(): string | null {
+        const style = this.settings.syncAxis.lineStyle.value.value as string;
+        const width = this.settings.syncAxis.width.value ?? 1;
+        if (style === "dashed") return `${width * 3},${width * 2}`;
+        if (style === "dotted") return `${width},${width * 2}`;
+        return null; //solid
+    }
+
+    private getGridOpacity(): number {
+        const transparency = this.settings.syncAxis.transparency?.value ?? 0;
+        return Math.max(0, Math.min(1, 1 - transparency / 100));
+    }
+
+    private drawMainGridlinesHorizontal(mainBar: BarData, reversed: boolean, bars: BarData[]) {
+        if (!this.settings.syncAxis.gridlines.value) return;
+
+        const stroke = this.colorHelper.getHighContrastColor("foreground", this.settings.syncAxis.color.value.value);
+        const opacity = this.getGridOpacity()
+        const lineStyle = this.getGridStrokeStyleArray();
+        const width = this.settings.syncAxis.width.value ?? 1;
+        const ticks = mainBar.xAxisProperties.values as number[];
+
+        const gridlineStartY = mainBar.y + this.BarSize + BulletChart.MainAxisSpacing;
+        const valueScaleOriginX = this.calculateXPosition(mainBar, null, reversed);
+        const gridlineEndY = bars[0].y - BulletChart.MainAxisSpacing;
+
+        const g = this.bulletGraphicsContext
+            .selectAll<SVGGElement, number>("g.main-gridlines-h")
+            .data([0])
+            .raise()
+            .join("g")
+            .classed("main-gridlines-h", true)
+            .lower();
+
+        const lines = g.selectAll<SVGLineElement, number>("line")
+            .data(ticks, (d) => String(d));
+
+        lines.enter()
+            .append("line")
+            .merge(lines)
+            .attr("x1", d => valueScaleOriginX + mainBar.scale(d))
+            .attr("x2", d => valueScaleOriginX + mainBar.scale(d))
+            .attr("y1", gridlineStartY)
+            .attr("y2", gridlineEndY)
+            .style("stroke", stroke)
+            .style("stroke-width", width)
+            .style("stroke-opacity", opacity)
+            .attr("stroke-dasharray", lineStyle);
+
+        lines.exit().remove();
+    }
+
+    private drawMainGridlinesVertical(mainBar: BarData, reversed: boolean, bars: BarData[]) {
+        if (!this.settings.syncAxis.gridlines.value) return;
+
+        const stroke = this.colorHelper.getHighContrastColor("foreground", this.settings.syncAxis.color.value.value);
+        const opacity = this.getGridOpacity();
+        const lineStyle = this.getGridStrokeStyleArray();
+        const width = this.settings.syncAxis.width.value ?? 1;
+        const ticks = mainBar.xAxisProperties.values as number[];
+
+        const valueScaleOriginY = this.calculateLabelHeight(mainBar, null, reversed);
+        const gridlineStartX = mainBar.x - BulletChart.MainAxisSpacing;
+        const gridlineEndX = bars[bars.length - 1].x + this.BarSize + BulletChart.MainAxisSpacing;
+
+        const g = this.bulletGraphicsContext
+            .selectAll<SVGGElement, number>("g.main-gridlines-v")
+            .data([0])
+            .join("g")
+            .classed("main-gridlines-v", true)
+            .lower();
+
+        const lines = g.selectAll<SVGLineElement, number>("line")
+            .data(ticks, (d) => String(d));
+
+        lines.enter()
+            .append("line")
+            .merge(lines)
+            .attr("x1", gridlineStartX)
+            .attr("x2", gridlineEndX)
+            .attr("y1", d => valueScaleOriginY + mainBar.scale(d))
+            .attr("y2", d => valueScaleOriginY + mainBar.scale(d))
+            .style("stroke", stroke)
+            .style("stroke-width", width)
+            .style("stroke-opacity", opacity)
+            .attr("stroke-dasharray", lineStyle);
+
+        lines.exit().remove();
     }
 
     private setUpBulletsVertically(
@@ -1807,14 +1898,14 @@ export class BulletChart implements IVisual {
             this.visualSettings.general.barSpacing.visible = false;
         }
 
-        if (!this.visualSettings.axis.syncAxis.value && this.visualSettings.axis.showOnlyMainAxis.value) {
+        if (!this.visualSettings.syncAxis.syncAxis.value && this.visualSettings.syncAxis.showMainAxis.value) {
             this.hostService.persistProperties({
                 merge: [{
-                    objectName: 'axis',
+                    objectName: 'syncAxis',
                     selector: null,
                     properties: {
                         syncAxis: false,
-                        showOnlyMainAxis: false
+                        showMainAxis: false
                     }
                 }]
             });
@@ -2042,7 +2133,7 @@ export class BulletChart implements IVisual {
         return [
             {
                 type: VisualShortcutType.Reset,
-                relatedResetFormattingIds: [axisReference.axis, axisReference.axisColor, axisReference.syncAxis, axisReference.showOnlyMainAxis, axisReference.orientation],
+                relatedResetFormattingIds: [axisReference.axis, axisReference.axisColor, axisReference.syncAxis, axisReference.showMainAxis, axisReference.orientation],
             },
             {
                 type: VisualShortcutType.Toggle,
@@ -2058,7 +2149,7 @@ export class BulletChart implements IVisual {
             },
             {
                 type: VisualShortcutType.Toggle,
-                ...axisReference.showOnlyMainAxis,
+                ...axisReference.showMainAxis,
                 disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowAllAxis"),
                 enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowOnlyMainAxis"),
             },

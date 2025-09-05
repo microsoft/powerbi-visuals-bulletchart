@@ -1,6 +1,6 @@
 import powerbi from "powerbi-visuals-api";
 import { legendInterfaces } from "powerbi-visuals-utils-chartutils";
-import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
+import { formattingSettings, formattingSettingsInterfaces } from "powerbi-visuals-utils-formattingmodel";
 import { Group, SimpleSlice } from "powerbi-visuals-utils-formattingmodel/lib/FormattingSettingsComponents";
 import { BarRectType, BulletChartOrientation } from "./enums";
 import { nameof } from './utils';
@@ -8,24 +8,24 @@ import { nameof } from './utils';
 import Model = formattingSettings.Model;
 import Card = formattingSettings.SimpleCard;
 import CompositeCard = formattingSettings.CompositeCard;
-import IEnumMember = powerbi.IEnumMember;
 import FormattingId = powerbi.visuals.FormattingId;
 import ValidatorType = powerbi.visuals.ValidatorType;
-import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import LegendPosition = legendInterfaces.LegendPosition;
+import ILocalizedItemMember = formattingSettingsInterfaces.ILocalizedItemMember;
 
 export const BulletChartObjectNames = {
-    Labels: { name: "labels", displayName: "Category labels" },
-    Axis: { name: "axis", displayName: "Axis" },
-    Orientation: { name: "orientation", displayName: "Orientation" },
-    Colors: { name: "colors", displayName: "Colors" },
+    Labels: { name: "labels", displayName: "Category labels", displayNameKey: "Visual_CategoryLabels"},
+    Axis: { name: "axis", displayName: "Axis", displayNameKey: "Visual_Axis" },
+    Orientation: { name: "orientation", displayName: "Orientation", displayNameKey: "Visual_Orientation" },
+    Colors: { name: "colors", displayName: "Colors", displayNameKey:"Visual_Colors" },
+    SyncAxis: { name: "syncAxis", displayName: "Sync Axis", displayNameKey: "Visual_SyncAxis" },
     // used for subselection
-    Minimum: { name: BarRectType.Minimum, displayName: "Minimum" },
-    NeedsImprovement: { name: BarRectType.NeedsImprovement, displayName: "Needs Improvement" },
-    Satisfactory: { name: BarRectType.Satisfactory, displayName: "Satisfactory" },
-    Good: { name: BarRectType.Good, displayName: "Good" },
-    VeryGood: { name: BarRectType.VeryGood, displayName: "Very good" },
-    Bullet: { name: BarRectType.Bullet, displayName: "Bullet" },
+    Minimum: { name: BarRectType.Minimum, displayName: "Minimum", displayNameKey: "Visual_Minimum" },
+    NeedsImprovement: { name: BarRectType.NeedsImprovement, displayName: "Needs Improvement", displayNameKey: "Visual_NeedsImprovement" },
+    Satisfactory: { name: BarRectType.Satisfactory, displayName: "Satisfactory", displayNameKey: "Visual_Satisfactory"},
+    Good: { name: BarRectType.Good, displayName: "Good", displayNameKey: "Visual_Good" },
+    VeryGood: { name: BarRectType.VeryGood, displayName: "Very good", displayNameKey: "Visual_VeryGood"},
+    Bullet: { name: BarRectType.Bullet, displayName: "Bullet", displayNameKey: "Visual_Bullet"},
 } as const;
 
 export const labelsReference: {
@@ -76,9 +76,9 @@ export const axisReference: {
     groupUid: string;
     axis: FormattingId;
     axisColor: FormattingId,
-    syncAxis: FormattingId,
-    showOnlyMainAxis: FormattingId,
     orientation: FormattingId,
+    syncAxis: FormattingId,
+    showMainAxis: FormattingId,
 } = {
     cardUid: "Visual-axis-card",
     groupUid: "axis-group",
@@ -90,18 +90,18 @@ export const axisReference: {
         objectName: BulletChartObjectNames.Axis.name,
         propertyName: nameof<AxisCard>("axisColor")
     },
-    syncAxis: {
-        objectName: BulletChartObjectNames.Axis.name,
-        propertyName: nameof<AxisCard>("syncAxis")
-    },
-    showOnlyMainAxis: {
-        objectName: BulletChartObjectNames.Axis.name,
-        propertyName: nameof<AxisCard>("showOnlyMainAxis")
-    },
     orientation: {
         objectName: BulletChartObjectNames.Orientation.name,
         propertyName: nameof<OrientationCard>("orientation")
     },
+    syncAxis: {
+        objectName: BulletChartObjectNames.SyncAxis.name,
+        propertyName: nameof<SyncAxisCard>("syncAxis")
+    },
+    showMainAxis: {
+        objectName: BulletChartObjectNames.SyncAxis.name,
+        propertyName: nameof<SyncAxisCard>("showMainAxis")
+    }
 } as const;
 
 
@@ -150,22 +150,28 @@ class TextSizeDefaults {
     public static readonly MaxSize = 24;
 }
 
-const orientationOptions: IEnumMember[] = [
-    { value: BulletChartOrientation.HorizontalLeft, displayName: "Visual_Orientation_HorizontalLeft" },
-    { value: BulletChartOrientation.HorizontalRight, displayName: "Visual_Orientation_HorizontalRight" },
-    { value: BulletChartOrientation.VerticalTop, displayName: "Visual_Orientation_VerticalTop" },
-    { value: BulletChartOrientation.VerticalBottom, displayName: "Visual_Orientation_VerticalBottom" },
+const orientationOptions: ILocalizedItemMember[] = [
+    { value: BulletChartOrientation.HorizontalLeft, displayNameKey: "Visual_Orientation_HorizontalLeft" },
+    { value: BulletChartOrientation.HorizontalRight, displayNameKey: "Visual_Orientation_HorizontalRight" },
+    { value: BulletChartOrientation.VerticalTop, displayNameKey: "Visual_Orientation_VerticalTop" },
+    { value: BulletChartOrientation.VerticalBottom, displayNameKey: "Visual_Orientation_VerticalBottom" },
 ];
 
-const legendPositionOptions: IEnumMember[] = [
-    { value: LegendPosition[LegendPosition.Top], displayName: "Visual_Top" },
-    { value: LegendPosition[LegendPosition.Bottom], displayName: "Visual_Bottom" },
-    { value: LegendPosition[LegendPosition.Right], displayName: "Visual_Right" },
-    { value: LegendPosition[LegendPosition.Left], displayName: "Visual_Left" },
-    { value: LegendPosition[LegendPosition.TopCenter], displayName: "Visual_TopCenter" },
-    { value: LegendPosition[LegendPosition.BottomCenter], displayName: "Visual_BottomCenter" },
-    { value: LegendPosition[LegendPosition.RightCenter], displayName: "Visual_RightCenter" },
-    { value: LegendPosition[LegendPosition.LeftCenter], displayName: "Visual_LeftCenter" },
+const legendPositionOptions: ILocalizedItemMember[] = [
+    { value: LegendPosition[LegendPosition.Top], displayNameKey: "Visual_Top" },
+    { value: LegendPosition[LegendPosition.Bottom], displayNameKey: "Visual_Bottom" },
+    { value: LegendPosition[LegendPosition.Right], displayNameKey: "Visual_Right" },
+    { value: LegendPosition[LegendPosition.Left], displayNameKey: "Visual_Left" },
+    { value: LegendPosition[LegendPosition.TopCenter], displayNameKey: "Visual_TopCenter" },
+    { value: LegendPosition[LegendPosition.BottomCenter], displayNameKey: "Visual_BottomCenter" },
+    { value: LegendPosition[LegendPosition.RightCenter], displayNameKey: "Visual_RightCenter" },
+    { value: LegendPosition[LegendPosition.LeftCenter], displayNameKey: "Visual_LeftCenter" },
+];
+
+const gridlinesStyle: ILocalizedItemMember[] = [
+    { value: "dotted", displayNameKey: "Visual_Dotted" },
+    { value: "dashed", displayNameKey: "Visual_Dashed" },
+    { value: 'solid', displayNameKey: "Visual_Solid" },
 ];
 
 
@@ -398,7 +404,7 @@ class OrientationCard extends Card {
 
     name: string = BulletChartObjectNames.Orientation.name;
     displayName: string = BulletChartObjectNames.Orientation.displayName;
-    displayNameKey: string = "Visual_Orientation";
+    displayNameKey: string = BulletChartObjectNames.Orientation.displayNameKey;
     slices = [this.orientation];
 }
 
@@ -447,7 +453,7 @@ class ColorsCard extends Card {
 
     name: string = BulletChartObjectNames.Colors.name;
     displayName: string = BulletChartObjectNames.Colors.displayName;
-    displayNameKey: string = "Visual_Colors";
+    displayNameKey: string = BulletChartObjectNames.Colors.displayNameKey;
     slices = [
         this.minColor,
         this.needsImprovementColor,
@@ -595,33 +601,11 @@ class AxisCard extends CompositeCard {
         slices: [this.measureUnits, this.unitsColor, this.unitsFont],
     });
 
-    syncAxis = new formattingSettings.ToggleSwitch({
-        name: "syncAxis",
-        displayName: "Sync axis",
-        displayNameKey: "Visual_SyncAxis",
-        value: false,
-    });
-
-    showOnlyMainAxis = new formattingSettings.ToggleSwitch({
-        name: "showOnlyMainAxis",
-        displayName: "Show only main axis",
-        displayNameKey: "Visual_ShowOnlyMainAxis",
-        value: false,
-    });
-
-    axisSynchronizationGroup = new Group({
-        name: "axisSynchronizationGroup",
-        displayName: "Sync axis",
-        displayNameKey: "Visual_SyncAxis",
-        topLevelSlice: this.syncAxis,
-        slices: [this.showOnlyMainAxis],
-    });
-
     topLevelSlice = this.axis;
     name: string = BulletChartObjectNames.Axis.name;
     displayName: string = BulletChartObjectNames.Axis.displayName;
-    displayNameKey: string =  "Visual_Axis";
-    groups = [this.axisGeneralGroup, this.axisMeasureUnitsGroup, this.axisSynchronizationGroup];
+    displayNameKey: string = BulletChartObjectNames.Axis.displayNameKey;
+    groups = [this.axisGeneralGroup, this.axisMeasureUnitsGroup];
 }
 
 class LegendCard extends BaseFontCardSettings {
@@ -671,6 +655,87 @@ class LegendCard extends BaseFontCardSettings {
     slices = [this.position, this.showTitle, this.titleText, this.labelColor, this.font];
 }
 
+class SyncAxisCard extends CompositeCard {
+    syncAxis = new formattingSettings.ToggleSwitch({
+        name: "syncAxis",
+        displayName: "Sync axis",
+        displayNameKey: "Visual_SyncAxis",
+        value: false,
+    });
+
+    showMainAxis = new formattingSettings.ToggleSwitch({
+        name: "showMainAxis",
+        displayName: "Show only main axis",
+        displayNameKey: "Visual_ShowOnlyMainAxis",
+        visible: true,
+        value: false,
+    });
+
+
+    gridlines = new formattingSettings.ToggleSwitch({
+        name: "gridlines",
+        displayName: "Gridlines",
+        displayNameKey: "Visual_Gridlines",
+        value: false,
+    });
+
+    color = new formattingSettings.ColorPicker({
+        name: "color",
+        displayName: "Color",
+        displayNameKey: "Visual_Color",
+        description: "Select color for grid lines",
+        descriptionKey: "Visual_Description_Color",
+        value: { value: "#000000" }
+    });
+
+    transparency = new formattingSettings.Slider({
+        name: "transparency",
+        displayName: "transparency",
+        displayNameKey: "Visual_transparency",
+        value: 1,
+        options: {
+            minValue: { value: 0, type: ValidatorType.Min },
+            maxValue: { value: 100, type: ValidatorType.Max },
+            unitSymbolAfterInput: true,
+            unitSymbol: "%"
+        }
+    });
+
+    lineStyle = new formattingSettings.ItemDropdown({
+        name: "lineStyle",
+        displayName: "Line Style",
+        displayNameKey: "Visual_LineStyle",
+        value: gridlinesStyle[0],
+        items: gridlinesStyle
+    });
+
+    width = new formattingSettings.NumUpDown({
+        name: "width",
+        displayName: "Width",
+        displayNameKey: "Visual_Width",
+        value: 1,
+        options: {
+            minValue: { value: 0, type: ValidatorType.Min },
+            maxValue: { value: 4, type: ValidatorType.Max },
+            unitSymbol: "px"
+        }
+    });
+
+    syncAxisGroup = new Group({
+        name: "showMainAxisSetting",
+        displayName: "Show only main axis",
+        displayNameKey: "Visual_ShowOnlyMainAxis",
+        topLevelSlice: this.showMainAxis,
+        slices: [this.gridlines, this.color, this.transparency, this.lineStyle, this.width]
+   })
+    
+    name: string = BulletChartObjectNames.SyncAxis.name;
+    displayName: string = BulletChartObjectNames.SyncAxis.displayName;
+    displayNameKey: string = BulletChartObjectNames.SyncAxis.displayNameKey;
+    topLevelSlice = this.syncAxis;
+    groups = [this.syncAxisGroup]
+}
+
 export class BulletChartSettingsModel extends Model {
     general = new GeneralCard();
     values = new DataValuesCard();
@@ -679,6 +744,7 @@ export class BulletChartSettingsModel extends Model {
     orientation = new OrientationCard();
     colors = new ColorsCard();
     axis = new AxisCard();
+    syncAxis = new SyncAxisCard();
     legend = new LegendCard();
 
     cards = [
@@ -689,17 +755,8 @@ export class BulletChartSettingsModel extends Model {
         this.orientation,
         this.colors,
         this.axis,
+        this.syncAxis,
         this.legend,
     ];
 
-    public setLocalizedOptions(localizationManager: ILocalizationManager) {
-        this.setLocalizedDisplayName(orientationOptions, localizationManager);
-        this.setLocalizedDisplayName(legendPositionOptions, localizationManager);
-    }
-
-    private setLocalizedDisplayName(options: IEnumMember[], localizationManager: ILocalizationManager) {
-        options.forEach((option: IEnumMember) => {
-            option.displayName = localizationManager.getDisplayName(option.displayName.toString());
-        });
-    }
 }

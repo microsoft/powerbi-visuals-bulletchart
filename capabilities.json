@@ -377,17 +377,62 @@
                     "type": {
                         "bool": true
                     }
-                },
+                }
+            }
+        },
+        "syncAxis":{
+            "properties": {
                 "syncAxis": {
                     "type": {
                         "bool": true
                     }
                 },
-                "showOnlyMainAxis": {
+                "showMainAxis": {
                     "type": {
                         "bool": true
                     }
+                },
+                "gridlines": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "color": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+               "transparency": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+
+               "lineStyle": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "Solid"
+                            },
+                            {
+                                "value": "Dashed"
+                            },
+                            {
+                                "value": "Dotted"
+                            }
+                        ]
+                    }
+                },
+                 "width": {
+                    "type": {
+                        "numeric": true
+                    }
                 }
+
             }
         },
         "legend": {
