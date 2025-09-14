@@ -125,6 +125,7 @@ import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 
 import { labelsReference, axisReference, colorsReference } from "./BulletChartSettingsModel";
 import { measureSvgTextWidth } from "powerbi-visuals-utils-formattingutils/lib/src/textMeasurementService";
+import { dataViewObjects } from "powerbi-visuals-utils-dataviewutils";
 
 interface ClassAndSelector {
     className: string;
@@ -165,6 +166,10 @@ export class BulletChart implements IVisual {
     private static labelHeightReversedPadding: number = 5;
     private static xAxisVerticalShift: number = 10;
     private static verticalHeightOffset: number = 25;
+    private static CategoryPropertyIdentifier = {
+        conditionalColor: { objectName: "colors", propertyName: "conditionalColor" },
+        fill: { objectName: "colors", propertyName: "fill" }
+    };
 
     private static CategoryLabelsSelector: ClassAndSelector = CreateClassAndSelector("categoryLabel");
     public static MeasureUnitsSelector: ClassAndSelector = CreateClassAndSelector("measureUnits");
@@ -464,6 +469,37 @@ export class BulletChart implements IVisual {
         return renderedColors;
     }
 
+    private static getCategoryFillColor(
+        categoryIndex: number,
+        colorHelper: ColorHelper,
+        categoryDataPointObjects?: powerbi.DataViewObjects[],
+        settings?: BulletChartSettingsModel
+        ): string {
+
+            if (settings.colors.categoryFillColorGroup.useConditionalFormatting.value) {
+                const overriddenColor = dataViewObjects.getFillColor(
+                    categoryDataPointObjects?.[categoryIndex],
+                    BulletChart.CategoryPropertyIdentifier.conditionalColor
+                );
+
+                if (overriddenColor) {
+                    return overriddenColor;
+                }
+
+                const defaultColorOverride = settings.colors.categoryFillColorGroup.conditionalColor.value.value;
+                if (defaultColorOverride) {
+                    return defaultColorOverride;
+                }
+            }
+            
+            const paletteColor = colorHelper.getColorForMeasure(
+                categoryDataPointObjects?.[categoryIndex],
+                categoryIndex
+            );
+            
+            return paletteColor;
+    }
+
     /**
      * Convert a DataView into a view model.
      */
@@ -578,9 +614,11 @@ export class BulletChart implements IVisual {
             }
 
             const highlight: boolean = categorical.Value?.highlights?.[idx] !== null;
-
+            const effectiveColor = BulletChart.getCategoryFillColor(idx,this.colorHelper,categorical.Category.objects,this.visualSettings)
+            const fillColor = this.colorHelper.getHighContrastColor("background", effectiveColor);
             const barData: BarData = this.BuildBulletChartItem(
                 idx,
+                fillColor,
                 category,
                 categoryValue,
                 targetValue,
@@ -737,6 +775,7 @@ export class BulletChart implements IVisual {
 
     private BuildBulletChartItem(
         idx: number,
+        categoryFillColor,
         category: string,
         categoryValue: PrimitiveValue,
         targetValue: PrimitiveValue,
@@ -840,11 +879,15 @@ export class BulletChart implements IVisual {
         const xAxisProperties: IAxisProperties = BulletChart.getXAxisProperties(visualSettings, bulletModel, scale, categorical, valueFormatString, isVerticalOrientation);
 
         const barData: BarData = {
-            scale: scale, barIndex: idx, categoryLabel: category,
+            fillColor: categoryFillColor,
+            scale: scale,
+            barIndex: idx, 
+            categoryLabel: category,
             x: isVerticalOrientation ? (BulletChart.XMarginVertical + (this.SpaceRequiredForBarVertically + this.BarSize) * idx) : (isReversedOrientation ? BulletChart.XMarginHorizontalRight : BulletChart.XMarginHorizontalLeft),
             y: isVerticalOrientation ? (BulletChart.YMarginVertical) : (BulletChart.YMarginHorizontal + bulletModel.spaceRequiredForBarHorizontally * idx),
             xAxisProperties: xAxisProperties,
             key: selectionIdBuilder().createSelectionId().getKey(),
+            identity: selectionIdBuilder().createSelectionId(), 
         };
 
         return barData;
@@ -1059,7 +1102,7 @@ export class BulletChart implements IVisual {
 
         this.hostService = options.host;
         this.colorPalette = this.hostService.colorPalette;
-        this.colorHelper = new ColorHelper(this.colorPalette);
+        this.colorHelper = new ColorHelper(this.colorPalette, BulletChart.CategoryPropertyIdentifier.fill, "");
         this.events = options.host.eventService;
         this.behavior = new Behavior(this.selectionManager);
 
@@ -1110,6 +1153,7 @@ export class BulletChart implements IVisual {
             }
 
             this.data = data;
+            this.visualSettings.populateCategoryColors(data.bars);
 
             this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.font.fontSize.value));
 
@@ -1276,6 +1320,53 @@ export class BulletChart implements IVisual {
         }
     }
 
+    private getCategoryColorByCondition(model: BulletChartModel, bars: BarData[]) {
+        return (d: BarRect) => {
+            if (model.settings.colors.categoryFillColorGroup.fillCategory.value &&
+                bars[d.barIndex]?.fillColor) {
+                return bars[d.barIndex].fillColor;
+            }
+            return d.fillColor;
+        };
+    }
+
+    private addLineToCategoryColor(
+        this: SVGRectElement,
+        barRect: BarRect,
+        model: BulletChartModel,
+        orientation: string,
+    ) {
+        if (model.settings.colors.categoryFillColorGroup.fillCategory.value) {
+            const x = parseFloat(this.getAttribute("x") || "0");
+            const y = parseFloat(this.getAttribute("y") || "0");
+            const width = parseFloat(this.getAttribute("width") || "0");
+            const height = parseFloat(this.getAttribute("height") || "0");
+
+            const parent = d3Select(this.parentElement);
+
+             if (orientation === "horizontal") {
+                parent.append("line")
+                    .attr("class", "right-border")
+                    .attr("x1", x + width)
+                    .attr("x2", x + width)
+                    .attr("y1", y)
+                    .attr("y2", y + height)
+                    .style("stroke", barRect.strokeColor)
+                    .style("stroke-width", 3);
+            } else {
+                parent.append("line")
+                    .attr("class", "bottom-border")
+                    .attr("x1", x)
+                    .attr("x2", x + width)
+                    .attr("y1", y + height)
+                    .attr("y2", y + height)
+                    .style("stroke", barRect.strokeColor)
+                    .style("stroke-width", 3);
+            }
+           
+        }
+    }
+
     private setUpBulletsHorizontally(
         model: BulletChartModel,
         reversed: boolean,
@@ -1310,9 +1401,11 @@ export class BulletChart implements IVisual {
             .classed(HtmlSubSelectableClass, this.formatMode)
             .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
             .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
-            .style("fill", (d: BarRect) => d.fillColor)
-            .style("stroke", (d: BarRect) => d.strokeColor)
-            .style("stroke-width", (d: BarRect) => d.strokeWidth);
+            .style("fill", this.getCategoryColorByCondition(model, bars))
+            .style("stroke", "none") // Remove the regular stroke
+            .each(function(this: SVGRectElement, d: BarRect) {
+                BulletChart.prototype.addLineToCategoryColor.call(this, d, model,'horizontall');
+            });
 
         // Draw value rects
         const valueSelection: d3Selection<SVGRectElement, BarRect, SVGGElement, null> = this.bulletGraphicsContext
@@ -1735,12 +1828,14 @@ export class BulletChart implements IVisual {
             .attr("height", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
             .attr("width", this.BarSize)
             .classed("range", true)
-            .style("fill", (d: BarRect) => d.fillColor)
+            .style("fill", this.getCategoryColorByCondition(model, bars))
             .classed(HtmlSubSelectableClass, this.formatMode)
             .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
             .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
-            .style("stroke", (d: BarRect) => d.strokeColor)
-            .style("stroke-width", (d: BarRect) => d.strokeWidth);
+            .style("stroke", "none") // Remove the regular stroke
+            .each(function(this: SVGRectElement, d: BarRect) {
+              BulletChart.prototype.addLineToCategoryColor.call(this, d, model,'vertical');
+            });
 
         // Draw value rects
         const valueSelection = this.bulletGraphicsContext
@@ -2242,5 +2337,3 @@ class TextMeasurementHelper {
         return svgTextElement.node().getBBox();
     }
 }
-
-

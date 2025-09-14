@@ -32,6 +32,7 @@ import VisualTooltipDataItem = powerbiVisualsApi.extensibility.VisualTooltipData
 
 import { axisInterfaces } from "powerbi-visuals-utils-chartutils";
 import IAxisProperties = axisInterfaces.IAxisProperties;
+import ISelectionId = powerbi.visuals.ISelectionId;
 
 import {BulletChartSettingsModel} from "./BulletChartSettingsModel";
 import { BarRectType } from './enums';
@@ -48,6 +49,7 @@ export type RenderedColors = {
 }
 
 export interface BulletChartModel {
+    fillColor?: string;
     bars: BarData[];
     settings: BulletChartSettingsModel;
     barRects: BarRect[];
@@ -69,6 +71,8 @@ export interface BarData {
     x: number;
     y: number;
     key: string;
+    fillColor?: string;
+    identity?: ISelectionId
 }
 
 export interface BarRect extends SelectableDataPoint {

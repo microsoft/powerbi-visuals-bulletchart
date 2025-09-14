@@ -3,6 +3,8 @@ import { legendInterfaces } from "powerbi-visuals-utils-chartutils";
 import { formattingSettings, formattingSettingsInterfaces } from "powerbi-visuals-utils-formattingmodel";
 import { Group, SimpleSlice } from "powerbi-visuals-utils-formattingmodel/lib/FormattingSettingsComponents";
 import { BarRectType, BulletChartOrientation } from "./enums";
+import { dataViewWildcard } from "powerbi-visuals-utils-dataviewutils"; 
+
 import { nameof } from './utils';
 
 import Model = formattingSettings.Model;
@@ -11,6 +13,7 @@ import CompositeCard = formattingSettings.CompositeCard;
 import FormattingId = powerbi.visuals.FormattingId;
 import ValidatorType = powerbi.visuals.ValidatorType;
 import LegendPosition = legendInterfaces.LegendPosition;
+import ISelectionId = powerbi.visuals.ISelectionId;
 import ILocalizedItemMember = formattingSettingsInterfaces.ILocalizedItemMember;
 
 export const BulletChartObjectNames = {
@@ -408,7 +411,46 @@ class OrientationCard extends Card {
     slices = [this.orientation];
 }
 
-class ColorsCard extends Card {
+class CategoryFillColorGroup extends Card {
+     fillCategory = new formattingSettings.ToggleSwitch({
+        name: "categoryFillColor",
+        displayName: "categoryFillColor",
+        displayNameKey: "Visual_CategoryFillColor",
+        value: false,
+        visible: true,
+    });
+
+     useConditionalFormatting = new formattingSettings.ToggleSwitch({
+        name: "useConditionalFormatting",
+        displayName: "Use Conditional Formatting",
+        displayNameKey: "Visual_UseConditionalFormatting",
+        value: false,
+        visible: true,
+    });
+
+    conditionalColor = new formattingSettings.ColorPicker({
+        name: "conditionalColor",
+        displayName: "Color",
+        displayNameKey: "Visual_Color",
+        value: {value: "#01B8AA"},
+        visible: false,
+        instanceKind: powerbi.VisualEnumerationInstanceKinds.ConstantOrRule,
+        selector: dataViewWildcard.createDataViewWildcardSelector(dataViewWildcard.DataViewWildcardMatchingOption.InstancesAndTotals),
+        altConstantSelector: null
+    });
+
+    name: string = 'categoryFillColor';
+    displayName: string = "Category Fill Color";
+    displayNameKey: string = "Visual_CategoryFillColor";
+    topLevelSlice= this.fillCategory;
+
+    slices = [
+        this.useConditionalFormatting,
+        this.conditionalColor
+    ];
+}
+
+class ColorsCard extends CompositeCard {
     minColor = new formattingSettings.ColorPicker({
         name: "minColor",
         displayName: "Minimum",
@@ -450,19 +492,33 @@ class ColorsCard extends Card {
         displayNameKey: "Visual_Colors_BulletColor",
         value: { value: "#000000" }
     });
+    
+
+    thresholdsColorGroup = new Group({
+        name: "thresholdsColor",
+        displayName: "Thresholds Color",
+        displayNameKey: "Visual_ThresholdsColor",
+        slices: [
+            this.minColor,
+            this.needsImprovementColor,
+            this.satisfactoryColor,
+            this.goodColor,
+            this.veryGoodColor,
+            this.bulletColor,
+        ]
+    });
+
+    categoryFillColorGroup= new CategoryFillColorGroup();
 
     name: string = BulletChartObjectNames.Colors.name;
     displayName: string = BulletChartObjectNames.Colors.displayName;
     displayNameKey: string = BulletChartObjectNames.Colors.displayNameKey;
-    slices = [
-        this.minColor,
-        this.needsImprovementColor,
-        this.satisfactoryColor,
-        this.goodColor,
-        this.veryGoodColor,
-        this.bulletColor,
-    ];
+    groups = [this.thresholdsColorGroup, this.categoryFillColorGroup];
 
+    onPreProcess(): void {
+        this.categoryFillColorGroup.conditionalColor.visible = this.categoryFillColorGroup.useConditionalFormatting.value;
+    }
+    
     public getData() {
         const colors = {
             minColor: { displayNameKey: this.minColor.displayNameKey, color: this.minColor.value.value },
@@ -691,7 +747,7 @@ class SyncAxisCard extends CompositeCard {
     transparency = new formattingSettings.Slider({
         name: "transparency",
         displayName: "transparency",
-        displayNameKey: "Visual_transparency",
+        displayNameKey: "Visual_Transparency",
         value: 1,
         options: {
             minValue: { value: 0, type: ValidatorType.Min },
@@ -759,4 +815,29 @@ export class BulletChartSettingsModel extends Model {
         this.legend,
     ];
 
+    public populateCategoryColors(bars) {
+        if (!bars || bars.length === 0) {
+            return;
+        }        
+    
+        if (!this.colors.categoryFillColorGroup.useConditionalFormatting.value) {
+            this.colors.categoryFillColorGroup.slices = [this.colors.categoryFillColorGroup.useConditionalFormatting, this.colors.categoryFillColorGroup.conditionalColor];
+
+            for (const bar of bars) {                
+                const identity: ISelectionId = <ISelectionId>bar.identity;
+                const selector = identity.getSelector();
+
+                const colorPicker = new formattingSettings.ColorPicker({
+                    name: "fill",
+                    displayName: "Color",
+                    displayNameKey:"Visual_Color",
+                    value: { value: bar.fillColor },
+                    visible: true,
+                    selector,
+                });
+
+                this.colors.categoryFillColorGroup.slices.push(colorPicker);
+            }
+        }
+    }
 }
