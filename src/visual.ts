@@ -614,7 +614,7 @@ export class BulletChart implements IVisual {
             }
 
             const highlight: boolean = categorical.Value?.highlights?.[idx] !== null;
-            const effectiveColor = BulletChart.getCategoryFillColor(idx,this.colorHelper,categorical.Category.objects,this.visualSettings)
+            const effectiveColor = BulletChart.getCategoryFillColor(idx,this.colorHelper,categorical.Category?.objects,this.visualSettings)
             const fillColor = this.colorHelper.getHighContrastColor("background", effectiveColor);
             const barData: BarData = this.BuildBulletChartItem(
                 idx,
@@ -1404,7 +1404,7 @@ export class BulletChart implements IVisual {
             .style("fill", this.getCategoryColorByCondition(model, bars))
             .style("stroke", "none") // Remove the regular stroke
             .each(function(this: SVGRectElement, d: BarRect) {
-                BulletChart.prototype.addLineToCategoryColor.call(this, d, model,'horizontall');
+                BulletChart.prototype.addLineToCategoryColor.call(this, d, model,'horizontal');
             });
 
         // Draw value rects
