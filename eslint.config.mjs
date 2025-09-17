@@ -12,7 +12,8 @@ export default [
             "test/**",
             ".tmp/**",
             "karma.conf.ts",
-            "test.webpack.config.js"
+            "test.webpack.config.js",
+            ".github/**"
         ],
     },
 ];
