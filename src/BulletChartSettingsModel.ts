@@ -78,10 +78,10 @@ export const axisReference: {
     cardUid: string;
     groupUid: string;
     axis: FormattingId;
-    axisColor: FormattingId
-    syncAxis: FormattingId,
-    showMainAxis: FormattingId,
-    orientation: FormattingId
+    axisColor: FormattingId;
+    syncAxis: FormattingId;
+    showMainAxis: FormattingId;
+    orientation: FormattingId;
 } = {
     cardUid: "Visual-axis-card",
     groupUid: "axis-group",
@@ -783,8 +783,8 @@ class SyncAxisCard extends CompositeCard {
         displayNameKey: "Visual_ShowOnlyMainAxis",
         topLevelSlice: this.showMainAxis,
         slices: [this.gridlines, this.color, this.transparency, this.lineStyle, this.width]
-   })
-    
+    })
+
     name: string = BulletChartObjectNames.SyncAxis.name;
     displayName: string = BulletChartObjectNames.SyncAxis.displayName;
     displayNameKey: string = BulletChartObjectNames.SyncAxis.displayNameKey;

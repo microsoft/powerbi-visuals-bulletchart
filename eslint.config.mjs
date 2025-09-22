@@ -28,5 +28,5 @@ export default [
             "test.webpack.config.js",
             ".github/**"
         ],
-    }
+    },
 ];

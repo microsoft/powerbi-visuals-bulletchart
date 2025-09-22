@@ -614,7 +614,7 @@ export class BulletChart implements IVisual {
             }
 
             const highlight: boolean = categorical.Value?.highlights?.[idx] !== null;
-            const effectiveColor = BulletChart.getCategoryFillColor(idx,this.colorHelper,categorical.Category?.objects,this.visualSettings)
+            const effectiveColor = BulletChart.getCategoryFillColor(idx, this.colorHelper, categorical.Category?.objects, this.visualSettings);
             const fillColor = this.colorHelper.getHighContrastColor("background", effectiveColor);
             const barData: BarData = this.BuildBulletChartItem(
                 idx,
@@ -1274,7 +1274,7 @@ export class BulletChart implements IVisual {
                 // main axis should be last/at the bottom
                 const mainBar = bars[bars.length - 1];
                 this.renderAxisHorizontally(mainBar, reversed, model.settings.syncAxis.showMainAxis.value);
-                this.drawMainGridlinesHorizontal(mainBar, reversed, bars)
+                this.drawMainGridlinesHorizontal(mainBar, reversed, bars);
             } else {
                 for (let idx: number = 0; idx < bars.length; idx++) {
                     this.renderAxisHorizontally(bars[idx], reversed, model.settings.syncAxis.showMainAxis.value);
@@ -1363,7 +1363,6 @@ export class BulletChart implements IVisual {
                     .style("stroke", barRect.strokeColor)
                     .style("stroke-width", 3);
             }
-           
         }
     }
 
@@ -1544,7 +1543,6 @@ export class BulletChart implements IVisual {
                 const mainBar = bars[0];
                 this.renderAxisVertically(mainBar, reversed, axisColor, model.settings.syncAxis.showMainAxis.value);
                 this.drawMainGridlinesVertical(mainBar, reversed, bars);
-
             } else {
                 for (let idx = 0; idx < bars.length; idx++) {
                     const bar = bars[idx];
