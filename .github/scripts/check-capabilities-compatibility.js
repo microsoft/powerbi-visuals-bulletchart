@@ -20,9 +20,14 @@ const allowlistFile = args.allowlist ? path.resolve(args.allowlist) : path.resol
 
 function readJson(file) {
   try {
-    const content = fs.readFileSync(file, 'utf8').trim();
-    if (!content) {
+    const rawContent = fs.readFileSync(file, 'utf8');
+    if (rawContent.length === 0) {
       console.warn(`Warning: ${file} is empty, treating as empty object`);
+      return {};
+    }
+    const content = rawContent.trim();
+    if (!content) {
+      console.warn(`Warning: ${file} contains only whitespace, treating as empty object`);
       return {};
     }
     const parsed = JSON.parse(content);

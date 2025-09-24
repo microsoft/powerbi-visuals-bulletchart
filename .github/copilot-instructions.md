@@ -169,7 +169,7 @@ set(?:Timeout|Interval)\s*\(\s*(['"]).*?\1
 AKIA[0-9A-Z]{16}
 ghp_[A-Za-z0-9]{36,}
 xox[baprs]-[A-Za-z0-9-]{10,48}
-eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}
+eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{10,}
 (AccountKey|SharedAccessKey|SAS|Sig|se=|sp=|sr=|spr=|sv=|st=|sk=|connection\s*string)\s*=\s*[^;'\n]+
 npm_[A-Za-z0-9]{36,}
 ```
