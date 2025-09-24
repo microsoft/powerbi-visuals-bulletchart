@@ -20,6 +20,8 @@
 - **Code quality & architecture**: scope summary, performance & accessibility hints, state/event cleanup, error handling, maintainability notes.
 - **Reporting**: one-line summary counts; per-finding snippets; suggested fixes; auto-labels.
 
+> **Comment limits**: Maximum 20 comments per review. Prioritize by severity levels (error > warning > info) to focus on breaking changes first.
+
 > Maintainers: thresholds, regexes and message templates are the **single source of truth** in this file to avoid divergence.
 
 ---
@@ -126,6 +128,20 @@
 - **warning** — should fix soon (e.g., missing PR description/tests, major dep bump, large assets).
 - **info** — suggestions/style (typos, architecture improvements).
 
+**Comment prioritization strategy** (max 20 comments per review but may leave less if no suggestions):
+1. **First priority**: All `error` level findings (critical security, breaking changes)
+2. **Second priority**: `warning` level findings affecting security/functionality  
+3. **Third priority**: `warning` level findings affecting maintainability/quality
+4. **Fourth priority**: `info` level findings (style, optimization suggestions)
+5. **Distribution guideline**: ~8 error, ~6 warning, ~4 info, ~2 architectural feedback
+
+**Comment efficiency guidelines**:
+- **Group related issues**: Combine similar findings in single comment when possible
+- **Provide context**: Include file:line references and brief explanations
+- **Suggest fixes**: Offer specific code snippets for common issues
+- **Link related**: Reference related findings across files
+- **Prioritize impact**: Focus on user-facing and security-critical changes first
+
 **Auto-labels** (by highest severity and change type):  
 `security`, `needs-review`, `tests`, `enhancement`, `performance`, `localization`.
 
@@ -141,7 +157,7 @@
 \.html\s*\(
 
 # Dynamic scripts / code eval
-createElement\s*\(\s*['"]script['"]\s*\)|appendChild\s*\([^)]*script[^)]*\\\)
+createElement\s*\(\s*['"]script['"]\s*\)|appendChild\s*\([^)]*script[^)]*\)
 \beval\s*\(
 \bnew\s+Function\s*\(
 set(?:Timeout|Interval)\s*\(\s*(['"]).*?\1
