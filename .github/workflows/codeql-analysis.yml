@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main, dev, certification]
   schedule:
-    - cron: '0 0 * * 3'
+    - cron: '28 14 * * 3'
 
 jobs:
   analyze:
@@ -17,11 +17,12 @@ jobs:
       actions: read
       contents: read
       security-events: write
+      pull-requests: read
 
     strategy:
       fail-fast: false
       matrix:
-        language: ['typescript']
+        language: ['javascript']
  
     steps:
     - name: Checkout repository
@@ -30,7 +31,7 @@ jobs:
         fetch-depth: 2
 
     - name: Use Node.js 18
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
         node-version: 18.x
 
@@ -47,3 +48,5 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
+      with:
+        upload: true
