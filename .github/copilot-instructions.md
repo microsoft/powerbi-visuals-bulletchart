@@ -35,7 +35,7 @@
 - **`pbiviz.json`**:
   - `visual.version` must bump for functional changes (semver).  
   - `visual.guid`, `visual.displayName`, `author`, `supportUrl`, `apiVersion` present.  
-  - `apiVersion` compatible with `@types/powerbi-visuals-api` (major alignment) → mismatch → `warning`.
+  - `apiVersion` major version must match the major version of `@types/powerbi-visuals-api` → mismatch → `warning`.
 
 ### 2) Security & forbidden patterns (report file:line)
 - Unsafe DOM:
@@ -65,7 +65,9 @@
 
 ### 4) Build artifacts, minification & large assets
 - `error`: any `\.min\.(js|ts|css)$` under `src/**`.
-- `warning`: likely-minified file (avg line length > 300 and median > 120) in `src/**`.
+- `warning`: likely-minified file in `src/**` if **all** of the following apply:
+  - avg line length > 300 and median > 120,
+  - **and** (very low whitespace ratio (e.g., < 10% of characters are whitespace) **or** high variable name entropy (e.g., many short, non-dictionary variable names)).
 - `warning`: large files in `src/**` > 250 KB (exclude `assets/**` and PBIVIZ icons).
 - `warning`: assets > 500 KB — recommend re-evaluating bundling, compression, or CDN prohibition (if applicable).
 
@@ -89,7 +91,7 @@
   - Missing localization keys → `warning`.
 - Spellcheck (en-US as source):
   - Report probable typos with level (`info`/`warning`) and replacement suggestion.
-  - Exclude identifiers/acronyms/brand-names based on `.spellcheck-whitelist`.
+  - Exclude identifiers/acronyms/brand-names.
 
 ### 8) Documentation & changelog
 - For non-trivial changes — update `changelog.md` → `info`/`warning`.
@@ -139,7 +141,7 @@
 \.html\s*\(
 
 # Dynamic scripts / code eval
-createElement\s*\(\s*['"]script['"]\s*\)|appendChild\s*\([^)]*script[^)]*\)
+createElement\s*\(\s*['"]script['"]\s*\)|appendChild\s*\([^)]*script[^)]*\\\)
 \beval\s*\(
 \bnew\s+Function\s*\(
 set(?:Timeout|Interval)\s*\(\s*(['"]).*?\1
