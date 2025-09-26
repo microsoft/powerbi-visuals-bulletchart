@@ -1331,18 +1331,18 @@ export class BulletChart implements IVisual {
     }
 
     private addLineToCategoryColor(
-        this: SVGRectElement,
+        element: SVGRectElement,
         barRect: BarRect,
         model: BulletChartModel,
         orientation: string,
     ) {
         if (model.settings.colors.categoryFillColorGroup.fillCategory.value) {
-            const x = parseFloat(this.getAttribute("x") || "0");
-            const y = parseFloat(this.getAttribute("y") || "0");
-            const width = parseFloat(this.getAttribute("width") || "0");
-            const height = parseFloat(this.getAttribute("height") || "0");
+            const x = parseFloat(element.getAttribute("x") || "0");
+            const y = parseFloat(element.getAttribute("y") || "0");
+            const width = parseFloat(element.getAttribute("width") || "0");
+            const height = parseFloat(element.getAttribute("height") || "0");
 
-            const parent = d3Select(this.parentElement);
+            const parent = d3Select(element.parentElement);
 
              if (orientation === "horizontal") {
                 parent.append("line")
@@ -1402,8 +1402,8 @@ export class BulletChart implements IVisual {
             .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
             .style("fill", this.getCategoryColorByCondition(model, bars))
             .style("stroke", "none") // Remove the regular stroke
-            .each(function(this: SVGRectElement, d: BarRect) {
-                BulletChart.prototype.addLineToCategoryColor.call(this, d, model,'horizontal');
+            .each((d: BarRect, i, nodes) => {
+                this.addLineToCategoryColor(nodes[i], d, model, 'horizontal');
             });
 
         // Draw value rects
@@ -1831,8 +1831,8 @@ export class BulletChart implements IVisual {
             .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
             .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
             .style("stroke", "none") // Remove the regular stroke
-            .each(function(this: SVGRectElement, d: BarRect) {
-              BulletChart.prototype.addLineToCategoryColor.call(this, d, model,'vertical');
+            .each((d: BarRect, i, nodes) => {
+                this.addLineToCategoryColor(nodes[i], d, model, 'vertical');
             });
 
         // Draw value rects

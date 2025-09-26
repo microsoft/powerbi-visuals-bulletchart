@@ -830,7 +830,7 @@ export class BulletChartSettingsModel extends Model {
                 const colorPicker = new formattingSettings.ColorPicker({
                     name: "fill",
                     displayName: "Color",
-                    displayNameKey:"Visual_Color",
+                    displayNameKey: "Visual_Color",
                     value: { value: bar.fillColor },
                     visible: true,
                     selector,
