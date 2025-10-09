@@ -879,7 +879,7 @@ export class BulletChart implements IVisual {
         const barData: BarData = {
             fillColor: categoryFillColor,
             scale: scale,
-            barIndex: idx, 
+            barIndex: idx,
             categoryLabel: category,
             x: isVerticalOrientation ? (BulletChart.XMarginVertical + (this.SpaceRequiredForBarVertically + this.BarSize) * idx) : (isReversedOrientation ? BulletChart.XMarginHorizontalRight : BulletChart.XMarginHorizontalLeft),
             y: isVerticalOrientation ? (BulletChart.YMarginVertical) : (BulletChart.YMarginHorizontal + bulletModel.spaceRequiredForBarHorizontally * idx),
@@ -1332,7 +1332,7 @@ export class BulletChart implements IVisual {
         element: SVGRectElement,
         barRect: BarRect,
         model: BulletChartModel,
-        orientation: string,
+        isHorizontal: boolean,
     ) {
         if (model.settings.colors.categoryFillColorGroup.fillCategory.value) {
             const x = parseFloat(element.getAttribute("x") || "0");
@@ -1342,7 +1342,7 @@ export class BulletChart implements IVisual {
 
             const parent = d3Select(element.parentElement);
 
-             if (orientation === "horizontal") {
+             if (isHorizontal) {
                 parent.append("line")
                     .attr("class", "right-border")
                     .attr("x1", x + width)
@@ -1401,7 +1401,7 @@ export class BulletChart implements IVisual {
             .style("fill", this.getCategoryColorByCondition(model, bars))
             .style("stroke", "none") // Remove the regular stroke
             .each((d: BarRect, i, nodes) => {
-                this.addLineToCategoryColor(nodes[i], d, model, 'horizontal');
+                this.addLineToCategoryColor(nodes[i], d, model, true);
             });
 
         // Draw value rects
@@ -1811,7 +1811,7 @@ export class BulletChart implements IVisual {
             .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
             .style("stroke", "none") // Remove the regular stroke
             .each((d: BarRect, i, nodes) => {
-                this.addLineToCategoryColor(nodes[i], d, model, 'vertical');
+                this.addLineToCategoryColor(nodes[i], d, model, false);
             });
 
         // Draw value rects

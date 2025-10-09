@@ -825,7 +825,7 @@ export class BulletChartSettingsModel extends Model {
             this.colors.categoryFillColorGroup.slices = [this.colors.categoryFillColorGroup.useConditionalFormatting, this.colors.categoryFillColorGroup.conditionalColor];
 
             for (const bar of bars) {                
-                const identity: ISelectionId = <ISelectionId>bar.identity;
+                const identity: ISelectionId = bar.identity as ISelectionId;
                 const selector = identity.getSelector();
 
                 const colorPicker = new formattingSettings.ColorPicker({
