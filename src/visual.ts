@@ -495,7 +495,6 @@ export class BulletChart implements IVisual {
             categoryDataPointObjects?.[categoryIndex],
             categoryIndex
         );
-        
         return paletteColor;
     }
 
@@ -886,7 +885,7 @@ export class BulletChart implements IVisual {
             y: isVerticalOrientation ? (BulletChart.YMarginVertical) : (BulletChart.YMarginHorizontal + bulletModel.spaceRequiredForBarHorizontally * idx),
             xAxisProperties: xAxisProperties,
             key: selectionIdBuilder().createSelectionId().getKey(),
-            identity: selectionIdBuilder().createSelectionId(), 
+            identity: selectionIdBuilder().createSelectionId(),
         };
 
         return barData;

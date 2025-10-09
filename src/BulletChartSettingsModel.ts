@@ -784,13 +784,13 @@ class SyncAxisCard extends CompositeCard {
         displayNameKey: "Visual_ShowOnlyMainAxis",
         topLevelSlice: this.showMainAxis,
         slices: [this.gridlines, this.color, this.transparency, this.lineStyle, this.width]
-    })
+    });
 
     name: string = BulletChartObjectNames.SyncAxis.name;
     displayName: string = BulletChartObjectNames.SyncAxis.displayName;
     displayNameKey: string = BulletChartObjectNames.SyncAxis.displayNameKey;
     topLevelSlice = this.syncAxis;
-    groups = [this.syncAxisGroup]
+    groups = [this.syncAxisGroup];
 }
 
 export class BulletChartSettingsModel extends Model {
