@@ -446,7 +446,6 @@ class CategoryFillColorGroup extends Card {
     topLevelSlice= this.fillCategory;
 
     slices = [
-        this.info,
         this.useConditionalFormatting,
         this.conditionalColor
     ];

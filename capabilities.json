@@ -306,38 +306,6 @@
                 }
             }
         },
-        "categoryFill": {
-            "properties": {
-                "fillCategory": {
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "useConditionalFormatting": {
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "conditionalColor": {
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                },
-                "fill": {
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "dataPoint": {
             "properties": {
                 "fill": {
