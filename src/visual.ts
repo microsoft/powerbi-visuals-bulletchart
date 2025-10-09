@@ -474,30 +474,29 @@ export class BulletChart implements IVisual {
         colorHelper: ColorHelper,
         categoryDataPointObjects?: powerbi.DataViewObjects[],
         settings?: BulletChartSettingsModel
-        ): string {
+    ): string {
 
-            if (settings.colors.categoryFillColorGroup.useConditionalFormatting.value) {
-                const overriddenColor = dataViewObjects.getFillColor(
-                    categoryDataPointObjects?.[categoryIndex],
-                    BulletChart.CategoryPropertyIdentifier.conditionalColor
-                );
-
-                if (overriddenColor) {
-                    return overriddenColor;
-                }
-
-                const defaultColorOverride = settings.colors.categoryFillColorGroup.conditionalColor.value.value;
-                if (defaultColorOverride) {
-                    return defaultColorOverride;
-                }
-            }
-            
-            const paletteColor = colorHelper.getColorForMeasure(
+        if (settings.colors.categoryFillColorGroup.useConditionalFormatting.value) {
+            const overriddenColor = dataViewObjects.getFillColor(
                 categoryDataPointObjects?.[categoryIndex],
-                categoryIndex
+                BulletChart.CategoryPropertyIdentifier.conditionalColor
             );
-            
-            return paletteColor;
+
+            if (overriddenColor) {
+                return overriddenColor;
+            }
+
+            const defaultColorOverride = settings.colors.categoryFillColorGroup.conditionalColor.value.value;
+            if (defaultColorOverride) {
+                return defaultColorOverride;
+            }
+        }
+        const paletteColor = colorHelper.getColorForMeasure(
+            categoryDataPointObjects?.[categoryIndex],
+            categoryIndex
+        );
+        
+        return paletteColor;
     }
 
     /**
