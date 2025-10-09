@@ -18,6 +18,7 @@
     "Visual_Colors_SatisfactoryColor": "Satisfactory",
     "Visual_Colors_VeryGoodColor": "Very Good",
     "Visual_CustomBarSpacing": "Custom bar spacing",
+    "Visual_Description_CategoryFillColor": "Enable custom colors for each category",
     "Visual_Dashed": "Dashed",
     "Visual_DataValues": "Data values",
     "Visual_DataValues_GoodPercent": "Good %",

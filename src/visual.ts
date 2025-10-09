@@ -1274,7 +1274,7 @@ export class BulletChart implements IVisual {
                 // main axis should be last/at the bottom
                 const mainBar = bars[bars.length - 1];
                 this.renderAxisHorizontally(mainBar, reversed, model.settings.syncAxis.showMainAxis.value);
-                this.drawMainGridlinesHorizontal(mainBar, reversed, bars);
+                this.drawGridlines(mainBar, reversed, bars, false);
             } else {
                 for (let idx: number = 0; idx < bars.length; idx++) {
                     this.renderAxisHorizontally(bars[idx], reversed, model.settings.syncAxis.showMainAxis.value);
@@ -1542,7 +1542,7 @@ export class BulletChart implements IVisual {
             if (model.settings.syncAxis.showMainAxis.value) {
                 const mainBar = bars[0];
                 this.renderAxisVertically(mainBar, reversed, axisColor, model.settings.syncAxis.showMainAxis.value);
-                this.drawMainGridlinesVertical(mainBar, reversed, bars);
+                this.drawGridlines(mainBar, reversed, bars, true);
             } else {
                 for (let idx = 0; idx < bars.length; idx++) {
                     const bar = bars[idx];
@@ -1718,46 +1718,7 @@ export class BulletChart implements IVisual {
         return Math.max(0, Math.min(1, 1 - transparency / 100));
     }
 
-    private drawMainGridlinesHorizontal(mainBar: BarData, reversed: boolean, bars: BarData[]) {
-        if (!this.settings.syncAxis.gridlines.value) return;
-
-        const stroke = this.colorHelper.getHighContrastColor("foreground", this.settings.syncAxis.color.value.value);
-        const opacity = this.getGridOpacity()
-        const lineStyle = this.getGridStrokeStyleArray();
-        const width = this.settings.syncAxis.width.value ?? 1;
-        const ticks = mainBar.xAxisProperties.values as number[];
-
-        const gridlineStartY = mainBar.y + this.BarSize + BulletChart.MainAxisSpacing;
-        const valueScaleOriginX = this.calculateXPosition(mainBar, null, reversed);
-        const gridlineEndY = bars[0].y - BulletChart.MainAxisSpacing;
-
-        const g = this.bulletGraphicsContext
-            .selectAll<SVGGElement, number>("g.main-gridlines-h")
-            .data([0])
-            .raise()
-            .join("g")
-            .classed("main-gridlines-h", true)
-            .lower();
-
-        const lines = g.selectAll<SVGLineElement, number>("line")
-            .data(ticks, (d) => String(d));
-
-        lines.enter()
-            .append("line")
-            .merge(lines)
-            .attr("x1", d => valueScaleOriginX + mainBar.scale(d))
-            .attr("x2", d => valueScaleOriginX + mainBar.scale(d))
-            .attr("y1", gridlineStartY)
-            .attr("y2", gridlineEndY)
-            .style("stroke", stroke)
-            .style("stroke-width", width)
-            .style("stroke-opacity", opacity)
-            .attr("stroke-dasharray", lineStyle);
-
-        lines.exit().remove();
-    }
-
-    private drawMainGridlinesVertical(mainBar: BarData, reversed: boolean, bars: BarData[]) {
+    private drawGridlines(mainBar: BarData, reversed: boolean, bars: BarData[], isVertical: boolean) {
         if (!this.settings.syncAxis.gridlines.value) return;
 
         const stroke = this.colorHelper.getHighContrastColor("foreground", this.settings.syncAxis.color.value.value);
@@ -1766,31 +1727,51 @@ export class BulletChart implements IVisual {
         const width = this.settings.syncAxis.width.value ?? 1;
         const ticks = mainBar.xAxisProperties.values as number[];
 
-        const valueScaleOriginY = this.calculateLabelHeight(mainBar, null, reversed);
-        const gridlineStartX = mainBar.x - BulletChart.MainAxisSpacing;
-        const gridlineEndX = bars[bars.length - 1].x + this.BarSize + BulletChart.MainAxisSpacing;
-
+        const className = isVertical ? "main-gridlines-v" : "main-gridlines-h";
+        
         const g = this.bulletGraphicsContext
-            .selectAll<SVGGElement, number>("g.main-gridlines-v")
+            .selectAll<SVGGElement, number>(`g.${className}`)
             .data([0])
             .join("g")
-            .classed("main-gridlines-v", true)
+            .classed(className, true)
             .lower();
 
         const lines = g.selectAll<SVGLineElement, number>("line")
             .data(ticks, (d) => String(d));
 
-        lines.enter()
-            .append("line")
-            .merge(lines)
-            .attr("x1", gridlineStartX)
-            .attr("x2", gridlineEndX)
-            .attr("y1", d => valueScaleOriginY + mainBar.scale(d))
-            .attr("y2", d => valueScaleOriginY + mainBar.scale(d))
-            .style("stroke", stroke)
-            .style("stroke-width", width)
-            .style("stroke-opacity", opacity)
-            .attr("stroke-dasharray", lineStyle);
+        if (isVertical) {
+            const valueScaleOriginY = this.calculateLabelHeight(mainBar, null, reversed);
+            const gridlineStartX = mainBar.x - BulletChart.MainAxisSpacing;
+            const gridlineEndX = bars[bars.length - 1].x + this.BarSize + BulletChart.MainAxisSpacing;
+
+            lines.enter()
+                .append("line")
+                .merge(lines)
+                .attr("x1", gridlineStartX)
+                .attr("x2", gridlineEndX)
+                .attr("y1", d => valueScaleOriginY + mainBar.scale(d))
+                .attr("y2", d => valueScaleOriginY + mainBar.scale(d))
+                .style("stroke", stroke)
+                .style("stroke-width", width)
+                .style("stroke-opacity", opacity)
+                .attr("stroke-dasharray", lineStyle);
+        } else {
+            const gridlineStartY = mainBar.y + this.BarSize + BulletChart.MainAxisSpacing;
+            const valueScaleOriginX = this.calculateXPosition(mainBar, null, reversed);
+            const gridlineEndY = bars[0].y - BulletChart.MainAxisSpacing;
+
+            lines.enter()
+                .append("line")
+                .merge(lines)
+                .attr("x1", d => valueScaleOriginX + mainBar.scale(d))
+                .attr("x2", d => valueScaleOriginX + mainBar.scale(d))
+                .attr("y1", gridlineStartY)
+                .attr("y2", gridlineEndY)
+                .style("stroke", stroke)
+                .style("stroke-width", width)
+                .style("stroke-opacity", opacity)
+                .attr("stroke-dasharray", lineStyle);
+        }
 
         lines.exit().remove();
     }

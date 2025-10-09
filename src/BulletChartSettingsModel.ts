@@ -414,7 +414,8 @@ class OrientationCard extends Card {
 class CategoryFillColorGroup extends Card {
      fillCategory = new formattingSettings.ToggleSwitch({
         name: "categoryFillColor",
-        displayName: "categoryFillColor",
+        displayName: "Category Fill Color",
+        descriptionKey: "Visual_Description_CategoryFill",
         displayNameKey: "Visual_CategoryFillColor",
         value: false,
         visible: true,
@@ -445,6 +446,7 @@ class CategoryFillColorGroup extends Card {
     topLevelSlice= this.fillCategory;
 
     slices = [
+        this.info,
         this.useConditionalFormatting,
         this.conditionalColor
     ];
