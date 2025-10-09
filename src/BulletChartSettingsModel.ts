@@ -415,7 +415,6 @@ class CategoryFillColorGroup extends Card {
      fillCategory = new formattingSettings.ToggleSwitch({
         name: "categoryFillColor",
         displayName: "Category Fill Color",
-        descriptionKey: "Visual_Description_CategoryFill",
         displayNameKey: "Visual_CategoryFillColor",
         value: false,
         visible: true,
@@ -425,6 +424,7 @@ class CategoryFillColorGroup extends Card {
         name: "useConditionalFormatting",
         displayName: "Use Conditional Formatting",
         displayNameKey: "Visual_UseConditionalFormatting",
+        descriptionKey: "Visual_UseConditionalFormatting_Description",
         value: false,
         visible: true,
     });
