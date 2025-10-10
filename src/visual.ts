@@ -1342,7 +1342,7 @@ export class BulletChart implements IVisual {
 
             const parent = d3Select(element.parentElement);
 
-             if (isHorizontal) {
+            if (isHorizontal) {
                 parent.append("line")
                     .attr("class", "right-border")
                     .attr("x1", x + width)
