@@ -125,6 +125,7 @@ import SubSelectionStylesType = powerbi.visuals.SubSelectionStylesType;
 
 import { labelsReference, axisReference, colorsReference } from "./BulletChartSettingsModel";
 import { measureSvgTextWidth } from "powerbi-visuals-utils-formattingutils/lib/src/textMeasurementService";
+import { dataViewObjects } from "powerbi-visuals-utils-dataviewutils";
 
 interface ClassAndSelector {
     className: string;
@@ -165,6 +166,10 @@ export class BulletChart implements IVisual {
     private static labelHeightReversedPadding: number = 5;
     private static xAxisVerticalShift: number = 10;
     private static verticalHeightOffset: number = 25;
+    private static CategoryPropertyIdentifier = {
+        conditionalColor: { objectName: "colors", propertyName: "conditionalColor" },
+        fill: { objectName: "colors", propertyName: "fill" }
+    };
 
     private static CategoryLabelsSelector: ClassAndSelector = CreateClassAndSelector("categoryLabel");
     public static MeasureUnitsSelector: ClassAndSelector = CreateClassAndSelector("measureUnits");
@@ -211,7 +216,7 @@ export class BulletChart implements IVisual {
             return this.BarSize + BulletChart.BarPaddingVerticalShort;
         }
 
-        return this.visualSettings.axis.showOnlyMainAxis.value
+        return this.visualSettings.syncAxis.showMainAxis.value
             ? this.BarSize + BulletChart.BarPaddingVerticalShort
             : this.BarSize + BulletChart.BarPaddingVerticalDefault;
     }
@@ -225,7 +230,7 @@ export class BulletChart implements IVisual {
             return BulletChart.BarPaddingHorizontalShort;
         }
 
-        return this.visualSettings.axis.showOnlyMainAxis.value
+        return this.visualSettings.syncAxis.showMainAxis.value
             ? BulletChart.BarPaddingHorizontalShort
             : BulletChart.BarPaddingHorizontalDefault;
     }
@@ -415,7 +420,7 @@ export class BulletChart implements IVisual {
             const targetValue2: PrimitiveValue = categoricalValues.TargetValue2 ? categoricalValues.TargetValue2[idx] : this.visualSettings.values.targetValue2.value;
 
             let minimumValue: number;
-            if (this.visualSettings.axis.syncAxis.value) {
+            if (this.visualSettings.syncAxis.syncAxis.value) {
                 minimumValue = categoryMinValue;
             } else {
                 minimumValue = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], this.visualSettings.values.minimumPercent.value, targetValue);
@@ -462,6 +467,35 @@ export class BulletChart implements IVisual {
         }
 
         return renderedColors;
+    }
+
+    private static getCategoryColor(
+        categoryIndex: number,
+        colorHelper: ColorHelper,
+        categoryDataPointObjects?: powerbi.DataViewObjects[],
+        settings?: BulletChartSettingsModel
+    ): string {
+
+        if (settings.colors.categoryColorGroup.useConditionalFormatting.value) {
+            const overriddenColor = dataViewObjects.getFillColor(
+                categoryDataPointObjects?.[categoryIndex],
+                BulletChart.CategoryPropertyIdentifier.conditionalColor
+            );
+
+            if (overriddenColor) {
+                return overriddenColor;
+            }
+
+            const defaultColorOverride = settings.colors.categoryColorGroup.conditionalColor.value.value;
+            if (defaultColorOverride) {
+                return defaultColorOverride;
+            }
+        }
+        const paletteColor = colorHelper.getColorForMeasure(
+            categoryDataPointObjects?.[categoryIndex],
+            categoryIndex
+        );
+        return paletteColor;
     }
 
     /**
@@ -578,9 +612,11 @@ export class BulletChart implements IVisual {
             }
 
             const highlight: boolean = categorical.Value?.highlights?.[idx] !== null;
-
+            const effectiveColor = BulletChart.getCategoryColor(idx, this.colorHelper, categorical.Category?.objects, this.visualSettings);
+            const fillColor = this.colorHelper.getHighContrastColor("background", effectiveColor);
             const barData: BarData = this.BuildBulletChartItem(
                 idx,
+                fillColor,
                 category,
                 categoryValue,
                 targetValue,
@@ -609,7 +645,7 @@ export class BulletChart implements IVisual {
     private calculateCategoryValueRange(length: number, categoricalValues: BulletChartValueColumns) {
         let categoryMinValue: number | undefined = undefined;
         let categoryMaxValue: number | undefined = undefined;
-        if (this.visualSettings.axis.syncAxis.value) {
+        if (this.visualSettings.syncAxis.syncAxis.value) {
             const rangeValues = [...Array(length).keys()]
                 .map(idx => {
                     const targetValue: PrimitiveValue = categoricalValues.TargetValue?.[idx] || this.visualSettings.values.targetValue.value;
@@ -737,6 +773,7 @@ export class BulletChart implements IVisual {
 
     private BuildBulletChartItem(
         idx: number,
+        categoryColor,
         category: string,
         categoryValue: PrimitiveValue,
         targetValue: PrimitiveValue,
@@ -757,7 +794,7 @@ export class BulletChart implements IVisual {
     ): BarData {
 
         let minimum: number;
-        if (visualSettings.axis.syncAxis.value) {
+        if (visualSettings.syncAxis.syncAxis.value) {
             minimum = categoryMinValue;
         } else {
             minimum = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Minimum?.[idx], visualSettings.values.minimumPercent.value, targetValue);
@@ -840,11 +877,15 @@ export class BulletChart implements IVisual {
         const xAxisProperties: IAxisProperties = BulletChart.getXAxisProperties(visualSettings, bulletModel, scale, categorical, valueFormatString, isVerticalOrientation);
 
         const barData: BarData = {
-            scale: scale, barIndex: idx, categoryLabel: category,
+            fillColor: categoryColor,
+            scale: scale,
+            barIndex: idx,
+            categoryLabel: category,
             x: isVerticalOrientation ? (BulletChart.XMarginVertical + (this.SpaceRequiredForBarVertically + this.BarSize) * idx) : (isReversedOrientation ? BulletChart.XMarginHorizontalRight : BulletChart.XMarginHorizontalLeft),
             y: isVerticalOrientation ? (BulletChart.YMarginVertical) : (BulletChart.YMarginHorizontal + bulletModel.spaceRequiredForBarHorizontally * idx),
             xAxisProperties: xAxisProperties,
             key: selectionIdBuilder().createSelectionId().getKey(),
+            identity: selectionIdBuilder().createSelectionId(),
         };
 
         return barData;
@@ -856,7 +897,7 @@ export class BulletChart implements IVisual {
         let good: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Good?.[idx], visualSettings.values.goodPercent.value, targetValue, minimum);
         let veryGood: number = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.VeryGood?.[idx], visualSettings.values.veryGoodPercent.value, targetValue, minimum);
         let maximum: number;
-        if (visualSettings.axis.syncAxis.value) {
+        if (visualSettings.syncAxis.syncAxis.value) {
             maximum = categoryMaxValue;
         } else {
             maximum = BulletChart.CALCULATE_ADJUSTED_VALUE_BASED_ON_TARGET(categoricalValues.Maximum?.[idx], visualSettings.values.maximumPercent.value, targetValue, minimum);
@@ -1059,7 +1100,7 @@ export class BulletChart implements IVisual {
 
         this.hostService = options.host;
         this.colorPalette = this.hostService.colorPalette;
-        this.colorHelper = new ColorHelper(this.colorPalette);
+        this.colorHelper = new ColorHelper(this.colorPalette, BulletChart.CategoryPropertyIdentifier.fill, "");
         this.events = options.host.eventService;
         this.behavior = new Behavior(this.selectionManager);
 
@@ -1094,8 +1135,6 @@ export class BulletChart implements IVisual {
             this.formatMode = options.formatMode ?? false;
 
             this.visualSettings = this.formattingSettingsService.populateFormattingSettingsModel(BulletChartSettingsModel, dataView);
-            this.visualSettings.setLocalizedOptions(this.localizationManager);
-
 
             const categorical: BulletChartColumns = BulletChartColumns.getCategoricalColumns(dataView);
             const categoricalValues: BulletChartValueColumns = BulletChartColumns.getCategoricalValues(dataView, categorical);
@@ -1112,6 +1151,7 @@ export class BulletChart implements IVisual {
             }
 
             this.data = data;
+            this.visualSettings.populateCategoryColors(data.bars);
 
             this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.font.fontSize.value));
 
@@ -1132,7 +1172,7 @@ export class BulletChart implements IVisual {
                         let axisHeight: number = 0;
                         if (this.settings.axis.axis.value) {
                             axisHeight = BulletChart.AxisHeight;
-                            if (this.settings.axis.showOnlyMainAxis.value) {
+                            if (this.settings.syncAxis.showMainAxis.value) {
                                 const lastBarSpacing = this.SpaceBetweenBarsHorizontally;
                                 // Replace auto/custom spacing with fixed one
                                 axisHeight -= lastBarSpacing;
@@ -1228,13 +1268,14 @@ export class BulletChart implements IVisual {
             .data(bars, (d: BarData) => d.key);
 
         if (model.settings.axis.axis.value) {
-            if (model.settings.axis.showOnlyMainAxis.value) {
+            if (model.settings.syncAxis.showMainAxis.value) {
                 // main axis should be last/at the bottom
                 const mainBar = bars[bars.length - 1];
-                this.renderAxisHorizontally(mainBar, reversed, model.settings.axis.showOnlyMainAxis.value);
+                this.renderAxisHorizontally(mainBar, reversed, model.settings.syncAxis.showMainAxis.value);
+                this.drawGridlines(mainBar, reversed, bars, false);
             } else {
                 for (let idx: number = 0; idx < bars.length; idx++) {
-                    this.renderAxisHorizontally(bars[idx], reversed, model.settings.axis.showOnlyMainAxis.value);
+                    this.renderAxisHorizontally(bars[idx], reversed, model.settings.syncAxis.showMainAxis.value);
                 }
             }
         }
@@ -1277,6 +1318,52 @@ export class BulletChart implements IVisual {
         }
     }
 
+    private getCategoryColorByCondition(model: BulletChartModel, bars: BarData[]) {
+        return (d: BarRect) => {
+            if (model.settings.colors.categoryColorGroup.fillCategory.value &&
+                bars[d.barIndex]?.fillColor) {
+                return bars[d.barIndex].fillColor;
+            }
+            return d.fillColor;
+        };
+    }
+
+    private addLineToCategoryColor(
+        element: SVGRectElement,
+        barRect: BarRect,
+        model: BulletChartModel,
+        isHorizontal: boolean,
+    ) {
+        if (model.settings.colors.categoryColorGroup.fillCategory.value) {
+            const x = parseFloat(element.getAttribute("x") || "0");
+            const y = parseFloat(element.getAttribute("y") || "0");
+            const width = parseFloat(element.getAttribute("width") || "0");
+            const height = parseFloat(element.getAttribute("height") || "0");
+
+            const parent = d3Select(element.parentElement);
+
+            if (isHorizontal) {
+                parent.append("line")
+                    .attr("class", "right-border")
+                    .attr("x1", x + width)
+                    .attr("x2", x + width)
+                    .attr("y1", y)
+                    .attr("y2", y + height)
+                    .style("stroke", barRect.strokeColor)
+                    .style("stroke-width", 3);
+            } else {
+                parent.append("line")
+                    .attr("class", "bottom-border")
+                    .attr("x1", x)
+                    .attr("x2", x + width)
+                    .attr("y1", y + height)
+                    .attr("y2", y + height)
+                    .style("stroke", barRect.strokeColor)
+                    .style("stroke-width", 3);
+            }
+        }
+    }
+
     private setUpBulletsHorizontally(
         model: BulletChartModel,
         reversed: boolean,
@@ -1311,9 +1398,11 @@ export class BulletChart implements IVisual {
             .classed(HtmlSubSelectableClass, this.formatMode)
             .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
             .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
-            .style("fill", (d: BarRect) => d.fillColor)
-            .style("stroke", (d: BarRect) => d.strokeColor)
-            .style("stroke-width", (d: BarRect) => d.strokeWidth);
+            .style("fill", this.getCategoryColorByCondition(model, bars))
+            .style("stroke", "none") // Remove the regular stroke
+            .each((d: BarRect, i, nodes) => {
+                this.addLineToCategoryColor(nodes[i], d, model, true);
+            });
 
         // Draw value rects
         const valueSelection: d3Selection<SVGRectElement, BarRect, SVGGElement, null> = this.bulletGraphicsContext
@@ -1448,13 +1537,14 @@ export class BulletChart implements IVisual {
         if (model.settings.axis.axis.value) {
             const axisColor = model.settings.axis.axisColor.value.value;
 
-            if (model.settings.axis.showOnlyMainAxis.value) {
+            if (model.settings.syncAxis.showMainAxis.value) {
                 const mainBar = bars[0];
-                this.renderAxisVertically(mainBar, reversed, axisColor, model.settings.axis.showOnlyMainAxis.value);
+                this.renderAxisVertically(mainBar, reversed, axisColor, model.settings.syncAxis.showMainAxis.value);
+                this.drawGridlines(mainBar, reversed, bars, true);
             } else {
                 for (let idx = 0; idx < bars.length; idx++) {
                     const bar = bars[idx];
-                    this.renderAxisVertically(bar, reversed, axisColor, model.settings.axis.showOnlyMainAxis.value);
+                    this.renderAxisVertically(bar, reversed, axisColor, model.settings.syncAxis.showMainAxis.value);
                 }
             }
 
@@ -1613,6 +1703,81 @@ export class BulletChart implements IVisual {
             );
     }
 
+    private getGridStrokeStyleArray(): string | null {
+        const style = String(this.settings.syncAxis.lineStyle.value.value || "").toLowerCase();
+        const width = Number(this.settings.syncAxis.width.value ?? 1);
+        // Map logical style -> dash/gap numeric sequence
+        let dashArray: number[] | null = null;
+        switch (style) {
+            case "dashed":
+                // dash 3x width, gap 2x width
+                dashArray = [width * 3, width * 2];
+                break;
+            case "dotted":
+                // dot (width), gap 2x width
+                dashArray = [width, width * 2];
+                break;
+            default:
+                dashArray = null; // solid
+        }
+
+        // Return serialized string of dash/gap sequence array
+        return dashArray ? dashArray.join(" ") : null;
+    }
+
+    private getGridOpacity(): number {
+        const transparency = this.settings.syncAxis.transparency?.value ?? 0;
+        return Math.max(0, Math.min(1, 1 - transparency / 100));
+    }
+
+    private drawGridlines(mainBar: BarData, reversed: boolean, bars: BarData[], isVertical: boolean) {
+        if (!this.settings.syncAxis.gridlines.value) return;
+
+        const stroke = this.colorHelper.getHighContrastColor("foreground", this.settings.syncAxis.color.value.value);
+        const opacity = this.getGridOpacity();
+        const lineStyle = this.getGridStrokeStyleArray();
+        const width = this.settings.syncAxis.width.value ?? 1;
+        const ticks = mainBar.xAxisProperties.values as number[];
+        const className = isVertical ? "main-gridlines-v" : "main-gridlines-h";
+
+        const g = this.bulletGraphicsContext
+            .selectAll<SVGGElement, number>(`g.${className}`)
+            .data([0])
+            .join("g")
+            .classed(className, true)
+            .lower();
+
+        const lines = g.selectAll<SVGLineElement, number>("line").data(ticks, d => String(d));
+
+        const props = isVertical
+            ? {
+                x1: () => mainBar.x - BulletChart.MainAxisSpacing,
+                x2: () => bars[bars.length - 1].x + this.BarSize + BulletChart.MainAxisSpacing,
+                y1: (d: number) => this.calculateLabelHeight(mainBar, null, reversed) + mainBar.scale(d),
+                y2: (d: number) => this.calculateLabelHeight(mainBar, null, reversed) + mainBar.scale(d),
+            }
+            : {
+                x1: (d: number) => this.calculateXPosition(mainBar, null, reversed) + mainBar.scale(d),
+                x2: (d: number) => this.calculateXPosition(mainBar, null, reversed) + mainBar.scale(d),
+                y1: () => mainBar.y + this.BarSize + BulletChart.MainAxisSpacing,
+                y2: () => bars[0].y - BulletChart.MainAxisSpacing,
+            };
+
+        lines.enter()
+            .append("line")
+            .merge(lines)
+            .attr("x1", (d: number) => props.x1(d))
+            .attr("x2", (d: number) => props.x2(d))
+            .attr("y1", (d: number) => props.y1(d))
+            .attr("y2", (d: number) => props.y2(d))
+            .style("stroke", stroke)
+            .style("stroke-width", width)
+            .style("stroke-opacity", opacity)
+            .attr("stroke-dasharray", lineStyle);
+
+        lines.exit().remove();
+    }
+
     private setUpBulletsVertically(
         model: BulletChartModel,
         reversed: boolean,
@@ -1644,12 +1809,14 @@ export class BulletChart implements IVisual {
             .attr("height", ((d: BarRect) => Math.max(BulletChart.zeroValue, d.start - d.end)))
             .attr("width", this.BarSize)
             .classed("range", true)
-            .style("fill", (d: BarRect) => d.fillColor)
+            .style("fill", this.getCategoryColorByCondition(model, bars))
             .classed(HtmlSubSelectableClass, this.formatMode)
             .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
             .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
-            .style("stroke", (d: BarRect) => d.strokeColor)
-            .style("stroke-width", (d: BarRect) => d.strokeWidth);
+            .style("stroke", "none") // Remove the regular stroke
+            .each((d: BarRect, i, nodes) => {
+                this.addLineToCategoryColor(nodes[i], d, model, false);
+            });
 
         // Draw value rects
         const valueSelection = this.bulletGraphicsContext
@@ -1807,14 +1974,14 @@ export class BulletChart implements IVisual {
             this.visualSettings.general.barSpacing.visible = false;
         }
 
-        if (!this.visualSettings.axis.syncAxis.value && this.visualSettings.axis.showOnlyMainAxis.value) {
+        if (!this.visualSettings.syncAxis.syncAxis.value && this.visualSettings.syncAxis.showMainAxis.value) {
             this.hostService.persistProperties({
                 merge: [{
-                    objectName: 'axis',
+                    objectName: 'syncAxis',
                     selector: null,
                     properties: {
                         syncAxis: false,
-                        showOnlyMainAxis: false
+                        showMainAxis: false
                     }
                 }]
             });
@@ -2042,7 +2209,7 @@ export class BulletChart implements IVisual {
         return [
             {
                 type: VisualShortcutType.Reset,
-                relatedResetFormattingIds: [axisReference.axis, axisReference.axisColor, axisReference.syncAxis, axisReference.showOnlyMainAxis, axisReference.orientation],
+                relatedResetFormattingIds: [axisReference.axis, axisReference.axisColor, axisReference.syncAxis, axisReference.showMainAxis, axisReference.orientation],
             },
             {
                 type: VisualShortcutType.Toggle,
@@ -2058,7 +2225,7 @@ export class BulletChart implements IVisual {
             },
             {
                 type: VisualShortcutType.Toggle,
-                ...axisReference.showOnlyMainAxis,
+                ...axisReference.showMainAxis,
                 disabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowAllAxis"),
                 enabledLabel: this.localizationManager.getDisplayName("Visual_OnObject_ShowOnlyMainAxis"),
             },
@@ -2151,5 +2318,3 @@ class TextMeasurementHelper {
         return svgTextElement.node().getBBox();
     }
 }
-
-

@@ -222,6 +222,34 @@
         },
         "colors": {
             "properties": {
+                "categoryColor":{
+                    "type": {
+                        "bool": true
+                    }
+                },
+               "useConditionalFormatting": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "conditionalColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
                 "minColor": {
                     "type": {
                         "fill": {
@@ -268,6 +296,19 @@
                     }
                 },
                 "bulletColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "dataPoint": {
+            "properties": {
+                "fill": {
                     "type": {
                         "fill": {
                             "solid": {
@@ -377,15 +418,58 @@
                     "type": {
                         "bool": true
                     }
-                },
+                }
+            }
+        },
+        "syncAxis":{
+            "properties": {
                 "syncAxis": {
                     "type": {
                         "bool": true
                     }
                 },
-                "showOnlyMainAxis": {
+                "showMainAxis": {
                     "type": {
                         "bool": true
+                    }
+                },
+                "gridlines": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "color": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+               "transparency": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+               "lineStyle": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "Solid"
+                            },
+                            {
+                                "value": "Dashed"
+                            },
+                            {
+                                "value": "Dotted"
+                            }
+                        ]
+                    }
+                },
+                 "width": {
+                    "type": {
+                        "numeric": true
                     }
                 }
             }
