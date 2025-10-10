@@ -411,11 +411,11 @@ class OrientationCard extends Card {
     slices = [this.orientation];
 }
 
-class CategoryFillColorGroup extends Card {
+class CategoryColorGroup extends Card {
      fillCategory = new formattingSettings.ToggleSwitch({
-        name: "categoryFillColor",
-        displayName: "Category Fill Color",
-        displayNameKey: "Visual_CategoryFillColor",
+        name: "categoryColor",
+        displayName: "Category Color",
+        displayNameKey: "Visual_CategoryColor",
         value: false,
         visible: true,
     });
@@ -440,9 +440,9 @@ class CategoryFillColorGroup extends Card {
         altConstantSelector: null
     });
 
-    name: string = 'categoryFillColor';
+    name: string = 'categoryColor';
     displayName: string = "Category Fill Color";
-    displayNameKey: string = "Visual_CategoryFillColor";
+    displayNameKey: string = "Visual_CategoryColor";
     topLevelSlice= this.fillCategory;
 
     slices = [
@@ -509,15 +509,15 @@ class ColorsCard extends CompositeCard {
         ]
     });
 
-    categoryFillColorGroup= new CategoryFillColorGroup();
+    categoryColorGroup= new CategoryColorGroup();
 
     name: string = BulletChartObjectNames.Colors.name;
     displayName: string = BulletChartObjectNames.Colors.displayName;
     displayNameKey: string = BulletChartObjectNames.Colors.displayNameKey;
-    groups = [this.thresholdsColorGroup, this.categoryFillColorGroup];
+    groups = [this.thresholdsColorGroup, this.categoryColorGroup];
 
     onPreProcess(): void {
-        this.categoryFillColorGroup.conditionalColor.visible = this.categoryFillColorGroup.useConditionalFormatting.value;
+        this.categoryColorGroup.conditionalColor.visible = this.categoryColorGroup.useConditionalFormatting.value;
     }
     
     public getData() {
@@ -821,23 +821,21 @@ export class BulletChartSettingsModel extends Model {
             return;
         }        
     
-        if (!this.colors.categoryFillColorGroup.useConditionalFormatting.value) {
-            this.colors.categoryFillColorGroup.slices = [this.colors.categoryFillColorGroup.useConditionalFormatting, this.colors.categoryFillColorGroup.conditionalColor];
+        if (!this.colors.categoryColorGroup.useConditionalFormatting.value) {
+            this.colors.categoryColorGroup.slices = [this.colors.categoryColorGroup.useConditionalFormatting, this.colors.categoryColorGroup.conditionalColor];
 
             for (const bar of bars) {                
                 const identity: ISelectionId = bar.identity as ISelectionId;
-                const selector = identity.getSelector();
-
+                const selector = identity.getSelector();                
                 const colorPicker = new formattingSettings.ColorPicker({
                     name: "fill",
-                    displayName: "Color",
-                    displayNameKey: "Visual_Color",
+                    displayName: bar.categoryLabel || 'Color',
                     value: { value: bar.fillColor },
                     visible: true,
                     selector,
                 });
 
-                this.colors.categoryFillColorGroup.slices.push(colorPicker);
+                this.colors.categoryColorGroup.slices.push(colorPicker);
             }
         }
     }

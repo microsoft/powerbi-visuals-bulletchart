@@ -222,7 +222,7 @@
         },
         "colors": {
             "properties": {
-                "categoryFillColor":{
+                "categoryColor":{
                     "type": {
                         "bool": true
                     }

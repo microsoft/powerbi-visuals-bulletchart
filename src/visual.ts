@@ -469,14 +469,14 @@ export class BulletChart implements IVisual {
         return renderedColors;
     }
 
-    private static getCategoryFillColor(
+    private static getCategoryColor(
         categoryIndex: number,
         colorHelper: ColorHelper,
         categoryDataPointObjects?: powerbi.DataViewObjects[],
         settings?: BulletChartSettingsModel
     ): string {
 
-        if (settings.colors.categoryFillColorGroup.useConditionalFormatting.value) {
+        if (settings.colors.categoryColorGroup.useConditionalFormatting.value) {
             const overriddenColor = dataViewObjects.getFillColor(
                 categoryDataPointObjects?.[categoryIndex],
                 BulletChart.CategoryPropertyIdentifier.conditionalColor
@@ -486,7 +486,7 @@ export class BulletChart implements IVisual {
                 return overriddenColor;
             }
 
-            const defaultColorOverride = settings.colors.categoryFillColorGroup.conditionalColor.value.value;
+            const defaultColorOverride = settings.colors.categoryColorGroup.conditionalColor.value.value;
             if (defaultColorOverride) {
                 return defaultColorOverride;
             }
@@ -612,7 +612,7 @@ export class BulletChart implements IVisual {
             }
 
             const highlight: boolean = categorical.Value?.highlights?.[idx] !== null;
-            const effectiveColor = BulletChart.getCategoryFillColor(idx, this.colorHelper, categorical.Category?.objects, this.visualSettings);
+            const effectiveColor = BulletChart.getCategoryColor(idx, this.colorHelper, categorical.Category?.objects, this.visualSettings);
             const fillColor = this.colorHelper.getHighContrastColor("background", effectiveColor);
             const barData: BarData = this.BuildBulletChartItem(
                 idx,
@@ -773,7 +773,7 @@ export class BulletChart implements IVisual {
 
     private BuildBulletChartItem(
         idx: number,
-        categoryFillColor,
+        categoryColor,
         category: string,
         categoryValue: PrimitiveValue,
         targetValue: PrimitiveValue,
@@ -877,7 +877,7 @@ export class BulletChart implements IVisual {
         const xAxisProperties: IAxisProperties = BulletChart.getXAxisProperties(visualSettings, bulletModel, scale, categorical, valueFormatString, isVerticalOrientation);
 
         const barData: BarData = {
-            fillColor: categoryFillColor,
+            fillColor: categoryColor,
             scale: scale,
             barIndex: idx,
             categoryLabel: category,
@@ -1320,7 +1320,7 @@ export class BulletChart implements IVisual {
 
     private getCategoryColorByCondition(model: BulletChartModel, bars: BarData[]) {
         return (d: BarRect) => {
-            if (model.settings.colors.categoryFillColorGroup.fillCategory.value &&
+            if (model.settings.colors.categoryColorGroup.fillCategory.value &&
                 bars[d.barIndex]?.fillColor) {
                 return bars[d.barIndex].fillColor;
             }
@@ -1334,7 +1334,7 @@ export class BulletChart implements IVisual {
         model: BulletChartModel,
         isHorizontal: boolean,
     ) {
-        if (model.settings.colors.categoryFillColorGroup.fillCategory.value) {
+        if (model.settings.colors.categoryColorGroup.fillCategory.value) {
             const x = parseFloat(element.getAttribute("x") || "0");
             const y = parseFloat(element.getAttribute("y") || "0");
             const width = parseFloat(element.getAttribute("width") || "0");
@@ -1704,11 +1704,25 @@ export class BulletChart implements IVisual {
     }
 
     private getGridStrokeStyleArray(): string | null {
-        const style = this.settings.syncAxis.lineStyle.value.value as string;
-        const width = this.settings.syncAxis.width.value ?? 1;
-        if (style === "dashed") return `${width * 3},${width * 2}`;
-        if (style === "dotted") return `${width},${width * 2}`;
-        return null; //solid
+        const style = String(this.settings.syncAxis.lineStyle.value.value || "").toLowerCase();
+        const width = Number(this.settings.syncAxis.width.value ?? 1);
+        // Map logical style -> dash/gap numeric sequence
+        let dashArray: number[] | null = null;
+        switch (style) {
+            case "dashed":
+                // dash 3x width, gap 2x width
+                dashArray = [width * 3, width * 2];
+                break;
+            case "dotted":
+                // dot (width), gap 2x width
+                dashArray = [width, width * 2];
+                break;
+            default:
+                dashArray = null; // solid
+        }
+
+        // Return serialized string of dash/gap sequence array
+        return dashArray ? dashArray.join(" ") : null;
     }
 
     private getGridOpacity(): number {
@@ -1724,9 +1738,8 @@ export class BulletChart implements IVisual {
         const lineStyle = this.getGridStrokeStyleArray();
         const width = this.settings.syncAxis.width.value ?? 1;
         const ticks = mainBar.xAxisProperties.values as number[];
-
         const className = isVertical ? "main-gridlines-v" : "main-gridlines-h";
-        
+
         const g = this.bulletGraphicsContext
             .selectAll<SVGGElement, number>(`g.${className}`)
             .data([0])
@@ -1734,42 +1747,33 @@ export class BulletChart implements IVisual {
             .classed(className, true)
             .lower();
 
-        const lines = g.selectAll<SVGLineElement, number>("line")
-            .data(ticks, (d) => String(d));
+        const lines = g.selectAll<SVGLineElement, number>("line").data(ticks, d => String(d));
 
-        if (isVertical) {
-            const valueScaleOriginY = this.calculateLabelHeight(mainBar, null, reversed);
-            const gridlineStartX = mainBar.x - BulletChart.MainAxisSpacing;
-            const gridlineEndX = bars[bars.length - 1].x + this.BarSize + BulletChart.MainAxisSpacing;
+        const props = isVertical
+            ? {
+                x1: () => mainBar.x - BulletChart.MainAxisSpacing,
+                x2: () => bars[bars.length - 1].x + this.BarSize + BulletChart.MainAxisSpacing,
+                y1: (d: number) => this.calculateLabelHeight(mainBar, null, reversed) + mainBar.scale(d),
+                y2: (d: number) => this.calculateLabelHeight(mainBar, null, reversed) + mainBar.scale(d),
+            }
+            : {
+                x1: (d: number) => this.calculateXPosition(mainBar, null, reversed) + mainBar.scale(d),
+                x2: (d: number) => this.calculateXPosition(mainBar, null, reversed) + mainBar.scale(d),
+                y1: () => mainBar.y + this.BarSize + BulletChart.MainAxisSpacing,
+                y2: () => bars[0].y - BulletChart.MainAxisSpacing,
+            };
 
-            lines.enter()
-                .append("line")
-                .merge(lines)
-                .attr("x1", gridlineStartX)
-                .attr("x2", gridlineEndX)
-                .attr("y1", d => valueScaleOriginY + mainBar.scale(d))
-                .attr("y2", d => valueScaleOriginY + mainBar.scale(d))
-                .style("stroke", stroke)
-                .style("stroke-width", width)
-                .style("stroke-opacity", opacity)
-                .attr("stroke-dasharray", lineStyle);
-        } else {
-            const gridlineStartY = mainBar.y + this.BarSize + BulletChart.MainAxisSpacing;
-            const valueScaleOriginX = this.calculateXPosition(mainBar, null, reversed);
-            const gridlineEndY = bars[0].y - BulletChart.MainAxisSpacing;
-
-            lines.enter()
-                .append("line")
-                .merge(lines)
-                .attr("x1", d => valueScaleOriginX + mainBar.scale(d))
-                .attr("x2", d => valueScaleOriginX + mainBar.scale(d))
-                .attr("y1", gridlineStartY)
-                .attr("y2", gridlineEndY)
-                .style("stroke", stroke)
-                .style("stroke-width", width)
-                .style("stroke-opacity", opacity)
-                .attr("stroke-dasharray", lineStyle);
-        }
+        lines.enter()
+            .append("line")
+            .merge(lines)
+            .attr("x1", (d: number) => props.x1(d))
+            .attr("x2", (d: number) => props.x2(d))
+            .attr("y1", (d: number) => props.y1(d))
+            .attr("y2", (d: number) => props.y2(d))
+            .style("stroke", stroke)
+            .style("stroke-width", width)
+            .style("stroke-opacity", opacity)
+            .attr("stroke-dasharray", lineStyle);
 
         lines.exit().remove();
     }
