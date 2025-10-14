@@ -1,3 +1,12 @@
+## 2.6.0
+### Visual changes
+* Separate "Sync Axis" and "Show only main axis" settings to maintain backward compatibility with previous reports
+* Add gridlines support for Main Axis with customizable color, width, opacity, and line style
+* Add category coloring — users can now fill category bars using conditional formatting or by selecting a custom color in the formatting pane
+
+### Code improvements
+* Use powerbi-visuals-utils-formattingmodel with ILocalizedItemMember instead of setLocalizedOptions
+
 ## 2.5.0
 ### Visual changes
 * Move "sync axis" and "show only main axis" settings to "Axis" card
