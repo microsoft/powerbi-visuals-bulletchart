@@ -31,7 +31,7 @@ jobs:
 
       - name: Determine base ref
         env:
-            PR_BRANCH: ${{ github.head_ref }}
+          PR_BRANCH: ${{ github.head_ref }}
         if: steps.check_changes.outputs.any_changed == 'true'
         id: vars
         run: |
