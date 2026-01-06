@@ -54,4 +54,3 @@ jobs:
         run: |
           node ./.github/scripts/check-capabilities-compatibility.js --baseFile=capabilities.base.json --prFile=capabilities.json || exit 1
         shell: bash
-        
