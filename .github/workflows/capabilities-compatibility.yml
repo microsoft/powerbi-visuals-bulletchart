@@ -30,11 +30,13 @@ jobs:
         shell: bash
 
       - name: Determine base ref
+        env:
+          PR_BRANCH: ${{ github.head_ref }}
         if: steps.check_changes.outputs.any_changed == 'true'
         id: vars
         run: |
           echo "BASE_REF=${{ github.event.pull_request.base.ref }}" >> $GITHUB_OUTPUT
-          echo "PR_REF=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+          echo "PR_REF=$PR_BRANCH" >> $GITHUB_OUTPUT
 
       - name: Checkout base branch file
         if: steps.check_changes.outputs.any_changed == 'true'
