@@ -618,7 +618,8 @@ describe("BulletChart", () => {
                 categoricalValues
             );
 
-            expect(Object.keys(renderedColors).length).toBeGreaterThan(0);
+            expect(renderedColors.satisfactoryColor).toBe(true);
+            expect(renderedColors.goodColor).toBe(true);
         });
     });
 
