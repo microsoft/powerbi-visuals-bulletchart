@@ -10,7 +10,7 @@
 ### Code improvements
 * Fix barSize minValue (0 → 1) to prevent division by zero
 * Fix computeRenderedColors: return → continue to process all bars
-* Fix gridlines lineStyle casing mismatch (lowercase → Capitalized)
+* Fix gridlines lineStyle casing mismatch (lowercase → Capitalized) with a case-insensitive fallback for values persisted by 2.6.0
 * Bump powerbi-visuals-tools to 7.2.1 and powerbi-visuals-utils-testutils to 7.0.1 to clear npm audit advisories
 
 ## 2.6.0

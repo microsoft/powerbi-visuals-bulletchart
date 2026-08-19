@@ -1167,6 +1167,7 @@ export class BulletChart implements IVisual {
             this.formatMode = options.formatMode ?? false;
 
             this.visualSettings = this.formattingSettingsService.populateFormattingSettingsModel(BulletChartSettingsModel, dataView);
+            this.visualSettings.restorePersistedLineStyle(dataView);
 
             const categorical: BulletChartColumns = BulletChartColumns.getCategoricalColumns(dataView);
             const categoricalValues: BulletChartValueColumns = BulletChartColumns.getCategoricalValues(dataView, categorical);

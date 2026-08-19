@@ -593,6 +593,27 @@ describe("BulletChart", () => {
 
             expect(visualBuilder.gridlines.length).toBe(0);
         });
+        [
+            { persisted: "dotted", capitalized: "Dotted" },
+            { persisted: "dashed", capitalized: "Dashed" },
+            { persisted: "solid", capitalized: "Solid" },
+        ].forEach(({ persisted, capitalized }) => {
+            it(`should keep the persisted "${persisted}" line style`, () => {
+                dataView.metadata.objects.syncAxis.lineStyle = persisted;
+
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                dataView.metadata.objects.syncAxis.lineStyle = capitalized;
+                const expectedBuilder = new BulletChartBuilder(1000, 500);
+                expectedBuilder.updateFlushAllD3Transitions(dataView);
+
+                const dashArray = (builder: BulletChartBuilder) =>
+                    Array.from(builder.gridlines).map((line) => line.getAttribute("stroke-dasharray"));
+
+                expect(visualBuilder.gridlines.length).toBeGreaterThan(0);
+                expect(dashArray(visualBuilder)).toEqual(dashArray(expectedBuilder));
+            });
+        });
     });
 
     describe("computeRenderedColors", () => {

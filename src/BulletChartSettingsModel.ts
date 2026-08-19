@@ -171,10 +171,12 @@ const legendPositionOptions: ILocalizedItemMember[] = [
     { value: LegendPosition[LegendPosition.LeftCenter], displayNameKey: "Visual_LeftCenter" },
 ];
 
+const solidGridlineStyle: ILocalizedItemMember = { value: "Solid", displayNameKey: "Visual_Solid" };
+
 const gridlinesStyle: ILocalizedItemMember[] = [
     { value: "Dotted", displayNameKey: "Visual_Dotted" },
     { value: "Dashed", displayNameKey: "Visual_Dashed" },
-    { value: "Solid", displayNameKey: "Visual_Solid" },
+    solidGridlineStyle,
 ];
 
 
@@ -838,5 +840,21 @@ export class BulletChartSettingsModel extends Model {
                 this.colors.categoryColorGroup.slices.push(colorPicker);
             }
         }
+    }
+
+    public restorePersistedLineStyle(dataView: powerbi.DataView): void {
+        if (this.syncAxis.lineStyle.value) {
+            return;
+        }
+
+        const persisted = dataView?.metadata?.objects?.[BulletChartObjectNames.SyncAxis.name]?.lineStyle;
+        if (!persisted) {
+            return;
+        }
+
+        const persistedValue: string = String(persisted).toLowerCase();
+        this.syncAxis.lineStyle.value =
+            gridlinesStyle.find(item => String(item.value).toLowerCase() === persistedValue)
+            ?? solidGridlineStyle;
     }
 }
