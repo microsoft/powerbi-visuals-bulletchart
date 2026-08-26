@@ -34,6 +34,7 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 import { VisualBuilderBase } from "powerbi-visuals-utils-testutils";
 
 import {BulletChart, BulletChart as VisualClass} from "../src/visual";
+import {BulletChartColumns, BulletChartValueColumns} from "../src/BulletChartColumns";
 import {BulletChartOrientation} from "../src/enums";
 import {BulletChartSettingsModel} from "../src/BulletChartSettingsModel";
 
@@ -64,6 +65,14 @@ export class BulletChartBuilder extends VisualBuilderBase<VisualClass> {
 
 	public get axis(): NodeListOf<HTMLElement> {
 		return this.mainElement.querySelectorAll("g.axis")
+	}
+
+	public get gridlines(): NodeListOf<SVGLineElement> {
+		return this.element.querySelectorAll("g.main-gridlines-h line, g.main-gridlines-v line");
+	}
+
+	public computeRenderedColors(categorical: BulletChartColumns, categoricalValues: BulletChartValueColumns): Record<string, boolean> {
+		return this.visual["computeRenderedColors"](categorical, categoricalValues);
 	}
 
 	public get categoryLabels(): NodeListOf<HTMLElement> {

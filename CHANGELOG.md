@@ -1,3 +1,18 @@
+## 2.6.1
+### Bug fixes
+* Fix category labels and measure unit text overlap when font size increases
+* Fix measure unit positioning for both horizontal and vertical orientations
+* Account for underline decoration in spacing calculations
+* Fix completion percent overlap with measure unit in vertical orientation
+* Fix gridlines not rendering when axis display units set to Thousands/Millions/Billions
+* Add stroke outlines for color bucket rects in High Contrast Mode
+
+### Code improvements
+* Fix barSize minValue (0 → 1) to prevent division by zero
+* Fix computeRenderedColors: return → continue to process all bars
+* Fix gridlines lineStyle casing mismatch (lowercase → Capitalized) with a case-insensitive fallback for values persisted by 2.6.0
+* Bump powerbi-visuals-tools to 7.2.1 and powerbi-visuals-utils-testutils to 7.0.1 to clear npm audit advisories
+
 ## 2.6.0
 ### Visual changes
 * Separate "Sync Axis" and "Show only main axis" settings to maintain backward compatibility with previous reports

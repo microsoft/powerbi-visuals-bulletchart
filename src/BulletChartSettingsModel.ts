@@ -171,10 +171,12 @@ const legendPositionOptions: ILocalizedItemMember[] = [
     { value: LegendPosition[LegendPosition.LeftCenter], displayNameKey: "Visual_LeftCenter" },
 ];
 
+const solidGridlineStyle: ILocalizedItemMember = { value: "Solid", displayNameKey: "Visual_Solid" };
+
 const gridlinesStyle: ILocalizedItemMember[] = [
-    { value: "dotted", displayNameKey: "Visual_Dotted" },
-    { value: "dashed", displayNameKey: "Visual_Dashed" },
-    { value: 'solid', displayNameKey: "Visual_Solid" },
+    { value: "Dotted", displayNameKey: "Visual_Dotted" },
+    { value: "Dashed", displayNameKey: "Visual_Dashed" },
+    solidGridlineStyle,
 ];
 
 
@@ -226,7 +228,7 @@ class GeneralCard extends Card {
         displayNameKey: "Visual_BarSize",
         value: 25,
         options: {
-            minValue: { value: 0, type: ValidatorType.Min },
+            minValue: { value: 1, type: ValidatorType.Min },
         }
     });
 
@@ -838,5 +840,21 @@ export class BulletChartSettingsModel extends Model {
                 this.colors.categoryColorGroup.slices.push(colorPicker);
             }
         }
+    }
+
+    public restorePersistedLineStyle(dataView: powerbi.DataView): void {
+        if (this.syncAxis.lineStyle.value) {
+            return;
+        }
+
+        const persisted = dataView?.metadata?.objects?.[BulletChartObjectNames.SyncAxis.name]?.lineStyle;
+        if (!persisted) {
+            return;
+        }
+
+        const persistedValue: string = String(persisted).toLowerCase();
+        this.syncAxis.lineStyle.value =
+            gridlinesStyle.find(item => String(item.value).toLowerCase() === persistedValue)
+            ?? solidGridlineStyle;
     }
 }

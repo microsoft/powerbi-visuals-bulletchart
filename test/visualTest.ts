@@ -556,6 +556,94 @@ describe("BulletChart", () => {
         });
     });
 
+    describe("Gridlines", () => {
+        beforeEach(() => {
+            dataView.metadata.objects = {
+                axis: {},
+                syncAxis: {
+                    showMainAxis: true,
+                    gridlines: true,
+                },
+            };
+        });
+
+        // Display units make the axis labels formatted strings; gridlines must still use numeric ticks.
+        [1000, 1000000, 1000000000].forEach((displayUnits: number) => {
+            it(`should be rendered at numeric positions when axis display units are ${displayUnits}`, () => {
+                dataView.metadata.objects.axis.axisDisplayFormat = displayUnits;
+
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                const gridlines: SVGLineElement[] = Array.from(visualBuilder.gridlines);
+                expect(gridlines.length).toBeGreaterThan(0);
+
+                gridlines.forEach((line: SVGLineElement) => {
+                    expect(isFinite(parseFloat(line.getAttribute("x1")))).toBe(true);
+                    expect(isFinite(parseFloat(line.getAttribute("x2")))).toBe(true);
+                    expect(isFinite(parseFloat(line.getAttribute("y1")))).toBe(true);
+                    expect(isFinite(parseFloat(line.getAttribute("y2")))).toBe(true);
+                });
+            });
+        });
+
+        it("should not be rendered when gridlines are turned off", () => {
+            dataView.metadata.objects.syncAxis.gridlines = false;
+
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            expect(visualBuilder.gridlines.length).toBe(0);
+        });
+        [
+            { persisted: "dotted", capitalized: "Dotted" },
+            { persisted: "dashed", capitalized: "Dashed" },
+            { persisted: "solid", capitalized: "Solid" },
+        ].forEach(({ persisted, capitalized }) => {
+            it(`should keep the persisted "${persisted}" line style`, () => {
+                dataView.metadata.objects.syncAxis.lineStyle = persisted;
+
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                dataView.metadata.objects.syncAxis.lineStyle = capitalized;
+                const expectedBuilder = new BulletChartBuilder(1000, 500);
+                expectedBuilder.updateFlushAllD3Transitions(dataView);
+
+                const dashArray = (builder: BulletChartBuilder) =>
+                    Array.from(builder.gridlines).map((line) => line.getAttribute("stroke-dasharray"));
+
+                expect(visualBuilder.gridlines.length).toBeGreaterThan(0);
+                expect(dashArray(visualBuilder)).toEqual(dashArray(expectedBuilder));
+            });
+        });
+    });
+
+    describe("computeRenderedColors", () => {
+        // Regression: a leading category without any defined range used to abort color detection for all following bars.
+        it("should collect colors of bars that follow a category without defined ranges", () => {
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const categoricalValues = {
+                Category: ["One", "Two"],
+                Value: [2, 4],
+                TargetValue: [3, 3],
+                Minimum: [0, 0],
+                NeedsImprovement: undefined,
+                Satisfactory: [undefined, 2],
+                Good: [undefined, 4],
+                VeryGood: undefined,
+                Maximum: [6, 6],
+                TargetValue2: undefined,
+            };
+
+            const renderedColors = visualBuilder.computeRenderedColors(
+                { Value: dataView.categorical.values[0] },
+                categoricalValues
+            );
+
+            expect(renderedColors.satisfactoryColor).toBe(true);
+            expect(renderedColors.goodColor).toBe(true);
+        });
+    });
+
     describe("createTooltipInfo", () => {
         it("should return an empty array if metadata isn't defined", () => {
             const tooltipItems: BulletChartTooltipItem[] = <BulletChartTooltipItem[]>[
@@ -697,6 +785,20 @@ describe("BulletChart", () => {
 
                 expect(isColorAppliedToElements(valueRects, null, "stroke"));
                 expect(isColorAppliedToElements(rangeRects, null, "stroke"));
+                done();
+            });
+        });
+
+        it("should outline color bucket rects with the foreground color", (done) => {
+            visualBuilder.updateRenderTimeout(dataView, () => {
+                const rangeRects: SVGElement[] = Array.from(visualBuilder.rangeRects);
+
+                expect(rangeRects.length).toBeGreaterThan(0);
+                rangeRects.forEach((rect: SVGElement) => {
+                    expect(rect.style["stroke"]).not.toBe("none");
+                    assertColorsMatch(rect.style["stroke"], foregroundColor);
+                    expect(parseFloat(rect.style["stroke-width"])).toBeGreaterThan(0);
+                });
                 done();
             });
         });

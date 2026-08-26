@@ -1,7 +1,7 @@
 {
   "name": "@microsoft/powerbi-visuals-bulletchart",
   "description": "Bullet chart",
-  "version": "2.6.0.0",
+  "version": "2.6.1.0",
   "private": true,
   "author": {
     "name": "Microsoft",
@@ -84,9 +84,9 @@
     "playwright-chromium": "^1.56.0",
     "powerbi-models": "^2.0.1",
     "powerbi-visuals-api": "~5.11.0",
-    "powerbi-visuals-tools": "^6.2.0",
+    "powerbi-visuals-tools": "^7.2.1",
     "powerbi-visuals-utils-onobjectutils": "^6.0.3",
-    "powerbi-visuals-utils-testutils": "^6.1.1",
+    "powerbi-visuals-utils-testutils": "^7.0.1",
     "style-loader": "4.0.0",
     "ts-loader": "^9.5.4",
     "ts-node": "10.9.2",

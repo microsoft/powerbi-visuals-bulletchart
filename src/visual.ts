@@ -161,11 +161,16 @@ export class BulletChart implements IVisual {
     private static SubtitleMargin: number = 10;
     private static SecondTargetLineSize: number = 7;
     private static FontFamily: string = "Segoe UI";
-    private static ratioForLabelHeight: number = 1.4;
-    private static measureUnitShift: number = 12;
-    private static labelHeightReversedPadding: number = 5;
-    private static xAxisVerticalShift: number = 10;
-    private static verticalHeightOffset: number = 25;
+    private static LabelHeightRatio: number = 1.4;
+    private static MeasureUnitVerticalShift: number = 12;
+    private static MeasureUnitFontHeightRatio: number = 0.75;
+    private static MeasureUnitBaselinePadding: number = 2;
+    private static UnderlineExtraPadding: number = 4;
+    private static ReversedLabelPadding: number = 5;
+    private static VerticalAxisClipPadding: number = 10;
+    private static VerticalViewportReserve: number = 25;
+    private static CompletionPercentLineSpacing: number = 7;
+    private static CompletionPercentVerticalLineSpacing: number = 3;
     private static CategoryPropertyIdentifier = {
         conditionalColor: { objectName: "colors", propertyName: "conditionalColor" },
         fill: { objectName: "colors", propertyName: "fill" }
@@ -202,6 +207,14 @@ export class BulletChart implements IVisual {
     private colorHelper: ColorHelper;
     private events: IVisualEventService;
     private tooltipServiceWrapper: ITooltipServiceWrapper;
+
+    private get highContrastStroke(): string {
+        return this.colorHelper.isHighContrast ? this.colorHelper.getHighContrastColor("foreground", "#000000") : "none";
+    }
+
+    private get highContrastStrokeWidth(): number {
+        return this.colorHelper.isHighContrast ? 1 : 0;
+    }
 
     private get BarSize(): number {
         return this.visualSettings.general.barSize.value;
@@ -437,7 +450,7 @@ export class BulletChart implements IVisual {
             } = BulletChart.computeCategoryNumbers(categoricalValues, idx, this.visualSettings, targetValue, minimumValue, categoryMaxValue, categoryValue, targetValue2);
 
             if (!anyRangeIsDefined) {
-                return;
+                continue;
             }
 
             if (!isNaN(minimum) && !isNaN(needsImprovement) && minimum !== needsImprovement) {
@@ -548,25 +561,16 @@ export class BulletChart implements IVisual {
             if (categorical.Category) {
                 category = valueFormatter.format(categoricalValues.Category[idx], categoryFormatString);
 
-                let completionPercentTextWidth: number = 0;
-                let completionPercentText: string = '';
-                if (this.visualSettings.general.showCompletionPercent.value && !isVerticalOrientation) {
-                    const value = categoricalValues.Value[idx];
-                    const targetValue = categoricalValues?.TargetValue?.[idx] ?? this.visualSettings.values.targetValue.value;
-                    completionPercentText = this.computeCompletionPercent(value, targetValue);
-                    if (isReversedOrientation) {
-                        completionPercentText = completionPercentText + ' - ';
-                    } else {
-                        completionPercentText = ' - ' + completionPercentText;
-                    }
-                    completionPercentTextWidth = BulletChart.measureSvgTextWidth({ text: completionPercentText, fontSize: this.visualSettings.labels.font.fontSize.value });
-                }
+                const completionPercentText: string = this.formatCompletionPercentSuffix({ categoricalValues, index: idx, isVerticalOrientation, isReversedOrientation });
+                const completionPercentTextWidth: number = completionPercentText
+                    ? BulletChart.measureSvgTextWidth({ text: completionPercentText, fontSize: this.visualSettings.labels.font.fontSize.value })
+                    : 0;
 
                 const textProperties = BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value);
 
                 let categoryLabelMaxWidth: number = this.visualSettings.labels.autoWidth.value
                     ? bulletModel.longestCategoryWidth
-                    : this.visualSettings.labels.maxWidth.value - completionPercentTextWidth;
+                    : Math.max(0, this.visualSettings.labels.maxWidth.value - completionPercentTextWidth);
 
                 if (isVerticalOrientation) {
                     categoryLabelMaxWidth = Math.min(Math.max(0, this.SpaceRequiredForBarVertically - BulletChart.AxisWidth), categoryLabelMaxWidth);
@@ -574,12 +578,19 @@ export class BulletChart implements IVisual {
 
                 category = TextMeasurementService.getTailoredTextOrDefault(textProperties, categoryLabelMaxWidth);
 
-                if (this.visualSettings.general.showCompletionPercent.value && !isVerticalOrientation) {
+                if (completionPercentText) {
                     if (isReversedOrientation) {
                         category = completionPercentText + category;
                     } else {
                         category = category + completionPercentText;
                     }
+
+                    // Ensure the combined text fits within the allocated label width
+                    const effectiveMaxWidth = this.visualSettings.labels.autoWidth.value
+                        ? bulletModel.longestCategoryWidth
+                        : this.visualSettings.labels.maxWidth.value;
+                    const combinedTextProperties = BulletChart.getTextProperties(category, this.visualSettings.labels.font.fontSize.value);
+                    category = TextMeasurementService.getTailoredTextOrDefault(combinedTextProperties, effectiveMaxWidth);
                 }
             }
 
@@ -670,17 +681,17 @@ export class BulletChart implements IVisual {
             return 0;
         }
 
-        let longestCategory: string = "";
+        let maxWidth: number = 0;
         for (let index = 0; index < categoricalValues.Category.length; index++) {
             const category = this.formatCategoryWithCompletionPercent({ categoricalValues, index, isVerticalOrientation, isReversedOrientation });
+            const width = BulletChart.measureSvgTextWidth({ text: category, fontSize: this.visualSettings.labels.font.fontSize.value });
 
-            if (category.length > longestCategory.length) {
-                longestCategory = category;
+            if (width > maxWidth) {
+                maxWidth = width;
             }
         }
 
-        const longestCategoryWidth = BulletChart.measureSvgTextWidth({ text: longestCategory, fontSize: this.visualSettings.labels.font.fontSize.value });
-        return longestCategoryWidth;
+        return maxWidth;
     }
 
     private static measureSvgTextWidth({text, fontSize}: { text: string, fontSize: number }) {
@@ -702,23 +713,32 @@ export class BulletChart implements IVisual {
         isReversedOrientation: boolean;
     }) {
         const category = categoricalValues.Category[index].toString();
+        const suffix = this.formatCompletionPercentSuffix({ categoricalValues, index, isVerticalOrientation, isReversedOrientation });
 
-        if (!this.visualSettings.general.showCompletionPercent.value
-            || !categoricalValues.Value?.[index]
-            || (!categoricalValues.TargetValue?.[index] && !this.visualSettings.values.targetValue.value)
-            || isVerticalOrientation
-        ) {
-            return category;
+        return isReversedOrientation ? suffix + category : category + suffix;
+    }
+
+    // Single source of truth for the completion percent affix so measured and rendered labels stay in sync.
+    private formatCompletionPercentSuffix({
+        categoricalValues,
+        index,
+        isVerticalOrientation,
+        isReversedOrientation
+    }: {
+        categoricalValues: BulletChartValueColumns;
+        index: number;
+        isVerticalOrientation: boolean;
+        isReversedOrientation: boolean;
+    }): string {
+        if (!this.visualSettings.general.showCompletionPercent.value || isVerticalOrientation) {
+            return "";
         }
 
-        const categoryValue: PrimitiveValue = categoricalValues.Value[index];
-        const targetValue: PrimitiveValue = categoricalValues?.TargetValue?.[index] || this.visualSettings.values.targetValue.value;
+        const categoryValue: PrimitiveValue = categoricalValues.Value?.[index];
+        const targetValue: PrimitiveValue = categoricalValues?.TargetValue?.[index] ?? this.visualSettings.values.targetValue.value;
+        const percent: string = this.computeCompletionPercent(categoryValue, targetValue);
 
-        if (isReversedOrientation) {
-            return this.computeCompletionPercent(categoryValue, targetValue) + " - " + category;
-        } else {
-            return category + " - " + this.computeCompletionPercent(categoryValue, targetValue);
-        }
+        return isReversedOrientation ? percent + " - " : " - " + percent;
     }
 
     private BuildBulletModel(
@@ -740,6 +760,7 @@ export class BulletChart implements IVisual {
             targetValues: [],
             viewportLength: 0,
             longestCategoryWidth: longestCategoryWidth,
+            verticalExtraOffset: 0,
         };
 
         const labelsPadding: number = isReversedOrientation ? BulletChart.LabelsPadding : BulletChart.zeroValue;
@@ -748,8 +769,18 @@ export class BulletChart implements IVisual {
             : 0;
 
         bulletModel.labelHeight = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value));
-        bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value)) / BulletChart.ratioForLabelHeight;
-        bulletModel.spaceRequiredForBarHorizontally = visualSettings.general.barSize.value + this.SpaceBetweenBarsHorizontally;
+        bulletModel.labelHeightTop = (visualSettings.labels.show.value || BulletChart.zeroValue) && Math.ceil(PixelConverter.fromPointToPixel(visualSettings.labels.font.fontSize.value)) / BulletChart.LabelHeightRatio;
+
+        bulletModel.verticalExtraOffset = this.computeVerticalExtraOffset(isVerticalOrientation, visualSettings, bulletModel.labelHeightTop);
+
+        const measureUnitExtraHeight = visualSettings.axis.measureUnits.value
+            ? bulletModel.labelHeight / 2 + Math.ceil(PixelConverter.fromPointToPixel(visualSettings.axis.unitsFont.fontSize.value))
+            : 0;
+        const minSpaceForBar = visualSettings.general.barSize.value + measureUnitExtraHeight + BulletChart.MeasureUnitVerticalShift;
+        bulletModel.spaceRequiredForBarHorizontally = Math.max(
+            visualSettings.general.barSize.value + this.SpaceBetweenBarsHorizontally,
+            minSpaceForBar
+        );
 
         let legendWidth: number = 0;
         switch (LegendPosition[this.visualSettings.legend.position.value.value]) {
@@ -764,7 +795,7 @@ export class BulletChart implements IVisual {
         const topAndBottomVerticalMargin: number = BulletChart.YMarginVertical * 2;
 
         bulletModel.viewportLength = Math.max(0, (isVerticalOrientation
-            ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - BulletChart.verticalHeightOffset - topAndBottomVerticalMargin)
+            ? (viewPortHeight - bulletModel.labelHeightTop - BulletChart.SubtitleMargin - bulletModel.verticalExtraOffset - BulletChart.VerticalViewportReserve - topAndBottomVerticalMargin)
             : (viewPortWidth - labelsWidth - BulletChart.XMarginHorizontalLeft - BulletChart.XMarginHorizontalRight - legendWidth)) - BulletChart.ScrollBarSize);
         bulletModel.hasHighlights = !!(categorical.Value.values.length > BulletChart.zeroValue && categorical.Value.highlights);
 
@@ -1128,6 +1159,7 @@ export class BulletChart implements IVisual {
         try {
             this.events.renderingStarted(options);
             if (!options.dataViews || !options.dataViews[0]) {
+                this.events.renderingFinished(options);
                 return;
             }
             const dataView: DataView = options.dataViews[0];
@@ -1135,6 +1167,7 @@ export class BulletChart implements IVisual {
             this.formatMode = options.formatMode ?? false;
 
             this.visualSettings = this.formattingSettingsService.populateFormattingSettingsModel(BulletChartSettingsModel, dataView);
+            this.visualSettings.restorePersistedLineStyle(dataView);
 
             const categorical: BulletChartColumns = BulletChartColumns.getCategoricalColumns(dataView);
             const categoricalValues: BulletChartValueColumns = BulletChartColumns.getCategoricalValues(dataView, categorical);
@@ -1143,17 +1176,20 @@ export class BulletChart implements IVisual {
             // Render legend first, so we can compute legend width and then adjust visual size
             this.renderLegend(renderedColors);
 
+            // Compute baselineDelta before CONVERTER, as it's needed for vertical offset calculations inside BuildBulletModel
+            this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.visualSettings.labels.font.fontSize.value));
+
             const data: BulletChartModel = this.CONVERTER({ dataView, options, categorical, categoricalValues });
 
             this.clearViewport();
             if (!data) {
+                this.events.renderingFinished(options);
                 return;
             }
 
             this.data = data;
             this.visualSettings.populateCategoryColors(data.bars);
 
-            this.baselineDelta = TextMeasurementHelper.estimateSvgTextBaselineDelta(BulletChart.getTextProperties(BulletChart.oneString, this.data.settings.labels.font.fontSize.value));
 
             this.bulletBody
                 .style("height", PixelConverter.toString(this.layout.viewportIn.height))
@@ -1238,8 +1274,8 @@ export class BulletChart implements IVisual {
 
     private calculateLabelHeight(barData: BarData, bar?: BarRect, reversed?: boolean) {
         return BulletChart.YMarginVertical + (reversed
-                ? BulletChart.labelHeightReversedPadding
-                : barData.y + this.data.labelHeightTop + BulletChart.BarMargin + BulletChart.SubtitleMargin)
+                ? BulletChart.ReversedLabelPadding
+                : barData.y + this.data.labelHeightTop + BulletChart.BarMargin + BulletChart.SubtitleMargin + this.data.verticalExtraOffset)
             + (bar ? bar.end : 0);
     }
 
@@ -1399,7 +1435,8 @@ export class BulletChart implements IVisual {
             .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
             .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
             .style("fill", this.getCategoryColorByCondition(model, bars))
-            .style("stroke", "none") // Remove the regular stroke
+            .style("stroke", this.highContrastStroke)
+            .style("stroke-width", this.highContrastStrokeWidth)
             .each((d: BarRect, i, nodes) => {
                 this.addLineToCategoryColor(nodes[i], d, model, true);
             });
@@ -1447,7 +1484,12 @@ export class BulletChart implements IVisual {
                         return BulletChart.XMarginHorizontalLeft + BulletChart.XMarginHorizontalRight + model.viewportLength + BulletChart.SubtitleMargin;
                     return d.x - BulletChart.SubtitleMargin;
                 }))
-                .attr("y", ((d: BarData) => d.y + this.data.labelHeight / 2 + BulletChart.measureUnitShift + this.BarSize / 2))
+                .attr("y", ((d: BarData) => {
+                    const underlinePadding = this.getUnderlinePadding(model.settings);
+                    const shift = this.getMeasureUnitShift(model.settings);
+                    const labelBaselineOffset = model.settings.labels.show.value ? this.baselineDelta : 0;
+                    return d.y + labelBaselineOffset + shift + underlinePadding + this.BarSize / 2;
+                }))
                 .attr("fill", model.settings.axis.unitsColor.value.value)
                 .attr("font-family", model.settings.axis.unitsFont.fontFamily.value)
                 .attr("font-size", PixelConverter.fromPoint(model.settings.axis.unitsFont.fontSize.value))
@@ -1564,7 +1606,7 @@ export class BulletChart implements IVisual {
                 .selectAll("g.axis > .tick text")
                 .call(
                     AxisHelper.LabelLayoutStrategy.clip,
-                    BulletChart.XMarginVertical - BulletChart.xAxisVerticalShift,
+                    BulletChart.XMarginVertical - BulletChart.VerticalAxisClipPadding,
                     TextMeasurementService.svgEllipsis
                 );
         }
@@ -1605,7 +1647,7 @@ export class BulletChart implements IVisual {
                     textSelection
                         .append("tspan")
                         .attr("x", (d: BarData) => d.x)
-                        .attr("dy", this.data.labelHeightTop + 7) // Add a little space between the category label and the completion percent
+                        .attr("dy", this.data.labelHeightTop + BulletChart.CompletionPercentLineSpacing)
                         .text((d: BarData) => {
                             const categoryValue = model.targetValues[d.barIndex].categoryValue;
                             const targetValue = model.targetValues[d.barIndex].targetValueUnscaled;
@@ -1625,6 +1667,54 @@ export class BulletChart implements IVisual {
         }
 
         return 'N/A';
+    }
+
+    /**
+     * Computes combined vertical extra offset (measure units + completion percent)
+     * used to reserve space above bars in vertical orientation.
+     */
+    private computeVerticalExtraOffset(
+        isVerticalOrientation: boolean,
+        settings: BulletChartSettingsModel,
+        labelHeightTop: number,
+    ): number {
+        if (!isVerticalOrientation) {
+            return 0;
+        }
+
+        let offset = 0;
+
+        if (settings.axis.measureUnits.value) {
+            const underlinePad = this.getUnderlinePadding(settings);
+            const shift = this.getMeasureUnitShift(settings);
+            const completionPercentSpacing = settings.labels.show.value && settings.general.showCompletionPercent.value
+                ? BulletChart.CompletionPercentVerticalLineSpacing
+                : 0;
+            offset += shift + underlinePad + completionPercentSpacing;
+        }
+
+        if (settings.labels.show.value && settings.general.showCompletionPercent.value) {
+            offset += labelHeightTop + BulletChart.CompletionPercentLineSpacing;
+        }
+
+        return offset;
+    }
+
+    private getMeasureUnitShift(settings: BulletChartSettingsModel): number {
+        if (!settings.labels.show.value) {
+            return BulletChart.MeasureUnitVerticalShift;
+        }
+
+        const fontHeight = Math.ceil(PixelConverter.fromPointToPixel(settings.axis.unitsFont.fontSize.value));
+        return this.baselineDelta
+            + fontHeight * BulletChart.MeasureUnitFontHeightRatio
+            + BulletChart.MeasureUnitBaselinePadding;
+    }
+
+    private getUnderlinePadding(settings: BulletChartSettingsModel): number {
+        return settings.labels.show.value && settings.labels.font.underline.value
+            ? BulletChart.UnderlineExtraPadding
+            : 0;
     }
 
     private renderAxisVertically(bar: BarData, reversed: boolean, axisColor: string, isMainAxis: boolean) {
@@ -1704,7 +1794,7 @@ export class BulletChart implements IVisual {
     }
 
     private getGridStrokeStyleArray(): string | null {
-        const style = String(this.settings.syncAxis.lineStyle.value.value || "").toLowerCase();
+        const style = String(this.settings.syncAxis.lineStyle.value?.value ?? "").toLowerCase();
         const width = Number(this.settings.syncAxis.width.value ?? 1);
         // Map logical style -> dash/gap numeric sequence
         let dashArray: number[] | null = null;
@@ -1737,7 +1827,7 @@ export class BulletChart implements IVisual {
         const opacity = this.getGridOpacity();
         const lineStyle = this.getGridStrokeStyleArray();
         const width = this.settings.syncAxis.width.value ?? 1;
-        const ticks = mainBar.xAxisProperties.values as number[];
+        const ticks = (mainBar.xAxisProperties.axis.tickValues() as number[]) ?? [];
         const className = isVertical ? "main-gridlines-v" : "main-gridlines-h";
 
         const g = this.bulletGraphicsContext
@@ -1813,7 +1903,8 @@ export class BulletChart implements IVisual {
             .classed(HtmlSubSelectableClass, this.formatMode)
             .attr(SubSelectableObjectNameAttribute, (d: BarRect) => d.type)
             .attr(SubSelectableDisplayNameAttribute, (d: BarRect) => d.type)
-            .style("stroke", "none") // Remove the regular stroke
+            .style("stroke", this.highContrastStroke)
+            .style("stroke-width", this.highContrastStrokeWidth)
             .each((d: BarRect, i, nodes) => {
                 this.addLineToCategoryColor(nodes[i], d, model, false);
             });
@@ -1848,7 +1939,7 @@ export class BulletChart implements IVisual {
             (d: TargetValue) => bars[d.barIndex].x + this.BarSize / 2,
             (d: TargetValue) => this.calculateLabelHeight(bars[d.barIndex], null, reversed) + d.value2);
 
-        const labelsStartPos: number = BulletChart.YMarginVertical + (reversed ? model.viewportLength + 15 : 0) + this.data.labelHeightTop;
+        const labelsStartPos: number = BulletChart.YMarginVertical + (reversed ? model.viewportLength + BulletChart.MainAxisSpacing : 0) + this.data.labelHeightTop;
         this.drawAxisAndLabelsForVerticalOrientation(model, reversed, labelsStartPos);
         const measureUnitsText: string = TextMeasurementService.getTailoredTextOrDefault(
             BulletChart.getTextProperties(model.settings.axis.measureUnits.value, model.settings.axis.unitsFont.fontSize.value),
@@ -1861,7 +1952,12 @@ export class BulletChart implements IVisual {
                 .classed(BulletChart.MeasureUnitsSelector.className, true)
                 .attr("x", ((d: BarData) => d.x + this.BarSize))
                 .attr("y", () => {
-                    return labelsStartPos + BulletChart.SubtitleMargin + BulletChart.measureUnitShift;
+                    const underlinePadding = this.getUnderlinePadding(model.settings);
+                    const shift = this.getMeasureUnitShift(model.settings);
+                    const completionPercentOffset = model.settings.labels.show.value && model.settings.general.showCompletionPercent.value
+                        ? this.data.labelHeightTop + BulletChart.CompletionPercentVerticalLineSpacing
+                        : 0;
+                    return labelsStartPos + shift + underlinePadding + completionPercentOffset;
                 })
                 .attr("fill", model.settings.axis.unitsColor.value.value)
                 .attr("font-family", model.settings.axis.unitsFont.fontFamily.value)

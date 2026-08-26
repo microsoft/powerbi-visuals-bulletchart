@@ -61,6 +61,7 @@ export interface BulletChartModel {
     labelHeightTop: number;
     spaceRequiredForBarHorizontally: number;
     longestCategoryWidth: number;
+    verticalExtraOffset: number;
 }
 
 export interface BarData {
