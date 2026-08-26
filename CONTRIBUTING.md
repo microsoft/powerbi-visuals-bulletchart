@@ -71,6 +71,22 @@ gh api repos/actions/checkout/tags --paginate \
 Use the `/tags` endpoint rather than `/git/ref/tags/<tag>` — for annotated tags the latter returns the
 SHA of the tag object instead of the commit it points at, and pinning that value does not work.
 
+Without `gh`, `git ls-remote` does the same over plain HTTPS. The `^{}` suffix asks git to dereference
+an annotated tag down to its commit:
+
+```bash
+git ls-remote --tags https://github.com/github/codeql-action v3.37.8 'v3.37.8^{}'
+# e4d2851c4593439ac10bdcd57c5b06cac73b4775  refs/tags/v3.37.8      <- tag object, do not pin this
+# 42947a340483f03ba47bb1a039b2c519aab3df85  refs/tags/v3.37.8^{}   <- commit, pin this
+```
+
+If a `^{}` line is present, use it; if it is absent the tag is lightweight and the first line already
+points at the commit.
+
+Take the SHA from the tag list of the canonical repository. Verifying it afterwards with
+`gh api repos/OWNER/REPO/commits/<sha>` is not a real check — GitHub serves fork objects from the
+upstream repository, so a commit that only exists in someone's fork will answer successfully.
+
 Then:
 
 - update the trailing `# vX.Y.Z` comment to match, since Dependabot reads it to work out the current
